@@ -1,19 +1,26 @@
 from __future__ import annotations
 from typing import List
 import numpy as np
+import heapq
 from itertools import pairwise
 
 
 class TrajectoryPoint(object):
     """Generic trajectory point described as a one dimensional vector"""
+
     def __init__(self, data, time):
         self.data = np.array(data)
         self.time = time
 
+    def __lt__(self, other: TrajectoryPoint):
+        return self.time < self.data
+
     def interp(self, other: TrajectoryPoint, s: float):
         """Interpolate from the this point to 'other' at s : [0, 1]"""
-        return s * (other - self.data)
-    
+        data = s * (other.data - self.data) + self.data
+        time = s * (other.time - self.time) + self.time
+        return TrajectoryPoint(data, time)
+
     def dist(self, other: TrajectoryPoint):
         """The distance between this point and other"""
         return np.linalg.norm(self.data - other.data)
@@ -35,10 +42,9 @@ class Trajectory:
         result = self.points[self.idx]
         self.idx += 1
         return result
-    
+
     def __getitem__(self, key):
         return self.points[key]
-
 
     def start_time(self):
         return min([p.time for p in self.points])
@@ -71,4 +77,3 @@ class Trajectory:
             traj.add_traj_point(current)
             previous = current
         return traj
-    
