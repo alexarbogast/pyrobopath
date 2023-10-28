@@ -1,5 +1,7 @@
 import unittest
 from scheduling.schedule import Event, Schedule, MultiAgentSchedule
+from scheduling.visualization import draw_schedule, draw_multi_agent_schedule
+from scheduling.dependency_graph import DependencyGraph
 
 
 class TestSchedule(unittest.TestCase):
@@ -20,27 +22,83 @@ class TestSchedule(unittest.TestCase):
 
 
 class TestMultiAgentSchedule(unittest.TestCase):
-    def setUp(self):
-        self.schedule = MultiAgentSchedule()
-
-        self.schedule.add_event(Event("eventA1", -1.0, 5.0), "agent1")
-        self.schedule.add_event(Event("eventB1", 5.0, 2.0), "agent1")
-        self.schedule.add_event(Event("eventC1", 7.0, 5.0), "agent1")
-        self.schedule.add_event(Event("eventD1", 12.0, 10.0), "agent1")
-        self.schedule.add_event(Event("eventE1", 22.0, 45.0), "agent1")
-        self.schedule.add_event(Event("eventF1", 67.0, 15.0), "agent1")
-
-        self.schedule.add_event(Event("eventA2", 0.0, 5.0), "agent2")
-        self.schedule.add_event(Event("eventB2", 5.0, 4.0), "agent2")
-        self.schedule.add_event(Event("eventC2", 9.0, 10.0), "agent2")
-        self.schedule.add_event(Event("eventD2", 19.0, 10.0), "agent2")
-        self.schedule.add_event(Event("eventE2", 67.0, 16.0), "agent2")
-
     def test_schedule(self):
-        self.assertEqual(self.schedule.start_time(), -1.0)
-        self.assertEqual(self.schedule.end_time(), 83.0)
-        self.assertEqual(self.schedule.duration(), 84.0)
-        self.assertEqual(self.schedule.n_agents(), 2)
+        schedule = MultiAgentSchedule()
+        schedule.add_event(Event("eventA1", -1.0, 5.0), "agent1")
+        schedule.add_event(Event("eventB1", 5.0, 2.0), "agent1")
+        schedule.add_event(Event("eventC1", 7.0, 5.0), "agent1")
+        schedule.add_event(Event("eventD1", 12.0, 10.0), "agent1")
+        schedule.add_event(Event("eventE1", 22.0, 45.0), "agent1")
+        schedule.add_event(Event("eventF1", 67.0, 15.0), "agent1")
+
+        schedule.add_event(Event("eventA2", 0.0, 5.0), "agent2")
+        schedule.add_event(Event("eventB2", 5.0, 4.0), "agent2")
+        schedule.add_event(Event("eventC2", 9.0, 10.0), "agent2")
+        schedule.add_event(Event("eventD2", 19.0, 10.0), "agent2")
+        schedule.add_event(Event("eventE2", 67.0, 16.0), "agent2")
+
+        self.assertEqual(schedule.start_time(), -1.0)
+        self.assertEqual(schedule.end_time(), 83.0)
+        self.assertEqual(schedule.duration(), 84.0)
+        self.assertEqual(schedule.n_agents(), 2)
+
+        other = Schedule()
+        other.add_event(Event("eventA3", -2.0, 5.0))
+        other.add_event(Event("eventB3", 70.0, 20.0))
+        schedule.add_schedule(other, "agent3")
+
+        self.assertEqual(schedule.start_time(), -2.0)
+        self.assertEqual(schedule.end_time(), 90.0)
+        self.assertEqual(schedule.duration(), 92.0)
+        self.assertEqual(schedule.n_agents(), 3)
+
+        # test other sequence functions
+        self.assertEqual(schedule.first_started(), "agent3")
+        self.assertEqual(schedule.last_started(), "agent2")
+        self.assertEqual(schedule.first_finished(), "agent1")
+        self.assertEqual(schedule.last_finished(), "agent3")
+
+        schedule.add_agent("agent4")
+        self.assertEqual(schedule.n_agents(), 4, "Number of agents != 4")
+        self.assertEqual(schedule["agent3"], other)
+
+
+class TestVisualization(unittest.TestCase):
+    def test_visualization_api(self):
+        self.schedule = Schedule()
+        self.schedule.add_event(Event("eventA", 0.0, 5.0))
+        self.schedule.add_event(Event("eventB", 5.0, 2.0))
+        draw_schedule(self.schedule, show=False)
+
+        self.multi_schedule = MultiAgentSchedule()
+        self.multi_schedule.add_event(Event("eventA1", -1.0, 5.0), "agent1")
+        self.multi_schedule.add_event(Event("eventB1", 5.0, 2.0), "agent1")
+        self.multi_schedule.add_event(Event("eventA2", 0.0, 5.0), "agent2")
+        self.multi_schedule.add_event(Event("eventB2", 5.0, 4.0), "agent2")
+        draw_multi_agent_schedule(self.multi_schedule, show=False)
+
+
+class TestDependencyGraph(unittest.TestCase):
+    def test_create_dependency_graph(self):
+        dg = DependencyGraph()
+        dg.add_node(0, ["start"])
+
+        can_start = dg.can_start(0)
+        self.assertFalse(can_start, "node zero cannot start before start is completed")
+
+        dg.set_complete("start")
+        complete = dg._graph.nodes["start"]["complete"]
+        self.assertTrue(complete, "'start' was not marked complete")
+
+        dg.reset()
+        can_start = dg.can_start(0)
+        self.assertFalse(can_start, "node zero cannot start before start is completed")
+
+        dg.set_complete("start")
+        dg.set_complete(0)
+        dg.add_node(1, [0])
+        can_start = dg.can_start(1)
+        self.assertTrue(can_start)
 
 
 if __name__ == "__main__":

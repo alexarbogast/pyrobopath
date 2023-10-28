@@ -3,6 +3,7 @@ from typing import List
 import collections
 import matplotlib.pyplot as plt
 
+
 class Event(object):
     def __init__(self, data, start, duration):
         self.data = data
@@ -10,43 +11,29 @@ class Event(object):
         self.duration = duration
 
 
-""" class Schedule(object):
-    def __init__(self):
-        self.events = collections.defaultdict(list)
-
-    def add_event(self, event, agent: int = 0):
-        self.events[agent].append(event)
-
-    def draw(self):
-        fig, ax = plt.subplots()
-        for agent in self.events.keys():
-            for event in self.events[agent]:
-                p = ax.barh(agent, left=event.start, width=event.duration)
-                ax.bar_label(p, label_type="center")
-        ax.set_yticks(range(len(self.events)))
-        plt.show()
-
-    @property 
-    def n_agents(self):
-        return len(self.events.keys) """
-    
-
 class Schedule(object):
     def __init__(self):
         self._events: List[Event] = []
-    
+        self._start_time = 0.0
+        self._end_time = 0.0
+
     def add_event(self, event: Event):
+        end_time = event.start + event.duration
+        if event.start < self._start_time:
+            self._start_time = event.start
+        if end_time > self._end_time:
+            self._end_time = end_time
         self._events.append(event)
 
     def start_time(self):
-        return min([e.start for e in self._events])
-    
+        return self._start_time
+
     def end_time(self):
-        return max([e.start + e.duration for e in self._events])
+        return self._end_time
 
     def duration(self):
         return self.end_time() - self.start_time()
-    
+
     def n_events(self):
         return len(self._events)
 
@@ -54,19 +41,56 @@ class Schedule(object):
 class MultiAgentSchedule(object):
     def __init__(self):
         self.schedules = collections.defaultdict(Schedule)
+        self._start_time = 0.0
+        self._end_time = 0.0
+
+    def __getitem__(self, agent):
+        return self.schedules[agent]
+
+    def add_agent(self, agent):
+        self.schedules[agent] = Schedule()
 
     def add_event(self, event: Event, agent):
+        end_time = event.start + event.duration
+        if event.start < self._start_time:
+            self._start_time = event.start
+        if end_time > self._end_time:
+            self._end_time = end_time
         self.schedules[agent].add_event(event)
 
+    def add_schedule(self, schedule: Schedule, agent):
+        if schedule.start_time() < self._start_time:
+            self._start_time = schedule.start_time()
+        if schedule.end_time() > self._end_time:
+            self._end_time = schedule.end_time()
+        self.schedules[agent] = schedule
+
     def start_time(self):
-        return min([s.start_time() for s in self.schedules.values()])
-    
+        return self._start_time
+
     def end_time(self):
-        return max([s.end_time() for s in self.schedules.values()])
+        return self._end_time
 
     def duration(self):
+        """The duration of the combined schedule"""
         return self.end_time() - self.start_time()
 
     def n_agents(self):
+        """The number of agents with schedules"""
         return len(self.schedules)
-    
+
+    def first_started(self):
+        """Returns the agent belonging to the schedule that finishes first"""
+        return min(self.schedules, key=lambda s: self.schedules[s].start_time())
+
+    def last_started(self):
+        """Returns the agent belonging to the schedule that finishes last"""
+        return max(self.schedules, key=lambda s: self.schedules[s].start_time())
+
+    def first_finished(self):
+        """Returns the agent belonging to the schedule that finishes first"""
+        return min(self.schedules, key=lambda s: self.schedules[s].end_time())
+
+    def last_finished(self):
+        """Returns the agent belonging to the schedule that finishes last"""
+        return max(self.schedules, key=lambda s: self.schedules[s].end_time())

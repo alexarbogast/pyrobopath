@@ -34,6 +34,11 @@ class Toolpath(object):
     def __init__(self):
         self.contours: List[Contour] = [] 
 
+    def tools(self):
+        """Returns a unique list of tools in the toolpath"""
+        tools = set(c.tool for c in self.contours)
+        return list(tools)
+
     @staticmethod
     def from_gcode(gcode: List[GcodeLine]) -> Toolpath:
         toolpath = Toolpath()
