@@ -1,7 +1,6 @@
 from __future__ import annotations
 from typing import List
 import collections
-import matplotlib.pyplot as plt
 
 
 class Event(object):

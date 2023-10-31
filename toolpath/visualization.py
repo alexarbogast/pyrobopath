@@ -15,7 +15,7 @@ def visualize_toolpath(toolpath: Toolpath):
     plt.show()
 
 
-def visualize_toolpath_projection(toolpath: Toolpath):
+def visualize_toolpath_projection(toolpath: Toolpath, show=True):
     COLORS = ["#DA3E52", "#001524", "#6969B3"]
     # find a unique set of z values
     contour_z = []
@@ -50,4 +50,7 @@ def visualize_toolpath_projection(toolpath: Toolpath):
     layer_slider.on_changed(update_layer)
     update_layer(1)
     ax.set_aspect("equal")
-    plt.show()
+    
+    if show:
+        plt.show()
+    return fig, ax

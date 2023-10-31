@@ -2,7 +2,7 @@ import os
 import unittest
 from gcodeparser import GcodeParser
 
-from toolpath import Toolpath, Contour
+from pyrobopath.toolpath import Toolpath
 
 TEST_GCODE1 = os.path.join(os.path.dirname(__file__), 'test_gcode', 'hollow_square.gcode')
 TEST_GCODE2 = os.path.join(os.path.dirname(__file__), 'test_gcode', 'multi_tool_square.gcode')

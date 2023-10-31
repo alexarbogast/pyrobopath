@@ -2,9 +2,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 from networkx.drawing.nx_pydot import graphviz_layout
 
-import collections
 from itertools import product
-
 
 class DependencyGraph(object):
     """Directed Acyclic Graph"""
@@ -34,7 +32,9 @@ class DependencyGraph(object):
     def reset(self):
         nx.set_node_attributes(self._graph, False, "complete")
 
-    def draw(self):
+    def draw(self, show=True):
         pos = graphviz_layout(self._graph, prog="dot")
-        nx.draw(self._graph, pos, with_labels=True)
-        plt.show()
+        nx.draw(self._graph, pos, with_labels=True, )
+        
+        if show:
+            plt.show()

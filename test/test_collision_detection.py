@@ -2,12 +2,12 @@ import unittest
 import numpy as np
 from copy import copy
 
-from collision_detection import (
+from pyrobopath.collision_detection import (
     LineCollisionModel,
     LollipopCollisionModel,
     CollisionGroup,
 )
-from collision_detection import Trajectory, TrajectoryPoint, check_trajectory_collision
+from pyrobopath.collision_detection import Trajectory, TrajectoryPoint, check_trajectory_collision
 
 
 class TestCollisionDetection(unittest.TestCase):

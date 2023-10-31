@@ -1,7 +1,7 @@
 import unittest
-from scheduling.schedule import Event, Schedule, MultiAgentSchedule
-from scheduling.visualization import draw_schedule, draw_multi_agent_schedule
-from scheduling.dependency_graph import DependencyGraph
+from pyrobopath.scheduling import Event, Schedule, MultiAgentSchedule
+from pyrobopath.scheduling import draw_schedule, draw_multi_agent_schedule
+from pyrobopath.scheduling import DependencyGraph
 
 
 class TestSchedule(unittest.TestCase):
