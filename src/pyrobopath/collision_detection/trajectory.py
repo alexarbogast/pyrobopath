@@ -1,8 +1,13 @@
 from __future__ import annotations
 from typing import List
 import numpy as np
-import heapq
-from itertools import pairwise
+from itertools import tee
+
+
+def pairwise(iterable):
+    a, b = tee(iterable)
+    next(b, None)
+    return zip(a, b)
 
 
 class TrajectoryPoint(object):

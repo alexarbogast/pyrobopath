@@ -2,8 +2,14 @@ from __future__ import annotations
 from typing import List
 from gcodeparser import GcodeParser, GcodeLine
 import numpy as np
+from itertools import tee
 
-from itertools import pairwise
+
+def pairwise(iterable):
+    a, b = tee(iterable)
+    next(b, None)
+    return zip(a, b)
+
 
 class Contour(object):
     counter: int = 0
@@ -13,26 +19,26 @@ class Contour(object):
             path = []
         self.path: List[np.ndarray] = path
         self.tool: int = tool
-        
+
         Contour.counter += 1
         self.id = Contour.counter
-    
+
     def __repr__(self):
         return str(f"c{self.id}")
-    
+
     def path_length(self):
         length = 0.0
         for s, e in pairwise(self.path):
             length += np.linalg.norm(e - s)
         return length
-    
+
     def n_segments(self):
         return len(self.path) - 1
 
 
 class Toolpath(object):
     def __init__(self):
-        self.contours: List[Contour] = [] 
+        self.contours: List[Contour] = []
 
     def tools(self):
         """Returns a unique list of tools in the toolpath"""
