@@ -62,6 +62,9 @@ class TestMultiAgentSchedule(unittest.TestCase):
         self.assertEqual(schedule.n_agents(), 4, "Number of agents != 4")
         self.assertEqual(schedule["agent3"], other)
 
+        schedule.add_agents(["agent5", "agent6", "agent7"])
+        self.assertEqual(schedule.n_agents(), 7, "Number of agents != 7")
+
 
 class TestVisualization(unittest.TestCase):
     def test_visualization_api(self):

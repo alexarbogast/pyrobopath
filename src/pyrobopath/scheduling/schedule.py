@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List
+from typing import List, Iterable, Hashable
 import collections
 
 
@@ -43,11 +43,15 @@ class MultiAgentSchedule(object):
         self._start_time = 0.0
         self._end_time = 0.0
 
-    def __getitem__(self, agent):
+    def __getitem__(self, agent: Hashable):
         return self.schedules[agent]
 
-    def add_agent(self, agent):
+    def add_agent(self, agent: Hashable):
         self.schedules[agent] = Schedule()
+
+    def add_agents(self, agents: Iterable[Hashable]):
+        for agent in agents:
+            self.add_agent(agent)
 
     def add_event(self, event: Event, agent):
         end_time = event.start + event.duration
