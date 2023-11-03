@@ -80,7 +80,7 @@ def check_trajectory_collision(
             completed = traj_interp.complete and completed
             # step trajectory
             state = traj_interp.step_state()
-            group.models[model_id].set_position(state.data)
+            group.models[model_id].translation = state.data
         if group.in_collision():
             return True
     return False

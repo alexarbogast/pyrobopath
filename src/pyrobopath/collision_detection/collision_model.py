@@ -9,42 +9,44 @@ class CollisionModel(object):
     "A collision model is used by a collision checker"
 
     def __init__(self):
-        raise NotImplementedError
+        self._transform = np.identity(4)
 
-    def set_position(self, value):
-        raise NotImplementedError
+    @property
+    def translation(self):
+        return self._transform[:3, 3]
+    
+    @translation.setter
+    def translation(self, value):
+        self._transform[:3, 3] = value
+
+    @property
+    def rotation(self):
+        return self._transform[:3, :3]
+
+    @rotation.setter
+    def rotation(self, value):
+        self._transform[:3, :3] = value
 
     def in_collision(self, other: CollisionModel) -> bool:
         raise NotImplementedError
 
 
 class LineCollisionModel(CollisionModel):
-    def __init__(self, start, end):
-        self._start = start
-        self._end = end
-
-    def set_position(self, value):
-        self._end = value
+    def __init__(self, base: np.ndarray):
+        super().__init__()
+        self._base = base
 
     @property
-    def start(self):
-        return self._start
+    def base(self):
+        return self._base
 
-    @start.setter
-    def start(self, value):
-        self._start = value
-
-    @property
-    def end(self):
-        return self._end
-
-    @end.setter
-    def end(self, value):
-        self._end = value
+    @base.setter
+    def base(self, value):
+        self._base = value
 
     def in_collision(self, other: LineCollisionModel) -> bool:
-        p1, q1 = np.round(self.start, 5), np.round(self.end, 5)
-        p2, q2 = np.round(other.start, 5), np.round(other.end, 5)
+        p1, q1 = np.round(self.base, 5), np.round(self.translation, 5)
+        p2, q2 = np.round(other.base, 5), np.round(other.translation, 5)
 
         o1 = orientation(p1, q1, p2)
         o2 = orientation(p1, q1, q2)
@@ -75,8 +77,8 @@ class LineCollisionModel(CollisionModel):
 
 
 class LollipopCollisionModel(LineCollisionModel):
-    def __init__(self, start, end, radius):
-        super().__init__(start, end)
+    def __init__(self, base: np.ndarray, radius: float):
+        super().__init__(base)
         self._radius = radius
 
     @property
@@ -91,7 +93,7 @@ class LollipopCollisionModel(LineCollisionModel):
         if super().in_collision(other):
             return True
 
-        tip_to_tip = np.linalg.norm(self.end - other.end)
+        tip_to_tip = np.linalg.norm(self.translation - other.translation)
         return tip_to_tip < (self.radius + other.radius)
 
 
