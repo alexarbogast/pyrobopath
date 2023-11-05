@@ -83,3 +83,27 @@ class FCLRobotBBCollisionModel(FCLBoxCollisionModel):
     @anchor.setter
     def anchor(self, value):
         self._anchor = value
+
+
+def continuous_collision_check(
+    model1: FCLCollisionModel,
+    trans1_final: np.ndarray,
+    model2: FCLCollisionModel,
+    trans2_final: np.ndarray,
+):
+    t1_initial = fcl.Transform(model1.rotation, model1.translation)
+    t2_initial = fcl.Transform(model2.rotation, model2.translation)
+
+    t1_final = fcl.Transform(model1.rotation, trans1_final)
+    t2_final = fcl.Transform(model2.rotation, trans2_final)
+
+    model1.obj.setTransform(t1_initial)
+    model2.obj.setTransform(t2_initial)
+
+    request = fcl.ContinuousCollisionRequest()
+    result = fcl.ContinuousCollisionResult()
+
+    ret = fcl.continuousCollide(
+        model1.obj, t1_final, model2.obj, t2_final, request, result
+    )
+    return result.is_collide

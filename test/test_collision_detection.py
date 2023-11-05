@@ -29,6 +29,60 @@ class TestCollisionDetection(unittest.TestCase):
         self.assertEqual(traj.end_time(), 40.0, "End time != 40.0")
         self.assertEqual(traj.elapsed(), 60.0, "Elapsed != 60.0")
 
+        traj = Trajectory()
+        pt1 = TrajectoryPoint([-1.0, 0.0, 0.0], 0.0)
+        pt2 = TrajectoryPoint([0.0, 0.0, 0.0], 1.0)
+        pt3 = TrajectoryPoint([1.0, 0.0, 0.0], 2.0)
+        traj.add_traj_point(pt1)
+        traj.add_traj_point(pt2)
+        traj.add_traj_point(pt3)
+
+        # fmt: off
+        # before start time
+        sliced = traj.slice(-2.0, -1.0)
+        self.assertIsNone(sliced, "Sliced is not None")
+
+        # up to start time
+        sliced = traj.slice(-2.0, 0.0)
+        self.assertEqual(len(sliced.points), 1, "Sliced trajectory does not have 1 point")
+        self.assertEqual(sliced.start_time(), pt1.time, "Sliced trajectory has wrong start time")
+        self.assertEqual(sliced.end_time(), pt1.time, "Sliced trajectory has wrong end time")
+
+        # original slice
+        sliced = traj.slice(0.0, 2.0)
+        self.assertEqual(len(sliced.points), 3, "Sliced trajectory does not have 3 points")
+        self.assertEqual(sliced.start_time(), pt1.time, "Sliced trajectory has wrong start time")
+        self.assertEqual(sliced.end_time(), pt3.time, "Sliced trajectory has wrong end time")
+        for a, b in zip(sliced.points, traj.points):
+            self.assertTrue(np.allclose(a.data, b.data),
+                            "Sliced trajectory points are incorrect")
+
+        # in the middle
+        sliced = traj.slice(0.5, 1.5)
+        self.assertEqual(sliced.start_time(), 0.5, "Sliced trajectory has wrong start time")
+        self.assertEqual(sliced.end_time(), 1.5, "Sliced trajectory has wrong end time")
+        points = [TrajectoryPoint([-0.5, 0.0, 0.0], 0.5), pt2, TrajectoryPoint([0.5, 0.0, 0.0], 1.5)]
+        for a, b in zip(sliced.points, points):
+            self.assertTrue(np.allclose(a.data, b.data),
+                            "Sliced trajectory points are incorrect")
+
+        # one segment
+        sliced = traj.slice(0.25, 0.75)
+        self.assertEqual(len(sliced.points), 2, "Sliced trajectory does not have 2 point")
+        self.assertEqual(sliced.start_time(), 0.25, "Sliced trajectory has wrong start time")
+        self.assertEqual(sliced.end_time(), 0.75, "Sliced trajectory has wrong end time")
+
+        # at end time
+        sliced = traj.slice(2.0, 3.0)
+        self.assertEqual(len(sliced.points), 1, "Sliced trajectory does not have 1 point")
+        self.assertEqual(sliced.start_time(), pt3.time, "Sliced trajectory has wrong start time")
+        self.assertEqual(sliced.end_time(), pt3.time, "Sliced trajectory has wrong end time")
+
+        # after end time
+        sliced = traj.slice(3.0, 4.0)
+        self.assertIsNone(sliced, "Sliced is not None")
+        # fmt: on
+
     def test_collision_group(self):
         base_A = np.array([-1.0, -1.0, 0.0])
         base_B = np.array([1.0, -1.0, 0.0])
@@ -168,7 +222,6 @@ class TestCollisionDetection(unittest.TestCase):
         trajB = Trajectory.from_const_vel_path(path2, 1.0, start_time=-0.5)
         trajs = [trajA, trajB]
         collision = check_trajectory_collision(collision_group, trajs, 0.1)
-        print(collision)
         self.assertTrue(collision, "Colliding trajectory returned with collision-free")
 
 
@@ -211,3 +264,38 @@ class TestFCLCollisionDetection(unittest.TestCase):
             robot_bb_1.in_collision(robot_bb_2),
             "Collision-free state returned with collision",
         )
+
+    def test_trajectory_collision_query(self):
+        robot_bb_1 = FCLRobotBBCollisionModel(
+            width=1.0, height=1.0, anchor=[-5.0, 0.0, 0.0]
+        )
+        robot_bb_2 = FCLRobotBBCollisionModel(
+            width=1.0, height=1.0, anchor=[5.0, 0.0, 0.0]
+        )
+
+        # collision-free
+        path1 = [[-3.0, 0.0, 0.0], [-1.0, 0.0, 0.0]]
+        path2 = [[3.0, 0.0, 0.0], [1.0, 0.0, 0.0]]
+        traj1 = Trajectory.from_const_vel_path(path1, 1.0)
+        traj2 = Trajectory.from_const_vel_path(path2, 1.0)
+
+        res = trajectory_collision_query(robot_bb_1, traj1, robot_bb_2, traj2)
+        self.assertFalse(res, "Collision-free trajectory returned with collision")
+
+        # collision
+        path1 = [[-3.0, 0.0, 0.0], [1.0, 0.0, 0.0]]
+        path2 = [[3.0, 0.0, 0.0], [-1.0, 0.0, 0.0]]
+        traj1 = Trajectory.from_const_vel_path(path1, 1.0)
+        traj2 = Trajectory.from_const_vel_path(path2, 1.0)
+
+        res = trajectory_collision_query(robot_bb_1, traj1, robot_bb_2, traj2)
+        self.assertTrue(res, "Collision trajectory returned with collision-free")
+
+        # collision
+        path1 = [[0.0, 1.0, 0.0], [0.0, -1.0, 0.0]]
+        path2 = [[0.0, -1.0, 0.0], [0.0, 1.0, 0.0]]
+        traj1 = Trajectory.from_const_vel_path(path1, 1.0, 0.5)
+        traj2 = Trajectory.from_const_vel_path(path2, 1.0)
+
+        res = trajectory_collision_query(robot_bb_1, traj1, robot_bb_2, traj2)
+        self.assertTrue(res, "Collision trajectory returned with collision-free")

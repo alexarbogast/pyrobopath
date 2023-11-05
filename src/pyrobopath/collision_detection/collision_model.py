@@ -27,6 +27,14 @@ class CollisionModel(object):
     def rotation(self, value):
         self._transform[:3, :3] = value
 
+    @property
+    def transform(self):
+        return self._transform
+    
+    @transform.setter
+    def transform(self, value):
+        self._transform = value
+
     def in_collision(self, other: CollisionModel) -> bool:
         raise NotImplementedError
 

@@ -2,8 +2,9 @@ from __future__ import annotations
 from typing import List
 import numpy as np
 
-from .collision_model import LollipopCollisionModel, CollisionGroup
-from .trajectory import Trajectory, TrajectoryPoint
+from .collision_model import CollisionGroup, CollisionModel
+from .fcl_collision_models import FCLCollisionModel, continuous_collision_check
+from .trajectory import Trajectory
 
 
 class _TrajectoryStateInterpolator(object):
@@ -82,5 +83,51 @@ def check_trajectory_collision(
             state = traj_interp.step_state()
             group.models[model_id].translation = state.data
         if group.in_collision():
+            return True
+    return False
+
+
+class _ConcurrentSegmentIterator:
+    def __init__(self, trajs: List[Trajectory]):
+        self.trajs = trajs
+        self.iters = [iter(t) for t in self.trajs]
+        self.points = [next(i) for i in self.iters]
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        index_min = min(range(len(self.points)), key=lambda i: self.points[i].time)
+        t0 = self.points[index_min].time
+        for i in range(len(self.points)):
+            if self.points[i].time == t0:
+                self.points[i] = next(self.iters[i])
+
+        t1 = min([p.time for p in self.points])
+        slices = [t.slice(t0, t1) for t in self.trajs]
+        if all([s is None for s in slices]):
+            raise StopIteration
+        if any([s is None for s in slices]):
+            return self.__next__()
+        return slices
+
+
+def trajectory_collision_query(
+    model1: FCLCollisionModel,
+    traj1: Trajectory,
+    model2: CollisionModel,
+    traj2: Trajectory,
+):
+    """Performs continuous collision checking along paired trajectory segments
+       with concurrent operation.
+    """
+    for traj_pair in _ConcurrentSegmentIterator([traj1, traj2]):
+        model1.translation = traj_pair[0][0].data  # first point
+        model2.translation = traj_pair[1][0].data
+
+        p1_final = traj_pair[0][-1].data  # last point
+        p2_final = traj_pair[1][-1].data
+
+        if continuous_collision_check(model1, p1_final, model2, p2_final):
             return True
     return False
