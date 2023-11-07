@@ -20,6 +20,33 @@ class TestSchedule(unittest.TestCase):
         self.assertEqual(self.schedule.duration(), 82.0, "Duration != 82.0")
         self.assertEqual(self.schedule.n_events(), 6, "Number of events != 6")
 
+        sliced = self.schedule.slice(0.0, 82.0)
+        self.assertEqual(sliced.start_time(), 0.0, "Start time != 0.0")
+        self.assertEqual(sliced.end_time(), 82.0, "End time != 82.0")
+        self.assertEqual(sliced.duration(), 82.0, "Duration != 82.0")
+        self.assertEqual(sliced.n_events(), 6, "Number of events != 6")
+
+        sliced = self.schedule.slice(3.0, 11.0)
+        self.assertEqual(sliced.start_time(), 0.0, "Start time != 0.0")
+        self.assertEqual(sliced.end_time(), 12.0, "End time != 12.0")
+        self.assertEqual(sliced.duration(), 12.0, "Duration != 12.0")
+        self.assertEqual(sliced.n_events(), 3, "Number of events != 3")
+
+        sliced = self.schedule.slice(-1.0, -0.1)
+        self.assertEqual(sliced.n_events(), 0, "Number of events != 0")
+        self.assertEqual(sliced.start_time(), -1.0)
+        self.assertEqual(sliced.end_time(), -0.1)
+
+        sliced = self.schedule.slice(-1.0, 0.0)
+        self.assertEqual(sliced.n_events(), 1, "Number of events != 1")
+        self.assertEqual(sliced.start_time(), 0.0, "Start time != 0.0")
+        self.assertEqual(sliced.end_time(), 5.0, "End time != 5.0")
+
+        sliced = self.schedule.slice(82.0, 83.0)
+        self.assertEqual(sliced.n_events(), 1, "Number of events != 1")
+        self.assertEqual(sliced.start_time(), 67.0)
+        self.assertEqual(sliced.end_time(), 82.0)
+
 
 class TestMultiAgentSchedule(unittest.TestCase):
     def test_schedule(self):
@@ -64,6 +91,29 @@ class TestMultiAgentSchedule(unittest.TestCase):
 
         schedule.add_agents(["agent5", "agent6", "agent7"])
         self.assertEqual(schedule.n_agents(), 7, "Number of agents != 7")
+
+    def test_slicing(self):
+        schedule = MultiAgentSchedule()
+        schedule.add_event(Event(None, start=-2.0, duration=2.0), "agent1")
+        schedule.add_event(Event(None, start=1.0, duration=2.0), "agent1")
+
+        schedule.add_event(Event(None, start=-1.0, duration=1.0), "agent2")
+        schedule.add_event(Event(None, start=1.0, duration=3.0), "agent2")
+
+        schedule.add_event(Event(None, start=-3.0, duration=3.0), "agent3")
+        schedule.add_event(Event(None, start=2.0, duration=1.0), "agent3")
+
+        sliced = schedule.slice(-3.0, 4.0)
+        self.assertEqual(sliced.start_time(), -3.0)
+        self.assertEqual(sliced.end_time(), 4.0)
+        self.assertEqual(schedule.duration(), 7)
+        self.assertEqual(schedule.n_agents(), 3)
+        self.assertEqual(schedule.schedules["agent1"].n_events(), 2)
+        self.assertEqual(schedule.schedules["agent2"].n_events(), 2)
+        self.assertEqual(schedule.schedules["agent3"].n_events(), 2)
+
+        sliced = schedule.slice(-4.0, -3.0)
+        self.assertEqual(sliced.n_events(), 1)
 
 
 class TestVisualization(unittest.TestCase):

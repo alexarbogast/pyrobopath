@@ -13,8 +13,8 @@ class Event(object):
 class Schedule(object):
     def __init__(self):
         self._events: List[Event] = []
-        self._start_time = 0.0
-        self._end_time = 0.0
+        self._start_time = float('inf')
+        self._end_time = float('-inf')
 
     def add_event(self, event: Event):
         end_time = event.start + event.duration
@@ -35,6 +35,29 @@ class Schedule(object):
 
     def n_events(self):
         return len(self._events)
+
+    def slice(self, t_start, t_end) -> Schedule:
+        """
+        Returns a new schedule with events that end at/after t_start and 
+        start at/before t_end
+
+        {e | e.start <= t_end ∧ e.end >= t_start for all e in schedule}
+
+        Note: Events are not sliced. If an event has any time in [t_start, t_end],
+        the original event is included in its entirety. 
+        """
+        new_sched = Schedule()
+        
+        filter = lambda e: e.start + e.duration >= t_start and e.start <= t_end
+        new_sched._events = [e for e in self._events if filter(e)]
+        if not new_sched._events:
+            new_sched._start_time = t_start
+            new_sched._end_time = t_end
+            return new_sched
+        
+        new_sched._start_time = min([e.start for e in new_sched._events])
+        new_sched._end_time = max([e.start + e.duration for e in new_sched._events])
+        return new_sched
 
 
 class MultiAgentSchedule(object):
@@ -81,6 +104,10 @@ class MultiAgentSchedule(object):
     def n_agents(self):
         """The number of agents with schedules"""
         return len(self.schedules)
+    
+    def n_events(self):
+        """The number of events from all schedules"""
+        return sum([s.n_events() for s in self.schedules.values()])
 
     def first_started(self):
         """Returns the agent belonging to the schedule that finishes first"""
@@ -97,3 +124,19 @@ class MultiAgentSchedule(object):
     def last_finished(self):
         """Returns the agent belonging to the schedule that finishes last"""
         return max(self.schedules, key=lambda s: self.schedules[s].end_time())
+
+    def slice(self, t_start, t_end) -> MultiAgentSchedule:
+        """Returns a new multi-agent schedule with the schedules for each agent
+        filtered with events that end after t_start and start before t_end"""
+        new_mas = MultiAgentSchedule()
+        for agent, schedule in self.schedules.items():
+            new_mas.add_schedule(schedule.slice(t_start, t_end), agent)
+
+        if new_mas.n_events() == 0:
+            new_mas._start_time = t_start
+            new_mas._end_time = t_end
+            return new_mas
+
+        new_mas._start_time = min([s.start_time() for s in new_mas.schedules.values()])
+        new_mas._end_time = max([s.end_time() for s in new_mas.schedules.values()])
+        return new_mas

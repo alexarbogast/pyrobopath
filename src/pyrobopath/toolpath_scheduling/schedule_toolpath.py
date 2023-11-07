@@ -11,6 +11,7 @@ from dataclasses import dataclass
 class PlanningOptions:
     velocity: float = 50.0
     retract_height: float = 50.0
+    collision_offset: float = 5.0
 
 
 class ToolpathScheduler(object):
@@ -97,3 +98,10 @@ class ToolpathScheduler(object):
         travel = [start, above_s, above_e, end]
         contour = Contour(travel, tool=-1)
         return contour
+
+
+class ContourEvent(Event):
+    def __init__(self, contour: Contour, start: float, velocity: float):
+        duration = contour.path_length() / velocity
+        super().__init__(contour, start, duration)
+        self.velocity = velocity

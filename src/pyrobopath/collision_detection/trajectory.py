@@ -20,6 +20,11 @@ class TrajectoryPoint(object):
     def __lt__(self, other: TrajectoryPoint):
         return self.time < other.time
 
+    def __eq__(self, other: TrajectoryPoint):
+        if isinstance(other, TrajectoryPoint):
+            return (self.data == other.data).all() and self.time == other.time
+        return False
+
     def interp(self, other: TrajectoryPoint, s: float):
         """Interpolate from the this point to 'other' at s : [0, 1]"""
         data = s * (other.data - self.data) + self.data
@@ -48,6 +53,11 @@ class Trajectory:
         self.idx += 1
         return result
 
+    def __add__(self, other) -> Trajectory:
+        new = Trajectory()
+        new.points = self.points + other.points
+        return new
+
     def __getitem__(self, key):
         return self.points[key]
 
@@ -69,47 +79,38 @@ class Trajectory:
             length += s.dist(e)
         return length
 
-    def slice(self, start, end) -> Trajectory:
-        st = self.start_time()
-        et = self.end_time()
-        if start > et or end < st:
+    def get_point_at_time(self, time):
+        """
+        Interpolate the trajectory at 'time'. This function returns 'None'
+        for queries outside of the interval [start_time(), end_time()]
+        """
+        if time < self.points[0].time or time > self.points[-1].time:
             return None
-        
+
+        for s, e in pairwise(self.points):
+            if time >= s.time and time < e.time:
+                return s.interp(e, (time - s.time) / (e.time - s.time))
+        return self.points[-1]
+
+    def slice(self, start, end) -> Trajectory:
+        """
+        Returns a new trajectory that has been filtered with trajectory points
+        in the closed interval [start, end].
+        """
+        if start > self.end_time() or end < self.start_time():
+            return None
+
         new_traj = Trajectory()
+        start_point = self.get_point_at_time(start)
+        if start_point is not None:
+            new_traj.add_traj_point(start_point)
 
-        # find (beginning) point index at t = start
-        start_point_idx = None
-        for i in range(1, len(self.points)):
-            if self.points[i].time == start:
-                start_point_idx = i
-                break
-            elif self.points[i].time > start:
-                start_point_idx = i - 1
-                break
+        new_traj.points += [p for p in self.points if p.time > start and p.time < end]
+        
+        end_point = self.get_point_at_time(end)
+        if end_point is not None:
+            new_traj.add_traj_point(end_point)
 
-        # find (ending) point index at t = end
-        end_point_idx = None
-        for i in reversed(range(len(self.points) - 1)):
-            if self.points[i].time == end:
-                end_point_idx = i
-                break
-            if self.points[i].time < end:
-                end_point_idx = i + 1
-                break
-
-        if start_point_idx == end_point_idx:
-            new_traj.add_traj_point(self.points[start_point_idx])
-            return new_traj
-
-        # interpolate ends
-        sp1, sp2 = self.points[start_point_idx], self.points[start_point_idx + 1]
-        new_sp = sp1.interp(sp2, (start - sp1.time) / (sp2.time - sp1.time))
-        ep1, ep2 = self.points[end_point_idx - 1], self.points[end_point_idx]
-        new_ep = ep1.interp(ep2, (end - ep1.time) / (ep2.time - ep1.time))
-
-        new_traj.points = self.points[start_point_idx + 1 : end_point_idx]
-        new_traj.points.insert(0, new_sp)
-        new_traj.points.append(new_ep)
         return new_traj
 
     @staticmethod

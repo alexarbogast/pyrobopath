@@ -3,7 +3,7 @@ import numpy as np
 from copy import copy
 
 from pyrobopath.collision_detection import *
-
+from pyrobopath.collision_detection import _ConcurrentSegmentIterator
 
 class TestCollisionDetection(unittest.TestCase):
     def test_const_vel_traj(self):
@@ -37,6 +37,23 @@ class TestCollisionDetection(unittest.TestCase):
         traj.add_traj_point(pt2)
         traj.add_traj_point(pt3)
 
+        # point interpolation
+        point = traj.get_point_at_time(-1.0)
+        self.assertIsNone(point)
+        
+        point = traj.get_point_at_time(0.0)
+        self.assertEqual(point, pt1)
+        
+        point = traj.get_point_at_time(0.5)
+        self.assertEqual(point, TrajectoryPoint([-0.5, 0.0, 0.0], 0.5))
+
+        point = traj.get_point_at_time(2.0)
+        self.assertEqual(point, pt3)
+
+        point = traj.get_point_at_time(3.0)
+        self.assertIsNone(point)
+
+        # trajectory slicing
         # fmt: off
         # before start time
         sliced = traj.slice(-2.0, -1.0)
@@ -56,6 +73,15 @@ class TestCollisionDetection(unittest.TestCase):
         for a, b in zip(sliced.points, traj.points):
             self.assertTrue(np.allclose(a.data, b.data),
                             "Sliced trajectory points are incorrect")
+            
+        # sandwiching start time
+        sliced = traj.slice(-1.0, 0.5)
+        self.assertEqual(len(sliced.points), 2, "Sliced trajectory does not have 2 points")
+        self.assertEqual(sliced.start_time(), 0.0)
+        self.assertEqual(sliced.end_time(), 0.5)
+        points = [TrajectoryPoint([-1.0, 0.0, 0.0], 0.0), TrajectoryPoint([-0.5, 0.0, 0.0], 0.5)]
+        for a, b in zip(sliced.points, points):
+            self.assertEqual(a, b, "Sliced trajectory points are incorrect")
 
         # in the middle
         sliced = traj.slice(0.5, 1.5)
@@ -245,10 +271,10 @@ class TestFCLCollisionDetection(unittest.TestCase):
         )
 
         # collision
-        robot_bb_1 = FCLRobotBBCollisionModel(width=1.0, height=0.5, anchor=[-5.0, 0.0, 0.0])
+        robot_bb_1 = FCLRobotBBCollisionModel(x=3.0, y=1.0, z=0.5, anchor=[-5.0, 0.0, 0.0])
         robot_bb_1.translation = [0.1, 2.0, 0.0]
 
-        robot_bb_2 = FCLRobotBBCollisionModel(width=1.0, height=0.5, anchor=[5.0, 0.0, 0.0])
+        robot_bb_2 = FCLRobotBBCollisionModel(x=3.0, y=1.0, z=0.5, anchor=[5.0, 0.0, 0.0])
         robot_bb_2.translation = [-0.1, 2.0, 0.0]
 
         # collision
@@ -267,10 +293,10 @@ class TestFCLCollisionDetection(unittest.TestCase):
 
     def test_trajectory_collision_query(self):
         robot_bb_1 = FCLRobotBBCollisionModel(
-            width=1.0, height=1.0, anchor=[-5.0, 0.0, 0.0]
+            x=3.0, y=1.0, z=1.0, anchor=[-5.0, 0.0, 0.0]
         )
         robot_bb_2 = FCLRobotBBCollisionModel(
-            width=1.0, height=1.0, anchor=[5.0, 0.0, 0.0]
+            x=3.0, y=1.0, z=1.0, anchor=[5.0, 0.0, 0.0]
         )
 
         # collision-free
@@ -299,3 +325,40 @@ class TestFCLCollisionDetection(unittest.TestCase):
 
         res = trajectory_collision_query(robot_bb_1, traj1, robot_bb_2, traj2)
         self.assertTrue(res, "Collision trajectory returned with collision-free")
+
+
+class TestConcurrentSegmentIterator(unittest.TestCase):
+    def test_concurrent_segment_iterator(self):
+        path1 = [[0.0, 2.0, 0.0],[0.0, -2.0, 0.0]]
+        path2 = [[2.0, 0.0, 0.0], [-2.0, 0.0, 0.0]]
+        traj1 = Trajectory().from_const_vel_path(path1, 1.0, 0.0)
+        traj2 = Trajectory().from_const_vel_path(path2, 1.0, 0.0)
+
+        traj_pair = list(_ConcurrentSegmentIterator([traj1, traj2]))
+        self.assertEqual(traj_pair[0][0].start_time(), traj1.start_time())
+        self.assertEqual(traj_pair[0][1].start_time(), traj2.start_time())
+        self.assertEqual(traj_pair[0][0].end_time(), traj1.end_time())
+        self.assertEqual(traj_pair[0][1].end_time(), traj2.end_time())
+
+        traj2 = Trajectory.from_const_vel_path(path2, 1.0, 2.0)
+        traj_pair = list(_ConcurrentSegmentIterator([traj1, traj2]))
+
+        self.assertEqual(len(traj_pair), 3)
+        self.assertEqual(traj_pair[0][0].start_time(), traj1.start_time())
+        self.assertEqual(traj_pair[0][1].start_time(), traj2.start_time())
+        self.assertEqual(traj_pair[0][0].end_time(), 2.0)
+        self.assertEqual(traj_pair[0][1].end_time(), 2.0)
+
+        self.assertEqual(traj_pair[1][0].start_time(), 2.0)
+        self.assertEqual(traj_pair[1][1].start_time(), 2.0)
+        self.assertEqual(traj_pair[1][0].end_time(), 4.0)
+        self.assertEqual(traj_pair[1][1].end_time(), 4.0)
+
+        self.assertEqual(traj_pair[2][0].start_time(), 4.0)
+        self.assertEqual(traj_pair[2][1].start_time(), 4.0)
+        self.assertEqual(traj_pair[2][0].end_time(), traj1.end_time())
+        self.assertEqual(traj_pair[2][1].end_time(), traj2.end_time())
+
+
+if __name__ == "__main__":
+    unittest.main()

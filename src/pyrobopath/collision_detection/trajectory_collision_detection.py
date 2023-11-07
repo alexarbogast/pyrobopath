@@ -88,27 +88,31 @@ def check_trajectory_collision(
 
 
 class _ConcurrentSegmentIterator:
+    """An iterator to loop over concurrent sections of trajectory segments."""
+
     def __init__(self, trajs: List[Trajectory]):
+        unique_times = set()
+        for t in trajs:
+            times = [p.time for p in t]
+            unique_times = unique_times.union(times)
+        self.unique_times = sorted(unique_times)
+
         self.trajs = trajs
-        self.iters = [iter(t) for t in self.trajs]
-        self.points = [next(i) for i in self.iters]
+        self.idx = 0
 
     def __iter__(self):
+        self.idx = 0
         return self
 
     def __next__(self):
-        index_min = min(range(len(self.points)), key=lambda i: self.points[i].time)
-        t0 = self.points[index_min].time
-        for i in range(len(self.points)):
-            if self.points[i].time == t0:
-                self.points[i] = next(self.iters[i])
-
-        t1 = min([p.time for p in self.points])
-        slices = [t.slice(t0, t1) for t in self.trajs]
-        if all([s is None for s in slices]):
+        if self.idx + 1 == len(self.unique_times):
             raise StopIteration
-        if any([s is None for s in slices]):
-            return self.__next__()
+
+        t0 = self.unique_times[self.idx]
+        t1 = self.unique_times[self.idx + 1]
+        slices = [t.slice(t0, t1) for t in self.trajs]
+
+        self.idx += 1
         return slices
 
 
@@ -119,7 +123,7 @@ def trajectory_collision_query(
     traj2: Trajectory,
 ):
     """Performs continuous collision checking along paired trajectory segments
-       with concurrent operation.
+    with concurrent operation.
     """
     for traj_pair in _ConcurrentSegmentIterator([traj1, traj2]):
         model1.translation = traj_pair[0][0].data  # first point
