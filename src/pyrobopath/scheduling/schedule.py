@@ -13,8 +13,8 @@ class Event(object):
 class Schedule(object):
     def __init__(self):
         self._events: List[Event] = []
-        self._start_time = float('inf')
-        self._end_time = float('-inf')
+        self._start_time = float("inf")
+        self._end_time = float("-inf")
 
     def add_event(self, event: Event):
         end_time = event.start + event.duration
@@ -38,26 +38,40 @@ class Schedule(object):
 
     def slice(self, t_start, t_end) -> Schedule:
         """
-        Returns a new schedule with events that end at/after t_start and 
+        Returns a new schedule with events that end at/after t_start and
         start at/before t_end
 
         {e | e.start <= t_end ∧ e.end >= t_start for all e in schedule}
 
         Note: Events are not sliced. If an event has any time in [t_start, t_end],
-        the original event is included in its entirety. 
+        the original event is included in its entirety.
         """
+
         new_sched = Schedule()
-        
-        filter = lambda e: e.start + e.duration >= t_start and e.start <= t_end
-        new_sched._events = [e for e in self._events if filter(e)]
+        new_sched._events = [self._events[i] for i in self.slice_ind(t_start, t_end)]
         if not new_sched._events:
             new_sched._start_time = t_start
             new_sched._end_time = t_end
             return new_sched
-        
+
         new_sched._start_time = min([e.start for e in new_sched._events])
         new_sched._end_time = max([e.start + e.duration for e in new_sched._events])
         return new_sched
+
+    def slice_ind(self, t_start, t_end) -> List[int]:
+        """
+        Returns the indices of events that end at/after t_start and
+        start at/before t_end
+
+        {i | e[i].start <= t_end ∧ e[i].end >= t_start for all e in schedule}
+
+        Note: Events are not sliced. If an event has any time in [t_start, t_end],
+        the original event is included in its entirety.
+        """
+        
+        filter = lambda e: e.start + e.duration >= t_start and e.start <= t_end
+        ind = [i for i, e in enumerate(self._events) if filter(e)]
+        return ind
 
 
 class MultiAgentSchedule(object):
@@ -104,7 +118,7 @@ class MultiAgentSchedule(object):
     def n_agents(self):
         """The number of agents with schedules"""
         return len(self.schedules)
-    
+
     def n_events(self):
         """The number of events from all schedules"""
         return sum([s.n_events() for s in self.schedules.values()])

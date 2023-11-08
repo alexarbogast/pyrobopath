@@ -47,6 +47,12 @@ class TestSchedule(unittest.TestCase):
         self.assertEqual(sliced.start_time(), 67.0)
         self.assertEqual(sliced.end_time(), 82.0)
 
+        ind_sliced = self.schedule.slice_ind(0.0, 82.0)
+        self.assertListEqual(ind_sliced, [0, 1, 2, 3, 4, 5])
+
+        ind_sliced = self.schedule.slice_ind(3.0, 11.0)
+        self.assertListEqual(ind_sliced, [0, 1, 2])
+
 
 class TestMultiAgentSchedule(unittest.TestCase):
     def test_schedule(self):
