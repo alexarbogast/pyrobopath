@@ -1,9 +1,9 @@
 import unittest
 import numpy as np
-from copy import copy
 
 from pyrobopath.collision_detection import *
 from pyrobopath.collision_detection import _ConcurrentSegmentIterator
+
 
 class TestCollisionDetection(unittest.TestCase):
     def test_const_vel_traj(self):
@@ -22,6 +22,10 @@ class TestCollisionDetection(unittest.TestCase):
 
     def test_trajectory(self):
         traj = Trajectory()
+
+        self.assertIsNone(traj.start_time())
+        self.assertIsNone(traj.end_time())
+
         traj.add_traj_point(TrajectoryPoint([-1.0, 1.0, 0.0], -20.0))
         traj.add_traj_point(TrajectoryPoint([1.0, 0.0, -1.0], 40.0))
 
@@ -291,12 +295,18 @@ class TestFCLCollisionDetection(unittest.TestCase):
             "Collision-free state returned with collision",
         )
 
+    def test_continuous_collision_check(self):
+        pass
+        #robot_bb_2 = FCLRobotBBCollisionModel(
+        #    x=3.0, y=0.2, z=1.0, anchor=[-5.0, 0.0, 0.0]
+        #)
+
     def test_trajectory_collision_query(self):
         robot_bb_1 = FCLRobotBBCollisionModel(
-            x=3.0, y=1.0, z=1.0, anchor=[-5.0, 0.0, 0.0]
+            x=3.0, y=0.2, z=1.0, anchor=[-5.0, 0.0, 0.0]
         )
         robot_bb_2 = FCLRobotBBCollisionModel(
-            x=3.0, y=1.0, z=1.0, anchor=[5.0, 0.0, 0.0]
+            x=3.0, y=0.2, z=1.0, anchor=[5.0, 0.0, 0.0]
         )
 
         # collision-free

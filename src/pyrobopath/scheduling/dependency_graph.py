@@ -1,7 +1,4 @@
-import matplotlib.pyplot as plt
 import networkx as nx
-from networkx.drawing.nx_pydot import graphviz_layout
-
 from itertools import product
 
 class DependencyGraph(object):
@@ -33,6 +30,9 @@ class DependencyGraph(object):
         nx.set_node_attributes(self._graph, False, "complete")
 
     def draw(self, show=True):
+        import matplotlib.pyplot as plt
+        from networkx.drawing.nx_pydot import graphviz_layout
+
         pos = graphviz_layout(self._graph, prog="dot")
         nx.draw(self._graph, pos, with_labels=True, )
         

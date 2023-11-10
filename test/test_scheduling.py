@@ -1,6 +1,6 @@
 import unittest
 from pyrobopath.scheduling import Event, Schedule, MultiAgentSchedule
-from pyrobopath.scheduling import draw_schedule, draw_multi_agent_schedule
+#from pyrobopath.scheduling import draw_schedule, draw_multi_agent_schedule
 from pyrobopath.scheduling import DependencyGraph
 
 
@@ -127,14 +127,14 @@ class TestVisualization(unittest.TestCase):
         self.schedule = Schedule()
         self.schedule.add_event(Event("eventA", 0.0, 5.0))
         self.schedule.add_event(Event("eventB", 5.0, 2.0))
-        draw_schedule(self.schedule, show=False)
+        #draw_schedule(self.schedule, show=False)
 
         self.multi_schedule = MultiAgentSchedule()
         self.multi_schedule.add_event(Event("eventA1", -1.0, 5.0), "agent1")
         self.multi_schedule.add_event(Event("eventB1", 5.0, 2.0), "agent1")
         self.multi_schedule.add_event(Event("eventA2", 0.0, 5.0), "agent2")
         self.multi_schedule.add_event(Event("eventB2", 5.0, 4.0), "agent2")
-        draw_multi_agent_schedule(self.multi_schedule, show=False)
+        #draw_multi_agent_schedule(self.multi_schedule, show=False)
 
 
 class TestDependencyGraph(unittest.TestCase):

@@ -1,6 +1,7 @@
 from __future__ import annotations
 import numpy as np
 import fcl
+
 from .collision_model import CollisionModel
 
 
@@ -59,21 +60,23 @@ class FCLRobotBBCollisionModel(FCLBoxCollisionModel):
 
     @translation.setter
     def translation(self, value):
+        value = np.array(value)
         self._eef_transform[:3, 3] = value
 
         # find box center location (z_height matches anchor)
-        v = self.translation - self.anchor
-        dir = v[:2] / np.linalg.norm(v[:2])
-        box_origin = self.translation[:2] + self.box.side[0] * 0.5 * -dir
-        
-        #box_origin = self._anchor[:2] + 0.5 * v[:2]
-        box_origin = np.concatenate((box_origin, [self.anchor[2]]))
-        self._transform[:3, 3] = box_origin.T
+        p_tip_anchor = value - self.anchor
+        dir = p_tip_anchor[:2] / np.linalg.norm(p_tip_anchor[:2])
+        box_origin = value[:2] - self.box.side[0] * 0.5 * dir
 
-        theta = np.arctan2(v[1], v[0])
-        R = np.array([[np.cos(theta), np.sin(theta)], [-np.sin(theta), np.cos(theta)]])
-        self._transform[:2, :2] = R
+        x = dir
+        y = np.array([-dir[1], dir[0]])
+        R = np.array([x, y]).T
         self._eef_transform[:2, :2] = R
+        self._transform[:2, :2] = R
+
+        box_origin = np.concatenate((box_origin, [self.anchor[2]]))
+        self._transform[:3, 3] = box_origin
+
 
     @property
     def anchor(self):
@@ -102,6 +105,10 @@ def continuous_collision_check(
     model2.obj.setTransform(t2_initial)
 
     request = fcl.ContinuousCollisionRequest()
+    request.ccd_motion_type = fcl.CCDMotionType.CCDM_LINEAR
+    request.ccd_solver_type = fcl.CCDSolverType.CCDC_CONSERVATIVE_ADVANCEMENT
+    request.gjk_solver_type = fcl.GJKSolverType.GST_LIBCCD
+    
     result = fcl.ContinuousCollisionResult()
     ret = fcl.continuousCollide(
         model1.obj, t1_final, model2.obj, t2_final, request, result

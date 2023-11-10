@@ -1,14 +1,12 @@
 from __future__ import annotations
-from .toolpath import Contour, Toolpath
+from .toolpath import Toolpath
 
-import matplotlib.pyplot as plt
-from matplotlib.widgets import Slider
-import matplotlib.patheffects as pe
 import numpy as np
 
-
-
 def visualize_toolpath(toolpath: Toolpath, show=True):
+    import matplotlib.pyplot as plt
+    import matplotlib.patheffects as pe
+
     fig = plt.figure()
     ax = fig.add_subplot(projection="3d")
     category_colors = plt.get_cmap("plasma")(
@@ -30,6 +28,10 @@ def visualize_toolpath(toolpath: Toolpath, show=True):
 
 
 def visualize_toolpath_projection(toolpath: Toolpath, show=True):
+    import matplotlib.pyplot as plt
+    from matplotlib.widgets import Slider
+    import matplotlib.patheffects as pe
+
     COLORS = plt.get_cmap("Paired")(np.linspace(0.1, 0.9, len(toolpath.tools())))
 
     # find a unique set of z values
@@ -73,3 +75,4 @@ def visualize_toolpath_projection(toolpath: Toolpath, show=True):
     if show:
         plt.show()
     return fig, ax
+    pass

@@ -1,10 +1,10 @@
 import numpy as np
-import matplotlib.pyplot as plt
 
 from .schedule import Schedule, MultiAgentSchedule
 from .schedule import Event
 
 def draw_schedule(s: Schedule, show=True):
+    import matplotlib.pyplot as plt
     fig, ax = plt.subplots(figsize=(9, 4))
     ax.set_xlim(s.start_time(), s.end_time())
     ax.set_ylim(-1.0, 1.0)
@@ -30,6 +30,7 @@ def draw_schedule(s: Schedule, show=True):
 
 
 def draw_multi_agent_schedule(s: MultiAgentSchedule, show=True):
+    import matplotlib.pyplot as plt
     fig, ax = plt.subplots(figsize=(9, 4))
     category_colors = plt.get_cmap('Pastel1')(
         np.linspace(0.15, 0.85, s.n_agents()))

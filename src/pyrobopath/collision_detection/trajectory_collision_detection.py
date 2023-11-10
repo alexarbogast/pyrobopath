@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import List
 import numpy as np
 
-from .collision_model import CollisionGroup, CollisionModel
+from .collision_model import CollisionGroup
 from .fcl_collision_models import FCLCollisionModel, continuous_collision_check
 from .trajectory import Trajectory
 
@@ -95,7 +95,7 @@ class _ConcurrentSegmentIterator:
         for t in trajs:
             times = [p.time for p in t]
             unique_times = unique_times.union(times)
-        self.unique_times = sorted(unique_times)
+        self.unique_times = sorted(list(unique_times))
 
         self.trajs = trajs
         self.idx = 0
@@ -119,7 +119,7 @@ class _ConcurrentSegmentIterator:
 def trajectory_collision_query(
     model1: FCLCollisionModel,
     traj1: Trajectory,
-    model2: CollisionModel,
+    model2: FCLCollisionModel,
     traj2: Trajectory,
 ):
     """Performs continuous collision checking along paired trajectory segments

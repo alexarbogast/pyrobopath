@@ -1,10 +1,12 @@
+from __future__ import annotations
 import numpy as np
+from dataclasses import dataclass
 
 from ..toolpath import Toolpath, Contour
-from ..scheduling import Event, MultiAgentSchedule
+from ..scheduling import Event
 from ..scheduling import DependencyGraph
 
-from dataclasses import dataclass
+from .schedule import ContourEvent, MultiAgentToolpathSchedule
 
 
 @dataclass
@@ -32,7 +34,7 @@ class ToolpathScheduler(object):
 
         current_positions = dict().fromkeys(self._agents, np.array([0.0, 0.0, 0.0]))
         agent_times = dict().fromkeys(self._agents, 0.0)
-        agent_schedules = MultiAgentSchedule()
+        agent_schedules = MultiAgentToolpathSchedule()
         for agent in self._agents:
             agent_schedules.add_agent(agent)
 
@@ -98,10 +100,4 @@ class ToolpathScheduler(object):
         travel = [start, above_s, above_e, end]
         contour = Contour(travel, tool=-1)
         return contour
-
-
-class ContourEvent(Event):
-    def __init__(self, contour: Contour, start: float, velocity: float):
-        duration = contour.path_length() / velocity
-        super().__init__(contour, start, duration)
-        self.velocity = velocity
+    

@@ -8,6 +8,7 @@ from .trajectory_collision_detection import (
 from .collision_model import LineCollisionModel, LollipopCollisionModel
 from .collision_model import CollisionGroup
 from .fcl_collision_models import (
+    FCLCollisionModel,
     FCLBoxCollisionModel,
     FCLRobotBBCollisionModel,
     continuous_collision_check,

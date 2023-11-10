@@ -9,6 +9,10 @@ class Event(object):
         self.start = start
         self.duration = duration
 
+    @property
+    def end(self):
+        return self.start + self.duration
+
 
 class Schedule(object):
     def __init__(self):
@@ -68,7 +72,7 @@ class Schedule(object):
         Note: Events are not sliced. If an event has any time in [t_start, t_end],
         the original event is included in its entirety.
         """
-        
+
         filter = lambda e: e.start + e.duration >= t_start and e.start <= t_end
         ind = [i for i, e in enumerate(self._events) if filter(e)]
         return ind

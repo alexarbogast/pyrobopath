@@ -62,9 +62,13 @@ class Trajectory:
         return self.points[key]
 
     def start_time(self):
+        if not self.n_points() > 0:
+            return None
         return min([p.time for p in self.points])
 
     def end_time(self):
+        if not self.n_points() > 0:
+            return None
         return max([p.time for p in self.points])
 
     def elapsed(self):
@@ -72,6 +76,12 @@ class Trajectory:
 
     def add_traj_point(self, point):
         self.points.append(point)
+
+    def insert_traj_point(self, index, point):
+        self.points.insert(index, point)
+
+    def n_points(self):
+        return len(self.points)
 
     def distance(self):
         length = 0.0
@@ -105,8 +115,12 @@ class Trajectory:
         if start_point is not None:
             new_traj.add_traj_point(start_point)
 
+        # if the start time is the end time, return a single point
+        if start == end:
+            return new_traj
+
         new_traj.points += [p for p in self.points if p.time > start and p.time < end]
-        
+
         end_point = self.get_point_at_time(end)
         if end_point is not None:
             new_traj.add_traj_point(end_point)

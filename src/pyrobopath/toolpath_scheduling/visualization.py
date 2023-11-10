@@ -1,9 +1,9 @@
 import numpy as np
-import matplotlib.pyplot as plt
 from ..scheduling import MultiAgentSchedule
 
 
 def draw_multi_agent_schedule(s: MultiAgentSchedule, show=True):
+    import matplotlib.pyplot as plt
     fig, ax = plt.subplots(figsize=(9, 4))
 
     # get unique materials
