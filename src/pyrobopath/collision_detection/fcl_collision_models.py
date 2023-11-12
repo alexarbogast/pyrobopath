@@ -87,7 +87,7 @@ class FCLRobotBBCollisionModel(FCLBoxCollisionModel):
         self._anchor = value
 
 
-def continuous_collision_check(
+def _continuous_collision_check(
     model1: FCLCollisionModel,
     trans1_final: np.ndarray,
     model2: FCLCollisionModel,

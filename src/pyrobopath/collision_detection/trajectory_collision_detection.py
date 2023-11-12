@@ -2,9 +2,87 @@ from __future__ import annotations
 from typing import List
 import numpy as np
 
-from .collision_model import CollisionGroup
-from .fcl_collision_models import FCLCollisionModel, continuous_collision_check
+from .collision_model import CollisionGroup, CollisionModel
 from .trajectory import Trajectory
+
+
+def continuous_collide(
+    model1: CollisionModel,
+    trans1_final: np.ndarray,
+    model2: CollisionModel,
+    trans2_final: np.ndarray,
+    threshold,
+):
+    start1 = np.copy(model1.translation)
+    start2 = np.copy(model2.translation)
+
+    dir1 = trans1_final - start1
+    dir2 = trans2_final - start2
+    len1 = np.linalg.norm(dir1)
+    len2 = np.linalg.norm(dir2)
+
+    n = int(np.ceil(max(len1, len2) / threshold))
+    collision_result = False
+    for s in np.linspace(0.0, 1.0, n):
+        model1.translation = start1 + dir1 * s
+        model2.translation = start2 + dir2 * s
+        if model1.in_collision(model2):
+            collision_result = True
+            break
+
+    # reset model position
+    model1.translation = start1
+    model2.translation = start2
+    return collision_result
+
+
+class _ConcurrentSegmentIterator:
+    """An iterator to loop over concurrent sections of trajectory segments."""
+
+    def __init__(self, trajs: List[Trajectory]):
+        unique_times = set()
+        for t in trajs:
+            times = [p.time for p in t]
+            unique_times = unique_times.union(times)
+        self.unique_times = sorted(list(unique_times))
+
+        self.trajs = trajs
+        self.idx = 0
+
+    def __iter__(self):
+        self.idx = 0
+        return self
+
+    def __next__(self):
+        if self.idx + 1 == len(self.unique_times):
+            raise StopIteration
+
+        t0 = self.unique_times[self.idx]
+        t1 = self.unique_times[self.idx + 1]
+        slices = [t.slice(t0, t1) for t in self.trajs]
+
+        self.idx += 1
+        return slices
+
+
+def trajectory_collision_query(
+    model1: CollisionModel,
+    traj1: Trajectory,
+    model2: CollisionModel,
+    traj2: Trajectory,
+    threshold: float,
+):
+    """Determine if two models collide along trajectories"""
+    for traj_pair in _ConcurrentSegmentIterator([traj1, traj2]):
+        model1.translation = traj_pair[0][0].data  # first point
+        model2.translation = traj_pair[1][0].data
+
+        p1_final = traj_pair[0][-1].data  # last point
+        p2_final = traj_pair[1][-1].data
+
+        if continuous_collide(model1, p1_final, model2, p2_final, threshold):
+            return True
+    return False
 
 
 class _TrajectoryStateInterpolator(object):
@@ -83,55 +161,5 @@ def check_trajectory_collision(
             state = traj_interp.step_state()
             group.models[model_id].translation = state.data
         if group.in_collision():
-            return True
-    return False
-
-
-class _ConcurrentSegmentIterator:
-    """An iterator to loop over concurrent sections of trajectory segments."""
-
-    def __init__(self, trajs: List[Trajectory]):
-        unique_times = set()
-        for t in trajs:
-            times = [p.time for p in t]
-            unique_times = unique_times.union(times)
-        self.unique_times = sorted(list(unique_times))
-
-        self.trajs = trajs
-        self.idx = 0
-
-    def __iter__(self):
-        self.idx = 0
-        return self
-
-    def __next__(self):
-        if self.idx + 1 == len(self.unique_times):
-            raise StopIteration
-
-        t0 = self.unique_times[self.idx]
-        t1 = self.unique_times[self.idx + 1]
-        slices = [t.slice(t0, t1) for t in self.trajs]
-
-        self.idx += 1
-        return slices
-
-
-def trajectory_collision_query(
-    model1: FCLCollisionModel,
-    traj1: Trajectory,
-    model2: FCLCollisionModel,
-    traj2: Trajectory,
-):
-    """Performs continuous collision checking along paired trajectory segments
-    with concurrent operation.
-    """
-    for traj_pair in _ConcurrentSegmentIterator([traj1, traj2]):
-        model1.translation = traj_pair[0][0].data  # first point
-        model2.translation = traj_pair[1][0].data
-
-        p1_final = traj_pair[0][-1].data  # last point
-        p2_final = traj_pair[1][-1].data
-
-        if continuous_collision_check(model1, p1_final, model2, p2_final):
             return True
     return False

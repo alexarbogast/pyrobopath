@@ -1,23 +1,19 @@
+from typing import List, Dict, Hashable
+
 from ..collision_detection import (
     Trajectory,
     TrajectoryPoint,
     trajectory_collision_query,
 )
-from itertools import tee
-from .toolpath_scheduler import ContourEvent
-from .schedule import ToolpathSchedule, MultiAgentToolpathSchedule
-
-
-def pairwise(iterable):
-    a, b = tee(iterable)
-    next(b, None)
-    return zip(a, b)
+from .schedule import ContourEvent, ToolpathSchedule, MultiAgentToolpathSchedule
+from .system_model import AgentModel
 
 
 def schedule_to_trajectory(
     schedule: ToolpathSchedule, t_start: float, t_end: float, default_state
 ) -> Trajectory:
-    """Slice a toolpath schedule to a continuous trajectory.
+    """
+    Slice a toolpath schedule to a continuous trajectory.
 
     The trajectory is guaranteed to have points at times t_start and t_end.
     The trajectories in any ContourEvent that fall in the time window are
@@ -61,7 +57,11 @@ def schedule_to_trajectory(
 
 
 def event_causes_collision(
-    event: ContourEvent, agent, schedule: MultiAgentToolpathSchedule, agent_models
+    event: ContourEvent,
+    agent: Hashable,
+    schedule: MultiAgentToolpathSchedule,
+    agent_models: Dict[str, AgentModel],
+    threshold: float,
 ):
     """
     Determines if adding 'event' to 'schedule' will cause a collision in the
@@ -75,8 +75,10 @@ def event_causes_collision(
         event (ContourEvent): The event to be added (with Event.data = Contour)
         agent (Hashable): The agent for the event
         schedule (MultiAgentSchedule): A schedule that is assumed collision-free
+        agent_models (Dict[str, AgentModel]): Context info about the system
+        threshold: The maximum collision checking step distance
     """
-    
+
     et = max(schedule.end_time(), event.end)
 
     new_sched = ToolpathSchedule()
@@ -95,6 +97,55 @@ def event_causes_collision(
             event_traj,
             agent_models[a].collision_model,
             traj,
+            threshold,
+        )
+        if collide:
+            return True
+    return False
+
+
+def events_cause_collision(
+    events: List[ContourEvent],
+    agent: Hashable,
+    schedule: MultiAgentToolpathSchedule,
+    agent_models: Dict[str, AgentModel],
+    threshold: float,
+):
+    """
+    Determines if adding the 'events' to 'schedule' will cause a collision in the
+    resulting trajectory.
+
+    This function is similar to `event_causes_collision` but batches the
+    collision check
+
+    Args:
+        events (List[ContourEvent]): The events to be added
+        agent (Hashable): The agent for the event
+        schedule (MultiAgentSchedule): A schedule that is assumed collision-free
+        agent_models (Dict[str, AgentModel]): Context info about the system
+        threshold: The maximum collision checking step distance
+    """
+    st = min([e.start for e in events])
+    et = max([e.end for e in events])
+    # et = min(schedule.end_time(), max([e.end for e in events]))
+
+    new_sched = ToolpathSchedule()
+    for event in events:
+        new_sched.add_event(event)
+
+    event_traj = schedule_to_trajectory(
+        new_sched, st, et, agent_models[agent].home_position
+    )
+    for a, s in schedule.schedules.items():
+        if a == agent:
+            continue
+        traj = schedule_to_trajectory(s, st, et, agent_models[a].home_position)
+        collide = trajectory_collision_query(
+            agent_models[agent].collision_model,
+            event_traj,
+            agent_models[a].collision_model,
+            traj,
+            threshold,
         )
         if collide:
             return True

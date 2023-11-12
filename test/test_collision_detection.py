@@ -212,6 +212,145 @@ class TestCollisionDetection(unittest.TestCase):
             "Collision state returned with collision-free",
         )
 
+
+class TestFCLCollisionDetection(unittest.TestCase):
+    def test_fcl_collision_models(self):
+        box_model_1 = FCLBoxCollisionModel(1, 1, 1)
+        box_model_2 = FCLBoxCollisionModel(1, 1, 1)
+
+        # collision
+        self.assertTrue(
+            box_model_1.in_collision(box_model_2),
+            "Collision state returned with collision-free",
+        )
+
+        # collision-free
+        box_model_1.translation = [-1, 0, 0]
+        box_model_2.translation = [1, 0, 0]
+        self.assertFalse(
+            box_model_1.in_collision(box_model_2),
+            "Collision-free state returned with collision",
+        )
+
+        # collision
+        robot_bb_1 = FCLRobotBBCollisionModel(x=3.0, y=1.0, z=0.5, anchor=[-5.0, 0.0, 0.0])
+        robot_bb_1.translation = [0.1, 2.0, 0.0]
+
+        robot_bb_2 = FCLRobotBBCollisionModel(x=3.0, y=1.0, z=0.5, anchor=[5.0, 0.0, 0.0])
+        robot_bb_2.translation = [-0.1, 2.0, 0.0]
+
+        # collision
+        self.assertTrue(
+            robot_bb_1.in_collision(robot_bb_2),
+            "Collision state returned with collision-free",
+        )
+
+        # collision-free
+        robot_bb_1.translation = [-1.0, 0.0, 0.0]
+        robot_bb_2.translation = [1.0, 0.0, 0.0]
+        self.assertFalse(
+            robot_bb_1.in_collision(robot_bb_2),
+            "Collision-free state returned with collision",
+        )
+
+    def test_trajectory_collision_query(self):
+        robot_bb_1 = FCLRobotBBCollisionModel(
+            x=3.0, y=0.2, z=1.0, anchor=[-5.0, 0.0, 0.0]
+        )
+        robot_bb_2 = FCLRobotBBCollisionModel(
+            x=3.0, y=0.2, z=1.0, anchor=[5.0, 0.0, 0.0]
+        )
+        threshold = 0.1
+
+        # collision-free
+        path1 = [[-3.0, 0.0, 0.0], [-1.0, 0.0, 0.0]]
+        path2 = [[3.0, 0.0, 0.0], [1.0, 0.0, 0.0]]
+        traj1 = Trajectory.from_const_vel_path(path1, 1.0)
+        traj2 = Trajectory.from_const_vel_path(path2, 1.0)
+
+        res = trajectory_collision_query(robot_bb_1, traj1, robot_bb_2, traj2, threshold)
+        self.assertFalse(res, "Collision-free trajectory returned with collision")
+
+        # collision
+        path1 = [[-3.0, 0.0, 0.0], [1.0, 0.0, 0.0]]
+        path2 = [[3.0, 0.0, 0.0], [-1.0, 0.0, 0.0]]
+        traj1 = Trajectory.from_const_vel_path(path1, 1.0)
+        traj2 = Trajectory.from_const_vel_path(path2, 1.0)
+
+        res = trajectory_collision_query(robot_bb_1, traj1, robot_bb_2, traj2, threshold)
+        self.assertTrue(res, "Collision trajectory returned with collision-free")
+
+        # collision
+        path1 = [[0.0, 1.0, 0.0], [0.0, -1.0, 0.0]]
+        path2 = [[0.0, -1.0, 0.0], [0.0, 1.0, 0.0]]
+        traj1 = Trajectory.from_const_vel_path(path1, 1.0, 0.5)
+        traj2 = Trajectory.from_const_vel_path(path2, 1.0)
+
+        res = trajectory_collision_query(robot_bb_1, traj1, robot_bb_2, traj2, threshold)
+        self.assertTrue(res, "Collision trajectory returned with collision-free")
+
+
+class TestConcurrentSegmentIterator(unittest.TestCase):
+    def test_concurrent_segment_iterator(self):
+        path1 = [[0.0, 2.0, 0.0],[0.0, -2.0, 0.0]]
+        path2 = [[2.0, 0.0, 0.0], [-2.0, 0.0, 0.0]]
+        traj1 = Trajectory().from_const_vel_path(path1, 1.0, 0.0)
+        traj2 = Trajectory().from_const_vel_path(path2, 1.0, 0.0)
+
+        traj_pair = list(_ConcurrentSegmentIterator([traj1, traj2]))
+        self.assertEqual(traj_pair[0][0].start_time(), traj1.start_time())
+        self.assertEqual(traj_pair[0][1].start_time(), traj2.start_time())
+        self.assertEqual(traj_pair[0][0].end_time(), traj1.end_time())
+        self.assertEqual(traj_pair[0][1].end_time(), traj2.end_time())
+
+        traj2 = Trajectory.from_const_vel_path(path2, 1.0, 2.0)
+        traj_pair = list(_ConcurrentSegmentIterator([traj1, traj2]))
+
+        self.assertEqual(len(traj_pair), 3)
+        self.assertEqual(traj_pair[0][0].start_time(), traj1.start_time())
+        self.assertEqual(traj_pair[0][1].start_time(), traj2.start_time())
+        self.assertEqual(traj_pair[0][0].end_time(), 2.0)
+        self.assertEqual(traj_pair[0][1].end_time(), 2.0)
+
+        self.assertEqual(traj_pair[1][0].start_time(), 2.0)
+        self.assertEqual(traj_pair[1][1].start_time(), 2.0)
+        self.assertEqual(traj_pair[1][0].end_time(), 4.0)
+        self.assertEqual(traj_pair[1][1].end_time(), 4.0)
+
+        self.assertEqual(traj_pair[2][0].start_time(), 4.0)
+        self.assertEqual(traj_pair[2][1].start_time(), 4.0)
+        self.assertEqual(traj_pair[2][0].end_time(), traj1.end_time())
+        self.assertEqual(traj_pair[2][1].end_time(), traj2.end_time())
+
+
+class TestTrajectoryCollision(unittest.TestCase):
+    def test_continuous_collide(self):
+        model1 = FCLBoxCollisionModel(1., 1., 1.)
+        model2 = FCLBoxCollisionModel(1., 1., 1.)
+
+        model1.translation = [-2., 0., 0.]
+        model2.translation = [2., 0., 0.]
+
+        # collide
+        origin = np.array([0., 0., 0.])
+        threshold = 0.01
+        ret = continuous_collide(model1, origin, model2, origin, threshold)
+        self.assertTrue(ret)
+
+        # no collide
+        pm1 = np.array([-0.6, 0., 0.])
+        pm2 = np.array([0.6, 0., 0.])
+        threshold = 0.01
+        ret = continuous_collide(model1, pm1, model2, pm2, threshold)
+        self.assertFalse(ret)
+
+        # collide
+        pm1 = np.array([0.6, 0., 0.])
+        pm2 = np.array([-0.6, 0., 0.])
+        threshold = 0.01
+        ret = continuous_collide(model1, pm1, model2, pm2, threshold)
+        self.assertTrue(ret)
+
     def test_trajectory_collision(self):
         base_A = [-2.0, 0.0, 0.0]
         base_B = [2.0, 0.0, 0.0]
@@ -254,121 +393,41 @@ class TestCollisionDetection(unittest.TestCase):
         collision = check_trajectory_collision(collision_group, trajs, 0.1)
         self.assertTrue(collision, "Colliding trajectory returned with collision-free")
 
-
-class TestFCLCollisionDetection(unittest.TestCase):
-    def test_fcl_collision_models(self):
-        box_model_1 = FCLBoxCollisionModel(1, 1, 1)
-        box_model_2 = FCLBoxCollisionModel(1, 1, 1)
-
-        # collision
-        self.assertTrue(
-            box_model_1.in_collision(box_model_2),
-            "Collision state returned with collision-free",
-        )
-
-        # collision-free
-        box_model_1.translation = [-1, 0, 0]
-        box_model_2.translation = [1, 0, 0]
-        self.assertFalse(
-            box_model_1.in_collision(box_model_2),
-            "Collision-free state returned with collision",
-        )
-
-        # collision
-        robot_bb_1 = FCLRobotBBCollisionModel(x=3.0, y=1.0, z=0.5, anchor=[-5.0, 0.0, 0.0])
-        robot_bb_1.translation = [0.1, 2.0, 0.0]
-
-        robot_bb_2 = FCLRobotBBCollisionModel(x=3.0, y=1.0, z=0.5, anchor=[5.0, 0.0, 0.0])
-        robot_bb_2.translation = [-0.1, 2.0, 0.0]
-
-        # collision
-        self.assertTrue(
-            robot_bb_1.in_collision(robot_bb_2),
-            "Collision state returned with collision-free",
-        )
-
-        # collision-free
-        robot_bb_1.translation = [-1.0, 0.0, 0.0]
-        robot_bb_2.translation = [1.0, 0.0, 0.0]
-        self.assertFalse(
-            robot_bb_1.in_collision(robot_bb_2),
-            "Collision-free state returned with collision",
-        )
-
-    def test_continuous_collision_check(self):
-        pass
-        #robot_bb_2 = FCLRobotBBCollisionModel(
-        #    x=3.0, y=0.2, z=1.0, anchor=[-5.0, 0.0, 0.0]
-        #)
-
     def test_trajectory_collision_query(self):
-        robot_bb_1 = FCLRobotBBCollisionModel(
-            x=3.0, y=0.2, z=1.0, anchor=[-5.0, 0.0, 0.0]
-        )
-        robot_bb_2 = FCLRobotBBCollisionModel(
-            x=3.0, y=0.2, z=1.0, anchor=[5.0, 0.0, 0.0]
-        )
+        model1 = FCLBoxCollisionModel(1., 1., 1.)
+        model2 = FCLBoxCollisionModel(1., 1., 1.)
+        threshold = 0.01
 
-        # collision-free
-        path1 = [[-3.0, 0.0, 0.0], [-1.0, 0.0, 0.0]]
-        path2 = [[3.0, 0.0, 0.0], [1.0, 0.0, 0.0]]
-        traj1 = Trajectory.from_const_vel_path(path1, 1.0)
-        traj2 = Trajectory.from_const_vel_path(path2, 1.0)
+        path1 = [[-3., 0., 0.], [3., 0., 0.]]
+        path2 = [[0., -3., 0.], [0., 3., 0.]]
+        traj1 = Trajectory.from_const_vel_path(path1, 1.0, 0.0)
+        traj2 = Trajectory.from_const_vel_path(path2, 1.0, 0.0)
+        ret = trajectory_collision_query(model1, traj1, model2, traj2, threshold)
+        self.assertTrue(ret)
 
-        res = trajectory_collision_query(robot_bb_1, traj1, robot_bb_2, traj2)
-        self.assertFalse(res, "Collision-free trajectory returned with collision")
+        path1 = [[-3., 0., 0.], [0., 3., 0.]]
+        path2 = [[3.,  0., 0.], [0.,-3., 0.]]
+        traj1 = Trajectory.from_const_vel_path(path1, 1.0, 0.0)
+        traj2 = Trajectory.from_const_vel_path(path2, 1.0, 0.0)
+        ret = trajectory_collision_query(model1, traj1, model2, traj2, threshold)
+        self.assertFalse(ret)
 
-        # collision
-        path1 = [[-3.0, 0.0, 0.0], [1.0, 0.0, 0.0]]
-        path2 = [[3.0, 0.0, 0.0], [-1.0, 0.0, 0.0]]
-        traj1 = Trajectory.from_const_vel_path(path1, 1.0)
-        traj2 = Trajectory.from_const_vel_path(path2, 1.0)
+        model1 = FCLRobotBBCollisionModel(3., 0.2, 1., np.array([-6., 0., 0.]))
+        model2 = FCLRobotBBCollisionModel(3., 0.2, 1., np.array([6., 0., 0.]))
+        
+        path1 = [[0., 3., 0.], [0., -3., 0.]]
+        path2 = [[0., -3., 0.], [0., 3., 0.]]
+        traj1 = Trajectory.from_const_vel_path(path1, 1.0, 0.0)
+        traj2 = Trajectory.from_const_vel_path(path2, 1.0, 0.0)
+        ret = trajectory_collision_query(model1, traj1, model2, traj2, threshold)
+        self.assertTrue(ret)
 
-        res = trajectory_collision_query(robot_bb_1, traj1, robot_bb_2, traj2)
-        self.assertTrue(res, "Collision trajectory returned with collision-free")
-
-        # collision
-        path1 = [[0.0, 1.0, 0.0], [0.0, -1.0, 0.0]]
-        path2 = [[0.0, -1.0, 0.0], [0.0, 1.0, 0.0]]
-        traj1 = Trajectory.from_const_vel_path(path1, 1.0, 0.5)
-        traj2 = Trajectory.from_const_vel_path(path2, 1.0)
-
-        res = trajectory_collision_query(robot_bb_1, traj1, robot_bb_2, traj2)
-        self.assertTrue(res, "Collision trajectory returned with collision-free")
-
-
-class TestConcurrentSegmentIterator(unittest.TestCase):
-    def test_concurrent_segment_iterator(self):
-        path1 = [[0.0, 2.0, 0.0],[0.0, -2.0, 0.0]]
-        path2 = [[2.0, 0.0, 0.0], [-2.0, 0.0, 0.0]]
-        traj1 = Trajectory().from_const_vel_path(path1, 1.0, 0.0)
-        traj2 = Trajectory().from_const_vel_path(path2, 1.0, 0.0)
-
-        traj_pair = list(_ConcurrentSegmentIterator([traj1, traj2]))
-        self.assertEqual(traj_pair[0][0].start_time(), traj1.start_time())
-        self.assertEqual(traj_pair[0][1].start_time(), traj2.start_time())
-        self.assertEqual(traj_pair[0][0].end_time(), traj1.end_time())
-        self.assertEqual(traj_pair[0][1].end_time(), traj2.end_time())
-
-        traj2 = Trajectory.from_const_vel_path(path2, 1.0, 2.0)
-        traj_pair = list(_ConcurrentSegmentIterator([traj1, traj2]))
-
-        self.assertEqual(len(traj_pair), 3)
-        self.assertEqual(traj_pair[0][0].start_time(), traj1.start_time())
-        self.assertEqual(traj_pair[0][1].start_time(), traj2.start_time())
-        self.assertEqual(traj_pair[0][0].end_time(), 2.0)
-        self.assertEqual(traj_pair[0][1].end_time(), 2.0)
-
-        self.assertEqual(traj_pair[1][0].start_time(), 2.0)
-        self.assertEqual(traj_pair[1][1].start_time(), 2.0)
-        self.assertEqual(traj_pair[1][0].end_time(), 4.0)
-        self.assertEqual(traj_pair[1][1].end_time(), 4.0)
-
-        self.assertEqual(traj_pair[2][0].start_time(), 4.0)
-        self.assertEqual(traj_pair[2][1].start_time(), 4.0)
-        self.assertEqual(traj_pair[2][0].end_time(), traj1.end_time())
-        self.assertEqual(traj_pair[2][1].end_time(), traj2.end_time())
-
+        path1 = [[-3., 0., 0.], [0., 3., 0.]]
+        path2 = [[3.,  0., 0.], [0.,-3., 0.]]
+        traj1 = Trajectory.from_const_vel_path(path1, 1.0, 0.0)
+        traj2 = Trajectory.from_const_vel_path(path2, 1.0, 0.0)
+        ret = trajectory_collision_query(model1, traj1, model2, traj2, threshold)
+        self.assertFalse(ret)
 
 if __name__ == "__main__":
     unittest.main()

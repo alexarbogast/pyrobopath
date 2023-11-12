@@ -3,7 +3,6 @@ import numpy as np
 from dataclasses import dataclass
 
 from ..toolpath import Toolpath, Contour
-from ..scheduling import Event
 from ..scheduling import DependencyGraph
 
 from .schedule import ContourEvent, MultiAgentToolpathSchedule

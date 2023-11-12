@@ -1,3 +1,4 @@
+from typing import List
 import networkx as nx
 from itertools import product
 
@@ -11,7 +12,8 @@ class DependencyGraph(object):
         self._graph.add_node(node, complete=False)
         if dependencies is None:
             return
-
+        
+        dep = list(dependencies)
         for d in dependencies:
             if not d in self._graph.nodes:
                 self._graph.add_node(d, complete=False)
