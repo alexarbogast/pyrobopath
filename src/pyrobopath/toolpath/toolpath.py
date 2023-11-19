@@ -45,8 +45,8 @@ class Toolpath(object):
         tools = set(c.tool for c in self.contours)
         return list(tools)
 
-    @staticmethod
-    def from_gcode(gcode: List[GcodeLine]) -> Toolpath:
+    @classmethod
+    def from_gcode(cls, gcode: List[GcodeLine]) -> Toolpath:
         toolpath = Toolpath()
         contour = Contour()
         xyze = np.array([0.0, 0.0, 0.0, 0.0])
@@ -56,6 +56,13 @@ class Toolpath(object):
         for line in gcode:
             if line.command[0] == "G":
                 if line.command[1] == 1:
+                    F = line.get_param("F", default=None)
+                    X = line.get_param("X", default=None)
+                    Y = line.get_param("Y", default=None)
+                    Z = line.get_param("Z", default=None)
+                    if not X and not Y and not Z and F:
+                        pass
+
                     new_xyze = np.array(
                         [
                             line.get_param("X", default=xyze[0]),

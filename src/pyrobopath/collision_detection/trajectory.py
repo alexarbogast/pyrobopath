@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import List
 import numpy as np
+import bisect
 from itertools import tee
 
 
@@ -24,6 +25,9 @@ class TrajectoryPoint(object):
         if isinstance(other, TrajectoryPoint):
             return (self.data == other.data).all() and self.time == other.time
         return False
+    
+    def __repr__(self):
+        return f"(Time: {self.time}, Point: {self.data})"
 
     def interp(self, other: TrajectoryPoint, s: float):
         """Interpolate from the this point to 'other' at s : [0, 1]"""
@@ -37,6 +41,12 @@ class TrajectoryPoint(object):
 
 
 class Trajectory:
+    """
+    A trajectory represents a sequence of points in time
+
+    Trajectory points should maintain a stricly increasing sorted order
+    """
+
     def __init__(self):
         # tuple (point, time)
         self.points: List[TrajectoryPoint] = []
@@ -57,22 +67,36 @@ class Trajectory:
         new = Trajectory()
         new.points = self.points + other.points
         return new
+    
+    def __eq__(self, other: Trajectory):
+        if isinstance(other, Trajectory):
+            return all([tp1 == tp2 for tp1, tp2 in zip(self, other)])
+        return False
 
     def __getitem__(self, key):
         return self.points[key]
 
+    def __repr__(self) -> str:
+        out = "Trajectory("
+        for p in self.points:
+            out += str(p) + " "
+        out += ")"
+        return out
+
     def start_time(self):
-        if not self.n_points() > 0:
+        if not self.points:
             return None
-        return min([p.time for p in self.points])
+        return self.points[0].time
 
     def end_time(self):
-        if not self.n_points() > 0:
+        if not self.points:
             return None
-        return max([p.time for p in self.points])
+        return self.points[-1].time
 
     def elapsed(self):
-        return self.end_time() - self.start_time()
+        if not self.points:
+            return None
+        return self.points[-1].time - self.points[0].time
 
     def add_traj_point(self, point):
         self.points.append(point)
@@ -94,19 +118,25 @@ class Trajectory:
         Interpolate the trajectory at 'time'. This function returns 'None'
         for queries outside of the interval [start_time(), end_time()]
         """
-        if time < self.points[0].time or time > self.points[-1].time:
+        if not self.points:
             return None
-
-        for s, e in pairwise(self.points):
-            if time >= s.time and time < e.time:
-                return s.interp(e, (time - s.time) / (e.time - s.time))
-        return self.points[-1]
+        
+        if time < self.start_time() or time > self.end_time():
+            return None
+        
+        ans = bisect.bisect_left([p.time for p in self.points], time)
+        s = self.points[ans]
+        e = self.points[ans - 1]
+        return s.interp(e, (time - s.time) / (e.time - s.time))
 
     def slice(self, start, end) -> Trajectory:
         """
         Returns a new trajectory that has been filtered with trajectory points
         in the closed interval [start, end].
         """
+        if not self.points:
+            return None
+        
         if start > self.end_time() or end < self.start_time():
             return None
 

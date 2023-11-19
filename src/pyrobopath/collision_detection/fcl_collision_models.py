@@ -1,5 +1,6 @@
 from __future__ import annotations
 import numpy as np
+import math
 import fcl
 
 from .collision_model import CollisionModel
@@ -60,22 +61,22 @@ class FCLRobotBBCollisionModel(FCLBoxCollisionModel):
 
     @translation.setter
     def translation(self, value):
-        value = np.array(value)
         self._eef_transform[:3, 3] = value
 
         # find box center location (z_height matches anchor)
-        p_tip_anchor = value - self.anchor
-        dir = p_tip_anchor[:2] / np.linalg.norm(p_tip_anchor[:2])
+        p_tip_anchor = (value - self.anchor)[:2]
+        dir = p_tip_anchor / self._norm(p_tip_anchor)
         box_origin = value[:2] - self.box.side[0] * 0.5 * dir
 
-        x = dir
-        y = np.array([-dir[1], dir[0]])
-        R = np.array([x, y]).T
-        self._eef_transform[:2, :2] = R
-        self._transform[:2, :2] = R
+        # set rotation
+        y_axis = np.array([-dir[1], dir[0]])
+        self._eef_transform[:2, 0] = dir
+        self._eef_transform[:2, 1] = y_axis
+        self._transform[:2, 0] = dir
+        self._transform[:2, 1] = y_axis
 
-        box_origin = np.concatenate((box_origin, [self.anchor[2]]))
-        self._transform[:3, 3] = box_origin
+        self._transform[:2, 3] = box_origin
+        self._transform[2, 3] = self.anchor[2]
 
 
     @property
@@ -85,6 +86,9 @@ class FCLRobotBBCollisionModel(FCLBoxCollisionModel):
     @anchor.setter
     def anchor(self, value):
         self._anchor = value
+
+    def _norm(self, v): # 2x as fast as np.linalg.norm()
+        return math.sqrt(v[0]*v[0] + v[1]*v[1])
 
 
 def _continuous_collision_check(

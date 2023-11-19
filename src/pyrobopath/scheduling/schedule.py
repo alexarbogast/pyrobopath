@@ -3,15 +3,114 @@ from typing import List, Iterable, Hashable
 import collections
 
 
-class Event(object):
-    def __init__(self, data, start, duration):
-        self.data = data
+class Interval(object):
+    """
+    An implementation of Allen's interval algebra
+    See: https://cse.unl.edu/~choueiry/Documents/Allen-CACM1983.pdf
+    """
+
+    def __init__(self, start, end):
         self.start = start
-        self.duration = duration
+        self.end = end
+
+    def precedes(self, other):
+        """XXX YYY"""
+        return self.end < other.start
+
+    def meets(self, other):
+        """
+        XXXYYY
+        """
+        return self.end == other.start
+
+    def overlaps(self, other):
+        """
+        XXX
+         YYY
+        """
+        return (
+            self.start < other.start and self.end > other.start and self.end < other.end
+        )
+
+    def starts(self, other):
+        """
+        XXX
+        YYYYY
+        """
+        return self.start == other.start and self.end < other.end
+
+    def during(self, other):
+        """
+         XXX
+        YYYYY
+        """
+        return self.start > other.start and self.end < other.end
+
+    def finishes(self, other):
+        """
+          XXX
+        YYYYY
+        """
+        return self.start > other.start and self.end == other.end
+
+    def equals(self, other):
+        """
+        XXX
+        YYY
+        """
+        return self.start == other.start and self.end == other.end
+
+    def finished_by(self, other):
+        """
+        XXXXX
+          YYY
+        """
+        return self.start < other.start and self.end == other.end
+
+    def contains(self, other):
+        """
+        XXXXX
+         YYY
+        """
+        return self.start < other.start and self.end > other.end
+
+    def started_by(self, other):
+        """
+        XXXXX
+        YYY
+        """
+        return self.start == other.start and self.end > other.end
+
+    def overlapped_by(self, other):
+        """
+         XXX
+        YYY
+        """
+        return (
+            self.start > other.start and self.start < other.end and self.end > other.end
+        )
+
+    def met_by(self, other):
+        """
+        YYYXXX
+        """
+        return self.start == other.end
+
+    def preceded_by(self, other):
+        """
+        YYY XXX
+        """
+        return self.start > other.end
+
+
+class Event(Interval):
+    def __init__(self, start, end, data=None):
+        super(Event, self).__init__(start, end)
+        self.data = data
 
     @property
-    def end(self):
-        return self.start + self.duration
+    def duration(self):
+        return self.end - self.start
 
 
 class Schedule(object):
@@ -21,12 +120,15 @@ class Schedule(object):
         self._end_time = float("-inf")
 
     def add_event(self, event: Event):
-        end_time = event.start + event.duration
         if event.start < self._start_time:
             self._start_time = event.start
-        if end_time > self._end_time:
-            self._end_time = end_time
+        if event.end > self._end_time:
+            self._end_time = event.end
         self._events.append(event)
+
+    def add_events(self, event: List[Event]):
+        for e in event:
+            self.add_event(e)
 
     def start_time(self):
         return self._start_time
@@ -59,7 +161,7 @@ class Schedule(object):
             return new_sched
 
         new_sched._start_time = min([e.start for e in new_sched._events])
-        new_sched._end_time = max([e.start + e.duration for e in new_sched._events])
+        new_sched._end_time = max([e.end for e in new_sched._events])
         return new_sched
 
     def slice_ind(self, t_start, t_end) -> List[int]:
@@ -73,7 +175,7 @@ class Schedule(object):
         the original event is included in its entirety.
         """
 
-        filter = lambda e: e.start + e.duration >= t_start and e.start <= t_end
+        filter = lambda e: e.end >= t_start and e.start <= t_end
         ind = [i for i, e in enumerate(self._events) if filter(e)]
         return ind
 
@@ -101,6 +203,11 @@ class MultiAgentSchedule(object):
         if end_time > self._end_time:
             self._end_time = end_time
         self.schedules[agent].add_event(event)
+
+    def add_events(self, events: List[Event], agent):
+        self.schedules[agent].add_events(events)
+        self._start_time = min(self._start_time, self.schedules[agent].start_time())
+        self._end_time = max(self._end_time, self.schedules[agent].end_time())
 
     def add_schedule(self, schedule: Schedule, agent):
         if schedule.start_time() < self._start_time:

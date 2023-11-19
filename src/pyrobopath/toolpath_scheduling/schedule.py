@@ -7,18 +7,22 @@ from ..collision_detection import Trajectory
 from ..toolpath import Contour
 
 
-class ContourEvent(Event):
-    def __init__(self, contour: Contour, start: float, velocity: float):
-        duration = contour.path_length() / velocity
-        super().__init__(contour, start, duration)
-        self.velocity = velocity
-        self.traj = Trajectory.from_const_vel_path(contour.path, velocity, start)
+class MoveEvent(Event):
+    def __init__(self, start, path, velocity):
+        self.traj = Trajectory.from_const_vel_path(path, velocity, start)
+        super(MoveEvent, self).__init__(start, self.traj.end_time(), path)
+
+
+class ContourEvent(MoveEvent):
+    def __init__(self, start, contour, velocity):
+        self.contour = contour
+        super(ContourEvent, self).__init__(start, contour.path, velocity)
 
 
 class ToolpathSchedule(Schedule):
     def __init__(self):
         super().__init__()
-        self._events: List[ContourEvent] = []
+        self._events: List[MoveEvent] = []
 
     # schedule sampling
     def get_state(self, time, default=None):
@@ -28,9 +32,8 @@ class ToolpathSchedule(Schedule):
             return state
         
         for e in self._events:
-            event_end = e.start + e.duration
-            if event_end < time:
-                state = e.data.path[-1] # keep track of current state
+            if e.end < time:
+                state = e.data[-1] # keep track of current state
                 continue
 
             if e.start <= time:

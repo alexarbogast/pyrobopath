@@ -101,12 +101,12 @@ class ToolpathScheduler(object):
         return contour
     
 
-class _ToolpathScheduler(object):
+class MultiAgentToolpathPlanner(object):
     def __init__(self, agent_models: dict):
         self._agent_models = agent_models
         self._agents = agent_models.keys()
 
-    def schedule(
+    def plan(
         self, toolpath: Toolpath, dg: DependencyGraph, options: PlanningOptions
     ):
         """Create a longest-processing-time-first (LPT) schedule with travel moves"""
@@ -114,11 +114,14 @@ class _ToolpathScheduler(object):
 
         completed_tasks = set()
         in_progress = {"start": 0.0}
-        frontier = set(dg._graph.successors("start"))
+        frontier = set(dg._graph.successors("start")) # tasks 
         dg.set_complete("start")
 
-        # TODO: update current positions from agent models
-        current_positions = dict().fromkeys(self._agents, np.array([0.0, 0.0, 0.0]))
+        # all agents start at home position
+        current_positions = dict()
+        for agent, model  in self._agent_models.keys():
+            current_positions[agent] = model.home_position
+
         agent_times = dict().fromkeys(self._agents, 0.0)
         agent_schedules = MultiAgentToolpathSchedule()
         for agent in self._agents:

@@ -1,11 +1,10 @@
 from distutils.core import setup
 
-package_name = 'nav2_gps_waypoint_follower_demo'
+package_name = 'pyrobopath'
 
 setup(
     name=package_name,
-    version='0.1.0',
-    scripts=[],
+    version='0.1.1',
     packages=['pyrobopath'],
     package_dir={'':'src'}, 
     install_requires=[
@@ -13,4 +12,3 @@ setup(
         'networkx',
     ]
 )
-
