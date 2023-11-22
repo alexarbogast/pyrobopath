@@ -3,6 +3,7 @@ from .toolpath import Toolpath
 
 import numpy as np
 
+
 def visualize_toolpath(toolpath: Toolpath, show=True):
     import matplotlib.pyplot as plt
     import matplotlib.patheffects as pe
@@ -75,4 +76,3 @@ def visualize_toolpath_projection(toolpath: Toolpath, show=True):
     if show:
         plt.show()
     return fig, ax
-    pass

@@ -196,6 +196,9 @@ class MultiAgentSchedule(object):
         for agent in agents:
             self.add_agent(agent)
 
+    def agents(self):
+        return self.schedules.keys()
+
     def add_event(self, event: Event, agent):
         end_time = event.start + event.duration
         if event.start < self._start_time:
