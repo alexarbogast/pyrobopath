@@ -13,7 +13,6 @@ from .toolpath_collision import (
     schedule_to_trajectories,
 )
 from .toolpath_scheduler import (
-    ToolpathScheduler,
     MultiAgentToolpathPlanner,
     PlanningOptions,
 )

@@ -2,7 +2,11 @@ import unittest
 import numpy as np
 
 from pyrobopath.toolpath import Contour
-from pyrobopath.collision_detection import FCLRobotBBCollisionModel, TrajectoryPoint, Trajectory
+from pyrobopath.collision_detection import (
+    FCLRobotBBCollisionModel,
+    TrajectoryPoint,
+    Trajectory,
+)
 from pyrobopath.toolpath_scheduling import *
 
 
@@ -25,7 +29,7 @@ class TestToolpathSchedule(unittest.TestCase):
         )
 
         schedule = ToolpathSchedule()
-        schedule.add_event(ContourEvent(0.0, contour1,  1.0))
+        schedule.add_event(ContourEvent(0.0, contour1, 1.0))
         schedule.add_event(ContourEvent(5.0, contour2, 1.0))
 
         self.assertEqual(schedule.duration(), 7)
@@ -54,39 +58,6 @@ class TestToolpathSchedule(unittest.TestCase):
 
         state = schedule.get_state(8.0, default)
         self.assertTrue(np.all(state == np.array([1.0, 0.0, 0.0])))
-
-
-# class TestToolpathScheduling(unittest.TestCase):
-#    def setUp(self):
-#        self.capabilities = {
-#            "agent1": 0,
-#            "agent2": 1,
-#            "agent3": 1,
-#        }
-#        self.ts = ToolpathScheduler(self.capabilities)
-#
-#    def test_toolpath_scheduler_single_agent(self):
-#        c0 = Contour(
-#            [
-#                np.array([0.0, 0.0, 0.0]),
-#                np.array([0.0, 1.0, 0.0]),
-#                np.array([1.0, 1.0, 0.0]),
-#            ],
-#            tool=0,
-#        )
-#
-#        toolpath = Toolpath()
-#        toolpath.contours.append(c0)
-#        dg = DependencyGraph()
-#        dg.add_node(0, ["start"])
-#
-#        capabilities = {"agent1": [0]}
-#        ts = ToolpathScheduler(capabilities)
-#
-#        options = PlanningOptions(velocity=1.0, retract_height=0.0)
-#        schedule = ts.schedule(toolpath, dg, options)
-#
-#        self.assertEqual(schedule.duration(), 2.0, "Schedule duration is not 2.0")
 
 
 class TestToolpathCollision(unittest.TestCase):
@@ -295,7 +266,7 @@ class TestToolpathCollision(unittest.TestCase):
                     np.array([-3.0, 0.0, 0.0]),
                     np.array([-2.0, 0.0, 0.0]),
                 ],
-                tool = -1
+                tool=-1,
             ),
             Contour([np.array([-2.0, 0.0, 0.0]), np.array([1.0, 0.0, 0.0])], tool=0),
             Contour(
@@ -304,7 +275,7 @@ class TestToolpathCollision(unittest.TestCase):
                     np.array([0.0, 0.0, 0.0]),
                     np.array([-3.0, 0.0, 0.0]),
                 ],
-                tool = -1
+                tool=-1,
             ),
         ]
         ec1_0 = ContourEvent(0.0, c1s[0], 1.0)
@@ -327,7 +298,7 @@ class TestToolpathCollision(unittest.TestCase):
                     np.array([0.0, 0.0, 0.0]),
                     np.array([0.0, -1.0, 0.0]),
                 ],
-                tool=0
+                tool=0,
             ),
             Contour([np.array([0.0, -1.0, 0.0]), np.array([3.0, 0.0, 0.0])], tool=-1),
         ]
@@ -431,24 +402,25 @@ class TestToolpathCollision(unittest.TestCase):
         self.assertTrue(np.all(traj.points[1].data == c2.path[1]))
 
         # contiguous events
-        #c1 = Contour([np.array([0.0, 2.0, 0.0]), np.array([0.0, -2.0, 0.0])])
-        #c2 = Contour([np.array([2.0, 0.0, 0.0]), np.array([-2.0, 0.0, 0.0])])
-#
-        #event1 = ContourEvent(0.0, c1, 1.0)
-        #event2 = ContourEvent(4.0, c2, 1.0)
-#
-        #schedule = ToolpathSchedule()
-        #schedule.add_event(event1)
-        #schedule.add_event(event2)
+        # c1 = Contour([np.array([0.0, 2.0, 0.0]), np.array([0.0, -2.0, 0.0])])
+        # c2 = Contour([np.array([2.0, 0.0, 0.0]), np.array([-2.0, 0.0, 0.0])])
+
         #
-        #traj = schedule_to_trajectory(
+        # event1 = ContourEvent(0.0, c1, 1.0)
+        # event2 = ContourEvent(4.0, c2, 1.0)
+        #
+        # schedule = ToolpathSchedule()
+        # schedule.add_event(event1)
+        # schedule.add_event(event2)
+        #
+        # traj = schedule_to_trajectory(
         #    schedule, t_start=0.0, t_end=8.0, default_state=default
-        #)
-        #self.assertEqual(traj.n_points(), 2)
-        #self.assertEqual(traj.start_time(), 6.0)
-        #self.assertEqual(traj.end_time(), 10.0)
-        #self.assertTrue(np.all(traj.points[0].data == c2.path[0]))
-        #self.assertTrue(np.all(traj.points[1].data == c2.path[1]))
+        # )
+        # self.assertEqual(traj.n_points(), 2)
+        # self.assertEqual(traj.start_time(), 6.0)
+        # self.assertEqual(traj.end_time(), 10.0)
+        # self.assertTrue(np.all(traj.points[0].data == c2.path[0]))
+        # self.assertTrue(np.all(traj.points[1].data == c2.path[1]))
 
     def test_schedule_to_trajectories(self):
         p1 = [np.array([0.0, 0.0, 0.0]), np.array([1.0, 0.0, 0.0])]
@@ -499,5 +471,6 @@ class TestToolpathCollision(unittest.TestCase):
         trajs = schedule_to_trajectories(s, 6.0, 7.0)
         self.assertLessEqual(trajs, [])
 
+
 if __name__ == "__main__":
-   unittest.main()
+    unittest.main()

@@ -19,14 +19,17 @@ def draw_multi_agent_schedule(s: MultiAgentToolpathSchedule, show=True):
         unique_tools.update(
             [e.contour.tool for e in sched._events if isinstance(e, ContourEvent)]
         )
-    unique_tools.discard(-1)
-    category_colors = plt.get_cmap("Paired")(np.linspace(0.1, 0.9, len(unique_tools)))
+    unique_tools = list(unique_tools)
+    color_map = plt.get_cmap("Paired")(np.linspace(0.1, 0.9, len(unique_tools)))
+
+    # build material dictionary
+    tool_colors = {tool: color_map[i] for i, tool in enumerate(unique_tools)}
 
     for agent, schedule in s.schedules.items():
         for event in schedule._events:
             color = "grey"
             if isinstance(event, ContourEvent):
-                color = category_colors[event.contour.tool]
+                color = tool_colors[event.contour.tool]
 
             p = ax.barh(
                 agent,

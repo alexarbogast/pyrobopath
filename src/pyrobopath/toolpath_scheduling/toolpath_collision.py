@@ -39,15 +39,14 @@ def schedule_to_trajectory(
             continue
         if e.start >= t_end:
             break
-        event_traj =  e.traj.slice(max(e.start, t_start), min(e.end, t_end))
-        
+        event_traj = e.traj.slice(max(e.start, t_start), min(e.end, t_end))
+
         # remove duplicates between contiguous events
         if event_traj[0].time == traj.points[-1].time:
             event_traj.points.pop(0)
 
         traj += event_traj
     traj.points.pop(0)
-        
 
     # add endpoints if traj_start != t_start or traj_end != t_end
     if traj.n_points():
@@ -65,6 +64,7 @@ def schedule_to_trajectory(
         traj.add_traj_point(TrajectoryPoint(end_state, t_end))
 
     return traj
+
 
 def schedule_to_trajectories(
     schedule: ToolpathSchedule, t_start: float, t_end: float
@@ -117,6 +117,7 @@ def schedule_to_trajectories(
 
     return trajs
 
+
 def event_causes_collision(
     event: ContourEvent,
     agent: Hashable,
@@ -164,6 +165,7 @@ def event_causes_collision(
             return True
     return False
 
+
 def chop_concurrent_trajectories(tr1: List[Trajectory], tr2: List[Trajectory]):
     tree2 = IntervalTree()
     for t in tr2:
@@ -177,6 +179,7 @@ def chop_concurrent_trajectories(tr1: List[Trajectory], tr2: List[Trajectory]):
             et = min(traj.end_time(), inter.end)
             traj_pairs.append((traj.slice(st, et), inter.data.slice(st, et)))
     return traj_pairs
+
 
 def events_cause_collision(
     events: List[ContourEvent],

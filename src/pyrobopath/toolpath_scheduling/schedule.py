@@ -10,6 +10,7 @@ from ..toolpath import Contour
 class MoveEvent(Event):
     def __init__(self, start, path, velocity):
         self.traj = Trajectory.from_const_vel_path(path, velocity, start)
+        self.velocity = velocity
         super(MoveEvent, self).__init__(start, self.traj.end_time(), path)
 
 
