@@ -11,6 +11,7 @@ from .toolpath_collision import (
     events_cause_collision,
     schedule_to_trajectory,
     schedule_to_trajectories,
+    concurrent_trajectory_pairs,
 )
 from .toolpath_scheduler import (
     MultiAgentToolpathPlanner,
@@ -19,4 +20,5 @@ from .toolpath_scheduler import (
 from .visualization import (
     draw_multi_agent_schedule,
     animate_multi_agent_toolpath_schedule,
+    animate_multi_agent_toolpath_full
 )

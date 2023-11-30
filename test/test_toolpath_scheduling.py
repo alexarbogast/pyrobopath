@@ -401,27 +401,6 @@ class TestToolpathCollision(unittest.TestCase):
         self.assertTrue(np.all(traj.points[0].data == c2.path[0]))
         self.assertTrue(np.all(traj.points[1].data == c2.path[1]))
 
-        # contiguous events
-        # c1 = Contour([np.array([0.0, 2.0, 0.0]), np.array([0.0, -2.0, 0.0])])
-        # c2 = Contour([np.array([2.0, 0.0, 0.0]), np.array([-2.0, 0.0, 0.0])])
-
-        #
-        # event1 = ContourEvent(0.0, c1, 1.0)
-        # event2 = ContourEvent(4.0, c2, 1.0)
-        #
-        # schedule = ToolpathSchedule()
-        # schedule.add_event(event1)
-        # schedule.add_event(event2)
-        #
-        # traj = schedule_to_trajectory(
-        #    schedule, t_start=0.0, t_end=8.0, default_state=default
-        # )
-        # self.assertEqual(traj.n_points(), 2)
-        # self.assertEqual(traj.start_time(), 6.0)
-        # self.assertEqual(traj.end_time(), 10.0)
-        # self.assertTrue(np.all(traj.points[0].data == c2.path[0]))
-        # self.assertTrue(np.all(traj.points[1].data == c2.path[1]))
-
     def test_schedule_to_trajectories(self):
         p1 = [np.array([0.0, 0.0, 0.0]), np.array([1.0, 0.0, 0.0])]
         p2 = [np.array([2.0, 0.0, 0.0]), np.array([3.0, 0.0, 0.0])]
@@ -471,6 +450,77 @@ class TestToolpathCollision(unittest.TestCase):
         trajs = schedule_to_trajectories(s, 6.0, 7.0)
         self.assertLessEqual(trajs, [])
 
+    def test_chop_concurrent_trajectories(self):
+        # list 1
+        t11 = Trajectory()
+        t11.add_traj_point(TrajectoryPoint(np.array([0., 0., 0.]), 0.))
+        t11.add_traj_point(TrajectoryPoint(np.array([1., 0., 0.]), 1.))
 
+        t12 = Trajectory()
+        t12.add_traj_point(TrajectoryPoint(np.array([5., 0., 0.]), 5.))
+        t12.add_traj_point(TrajectoryPoint(np.array([8., 0., 0.]), 8.))
+
+        t13 = Trajectory()
+        t13.add_traj_point(TrajectoryPoint(np.array([8., 0., 0.]), 8.))
+        t13.add_traj_point(TrajectoryPoint(np.array([9., 0., 0.]), 9.))
+        list1 = [t11, t12, t13] 
+
+        # list 2
+        t21 = Trajectory()
+        t21.add_traj_point(TrajectoryPoint(np.array([0., 0., 0.]), 0.))
+        t21.add_traj_point(TrajectoryPoint(np.array([6., 0., 0.]), 6.))
+
+        t22 = Trajectory()
+        t22.add_traj_point(TrajectoryPoint(np.array([7., 0., 0.]), 7.))
+        t22.add_traj_point(TrajectoryPoint(np.array([10., 0., 0.]), 10.))
+        list2 = [t21, t22]
+
+        concurrent_pairs = concurrent_trajectory_pairs(list1, list2)
+        self.assertEqual(len(concurrent_pairs), 4)
+
+        pair0 = concurrent_pairs[0]
+        self.assertEqual(pair0[0], t11)
+        self.assertEqual(pair0[1], t11)
+
+        pair1 = concurrent_pairs[1]
+        sliced_traj = t12.slice(5, 6)
+        self.assertEqual(pair1[0], sliced_traj)
+        self.assertEqual(pair1[1], sliced_traj)
+
+        pair2 = concurrent_pairs[2]
+        sliced_traj = t12.slice(7, 8)
+        self.assertEqual(pair2[0], sliced_traj)
+        self.assertEqual(pair2[1], sliced_traj)
+
+        pair3 = concurrent_pairs[3]
+        self.assertEqual(pair3[0], t13)
+        self.assertEqual(pair3[1], t13)
+
+        # single point duplicate trajectory (edge case)
+        t11 = Trajectory()
+        t11.add_traj_point(TrajectoryPoint(np.array([2., 0., 0.]), 2.))
+
+        t12 = Trajectory()
+        t12.add_traj_point(TrajectoryPoint(np.array([2., 0., 0.]), 2.))
+        t12.add_traj_point(TrajectoryPoint(np.array([3., 0., 0.]), 3.))
+        list1 = [t11, t12]
+
+        t21 = Trajectory()
+        t21.add_traj_point(TrajectoryPoint(np.array([0., 0., 0.]), 0.))
+        t21.add_traj_point(TrajectoryPoint(np.array([5., 0., 0.]), 5.))
+        list2 = [t21]
+
+        concurrent_pairs = concurrent_trajectory_pairs(list1, list2)
+        self.assertEqual(len(concurrent_pairs), 2)
+
+        pair0 = concurrent_pairs[0]
+        self.assertEqual(pair0[0], t11)
+        self.assertEqual(pair0[1], t11)
+
+        pair1 = concurrent_pairs[1]
+        self.assertEqual(pair1[0], t12)
+        self.assertEqual(pair1[1], t12)        
+
+ 
 if __name__ == "__main__":
     unittest.main()

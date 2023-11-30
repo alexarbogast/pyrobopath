@@ -1,13 +1,13 @@
 from __future__ import annotations
-from .toolpath import Toolpath
-
 import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.patheffects as pe
+from matplotlib.widgets import Slider
+
+from .toolpath import Toolpath
 
 
 def visualize_toolpath(toolpath: Toolpath, show=True):
-    import matplotlib.pyplot as plt
-    import matplotlib.patheffects as pe
-
     fig = plt.figure()
     ax = fig.add_subplot(projection="3d")
     category_colors = plt.get_cmap("plasma")(
@@ -29,11 +29,20 @@ def visualize_toolpath(toolpath: Toolpath, show=True):
 
 
 def visualize_toolpath_projection(toolpath: Toolpath, show=True):
-    import matplotlib.pyplot as plt
-    from matplotlib.widgets import Slider
-    import matplotlib.patheffects as pe
+    fig, ax = plt.subplots(figsize=(10, 8))
+    
+    layer_slider = _plot_toolpath_projection(toolpath, fig, ax)
+    ax.set_aspect("equal")
 
-    COLORS = plt.get_cmap("Paired")(np.linspace(0.1, 0.9, len(toolpath.tools())))
+    if show:
+        plt.show()
+    return fig, ax
+
+
+def _plot_toolpath_projection(toolpath, fig, ax):
+    unique_tools = toolpath.tools()
+    color_map = plt.get_cmap("Paired")(np.linspace(0.1, 0.9, len(unique_tools)))
+    tool_colors = {tool: color_map[i] for i, tool in enumerate(unique_tools)}
 
     # find a unique set of z values
     contour_z = []
@@ -43,7 +52,6 @@ def visualize_toolpath_projection(toolpath: Toolpath, show=True):
         contour_z.append(z_values[0])
         tools.append(contour.tool)
 
-    fig, ax = plt.subplots(figsize=(10, 8))
     unique_z = sorted(set(contour_z))
 
     def update_layer(val):
@@ -56,7 +64,7 @@ def visualize_toolpath_projection(toolpath: Toolpath, show=True):
                 path[:, 0],
                 path[:, 1],
                 path_effects=[pe.Stroke(linewidth=3, foreground="black"), pe.Normal()],
-                color=COLORS[tools[idx]],
+                color=tool_colors[tools[idx]],
             )
 
     # add slider control
@@ -71,8 +79,4 @@ def visualize_toolpath_projection(toolpath: Toolpath, show=True):
     )
     layer_slider.on_changed(update_layer)
     update_layer(1)
-    ax.set_aspect("equal")
-
-    if show:
-        plt.show()
-    return fig, ax
+    return layer_slider

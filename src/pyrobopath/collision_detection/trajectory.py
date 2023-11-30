@@ -47,9 +47,10 @@ class Trajectory:
     Trajectory points should maintain a stricly increasing sorted order
     """
 
-    def __init__(self):
-        # tuple (point, time)
+    def __init__(self, points: List[TrajectoryPoint]=None):
         self.points: List[TrajectoryPoint] = []
+        if points is not None:
+            self.points = points        
         self.idx = 0
 
     def __iter__(self):
@@ -127,7 +128,11 @@ class Trajectory:
         ans = bisect.bisect_left([p.time for p in self.points], time)
         s = self.points[ans]
         e = self.points[ans - 1]
-        return s.interp(e, (time - s.time) / (e.time - s.time))
+
+        if s == e:
+            return s
+        else:
+            return s.interp(e, (time - s.time) / (e.time - s.time))
 
     def slice(self, start, end) -> Trajectory:
         """

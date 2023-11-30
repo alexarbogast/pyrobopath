@@ -166,18 +166,35 @@ def event_causes_collision(
     return False
 
 
-def chop_concurrent_trajectories(tr1: List[Trajectory], tr2: List[Trajectory]):
-    tree2 = IntervalTree()
-    for t in tr2:
-        tree2.addi(t.start_time(), t.end_time(), t)
+def concurrent_trajectory_pairs(tr1: List[Trajectory], tr2: List[Trajectory]):
+    """
+    Finds the intersections of intervals in two lists of trajectories. 
+    Each trajectory is sliced according to the interval intersections.  
 
+    Runs in O(n + m)
+
+    Args:
+        tr1 (List[Trajectory]): The first list of trajectories
+        tr2 (List[Trajectory]): The second list of trajectories
+
+    Returns:
+        traj_pairs (List[Tuple(Trajectory, Trajectory)]): A list of concurrent
+                                                          trajectory pairs 
+    """
+    i = j = 0
     traj_pairs = []
-    for traj in tr1:
-        overlap_set = tree2.overlap(traj.start_time(), traj.end_time())
-        for inter in overlap_set:
-            st = max(traj.start_time(), inter.begin)
-            et = min(traj.end_time(), inter.end)
-            traj_pairs.append((traj.slice(st, et), inter.data.slice(st, et)))
+    while i < len(tr1) and j < len(tr2):
+        a_start, a_end = tr1[i].start_time(), tr1[i].end_time()
+        b_start, b_end = tr2[j].start_time(), tr2[j].end_time()
+        if a_start <= b_end and b_start <= a_end:
+            st = max(a_start, b_start)
+            et = min(a_end, b_end)
+            traj_pairs.append((tr1[i].slice(st, et), tr2[j].slice(st, et)))
+
+        if a_end < b_end:
+            i += 1
+        else:
+            j += 1
     return traj_pairs
 
 
@@ -214,7 +231,7 @@ def events_cause_collision(
             continue
 
         trajs = schedule_to_trajectories(s, st, et)
-        concurrent_trajs = chop_concurrent_trajectories(event_trajs, trajs)
+        concurrent_trajs = concurrent_trajectory_pairs(event_trajs, trajs)
         for pair in concurrent_trajs:
             collide = trajectory_collision_query(
                 agent_models[agent].collision_model,
