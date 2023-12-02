@@ -1,5 +1,4 @@
 from typing import List, Dict, Hashable
-from intervaltree import IntervalTree
 
 from ..collision_detection import (
     Trajectory,

@@ -5,6 +5,7 @@ import matplotlib.patches as patches
 import matplotlib.transforms as transforms
 import matplotlib.patheffects as pe
 from matplotlib.widgets import Slider
+from matplotlib.gridspec import GridSpec
 
 from ..toolpath import Toolpath
 from ..collision_detection import FCLRobotBBCollisionModel
@@ -22,6 +23,7 @@ def draw_multi_agent_schedule(s: MultiAgentToolpathSchedule, show=True):
     if show:
         plt.show()
     return fig, ax
+
 
 def _plot_multi_agent_schedule(s: MultiAgentToolpathSchedule, ax):
     # get unique materials
@@ -50,15 +52,15 @@ def _plot_multi_agent_schedule(s: MultiAgentToolpathSchedule, ax):
                 edgecolor="black",
                 color=color,
             )
-            #label = str(event.data)
-            #ax.bar_label(p, labels=[label], label_type="center")
+            # label = str(event.data)
+            # ax.bar_label(p, labels=[label], label_type="center")
 
 
 def animate_multi_agent_toolpath_schedule(
     schedule: MultiAgentToolpathSchedule,
     agent_models: Dict[Hashable, AgentModel],
     step,
-    plot_toolpath = True,
+    plot_toolpath=True,
     show=True,
 ):
     fig, ax = plt.subplots()
@@ -78,7 +80,7 @@ def animate_multi_agent_toolpath_schedule(
             model = AnimationModel(agent_models[a], schedule[a], ax)
         anim_models.append(model)
 
-    # update all models on slider change 
+    # update all models on slider change
     def update(val):
         for model in anim_models:
             model.update(val)
@@ -104,19 +106,31 @@ def animate_multi_agent_toolpath_schedule(
 
 
 def animate_multi_agent_toolpath_full(
-        toolpath: Toolpath,
-        schedule: MultiAgentToolpathSchedule,
-        agent_models: Dict[Hashable, AgentModel],
-        step,
-        show=True,
+    toolpath: Toolpath,
+    schedule: MultiAgentToolpathSchedule,
+    agent_models: Dict[Hashable, AgentModel],
+    step=0.01,
+    limits=((-500, 500), (-500, 500)),
+    show=True,
 ):
-    fig, ax = plt.subplots(2, gridspec_kw={'height_ratios': [1, 2]})
-    plt.subplots_adjust(left=0.05, right=0.95, bottom=0.2, top=0.95, wspace=0.2, hspace=0.2)
+    fig = plt.figure(figsize=(13, 9))
+    gs = GridSpec(3, 2, height_ratios=[1, 3, 0.15], width_ratios=[1, 50])
+    sched_ax = plt.subplot(gs[0, :])
+    anim_ax = plt.subplot(gs[1, 1])
 
     # ================= schedule =================
-    _plot_multi_agent_schedule(schedule, ax[0])
-    ax[0].set_xlabel("Time")
-    ax[0].set_title("Multi-agent Schedule")
+    _plot_multi_agent_schedule(schedule, sched_ax)
+    (sched_line,) = sched_ax.plot([], [],
+        lw=2,
+        color=(0, 1, 0.31),
+        path_effects=[
+            pe.Stroke(linewidth=4, foreground="black"),
+            pe.Normal(),
+        ],
+    )
+
+    sched_ax.set_xlabel("Time")
+    sched_ax.set_title("Multi-agent Schedule")
 
     # ================= toolpath =================
     unique_tools = toolpath.tools()
@@ -129,24 +143,33 @@ def animate_multi_agent_toolpath_full(
         contour_z.append(z_values[0])
         tools.append(contour.tool)
     unique_z = sorted(set(contour_z))
-    
+
+    contour_lines = []
+
     def update_layer(val):
-        for artist in plt.gca().lines + plt.gca().collections:
-            artist.remove()
-        #ax[1].cla()
+        for line in contour_lines:
+            mpl_line = line.pop(0)
+            mpl_line.remove()
+        contour_lines.clear()
         z_height = unique_z[val - 1]
         indices = [i for i, x in enumerate(contour_z) if x == z_height]
         for idx in indices:
             path = np.array(toolpath.contours[idx].path)
-            ax[1].plot(
-                path[:, 0],
-                path[:, 1],
-                path_effects=[pe.Stroke(linewidth=3, foreground="black"), pe.Normal()],
-                color=tool_colors[tools[idx]],
+            contour_lines.append(
+                anim_ax.plot(
+                    path[:, 0],
+                    path[:, 1],
+                    path_effects=[
+                        pe.Stroke(linewidth=3, foreground="black"),
+                        pe.Normal(),
+                    ],
+                    color=tool_colors[tools[idx]],
+                    zorder=0,
+                )
             )
 
     # add slider control
-    axlayers = fig.add_axes([0.05, 0.1, 0.0225, 0.5])
+    axlayers = plt.subplot(gs[1, 0])
     layer_slider = Slider(
         ax=axlayers,
         label="Layer",
@@ -159,28 +182,30 @@ def animate_multi_agent_toolpath_full(
     update_layer(1)
 
     # ================= agent simulation =================
-    ax[1].set_xlim((-400, 700))
-    ax[1].set_ylim((-100, 400))
-    ax[1].autoscale_view(False)
+    anim_ax.set_xlim(limits[0])
+    anim_ax.set_ylim(limits[1])
+    anim_ax.autoscale_view(False)
 
     # create models to animate
     anim_models = []
     for a in schedule.agents():
         model = None
         if isinstance(agent_models[a].collision_model, FCLRobotBBCollisionModel):
-            model = RobotBBAnimationModel(agent_models[a], schedule[a], ax[1])
+            model = RobotBBAnimationModel(agent_models[a], schedule[a], anim_ax)
         else:
-            model = AnimationModel(agent_models[a], schedule[a], ax[1])
+            model = AnimationModel(agent_models[a], schedule[a], anim_ax)
         anim_models.append(model)
 
-    # update all models on slider change 
-    def update(val):
+    # update all models and schedule line on slider change
+    def update_anim(val):
         for model in anim_models:
             model.update(val)
+
+        sched_line.set_data([val, val], [-3, 3])
         fig.canvas.draw_idle()
 
     # add slider control
-    axtime = plt.axes([0.25, 0.1, 0.65, 0.03])
+    axtime = plt.subplot(gs[2, 1:])
     anim_slider = Slider(
         ax=axtime,
         label="time",
@@ -189,14 +214,21 @@ def animate_multi_agent_toolpath_full(
         valstep=step,
         valinit=schedule.start_time(),
     )
-    anim_slider.on_changed(update)
-    update(schedule.start_time())
-    ax[1].set_aspect("equal")
+    anim_slider.on_changed(update_anim)
+    update_anim(schedule.start_time())
+    anim_ax.set_aspect("equal")
+    plt.tight_layout()
 
     if show:
         plt.show()
-    return fig, ax
+    return fig
 
+    # Animation
+    #import matplotlib.animation as animation
+    #fps=30
+    #writer = animation.FFMpegWriter(fps=fps) 
+    #anim = animation.FuncAnimation(fig, update_anim, frames=np.arange(schedule.start_time(), schedule.end_time(), 0.6))
+    #anim.save('test2.mp4', writer=writer)
 
 
 class AnimationModel(object):
