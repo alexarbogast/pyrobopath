@@ -11,7 +11,7 @@ _This project is under heavy development and subject to changes in API and funct
 ## Dependencies
 - [NetworkX](https://networkx.org/)
 - [GcodeParser](https://github.com/AndyEveritt/GcodeParser)
-- [python-fcl](https://github.com/BerkeleyAutomation/python-fcl/releases)
+- [python-fcl](https://github.com/BerkeleyAutomation/python-fcl)
 
 ## Usage
 See [examples.py](./examples/examples.py) for usage demos.
