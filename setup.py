@@ -1,14 +1,13 @@
-from distutils.core import setup
+from setuptools import setup, find_packages
 
-package_name = 'pyrobopath'
+package_name = "pyrobopath"
 
 setup(
     name=package_name,
-    version='0.1.1',
-    packages=['pyrobopath'],
-    package_dir={'':'src'}, 
-    install_requires=[
-        'itertools',
-        'networkx',
-    ]
+    version="0.2.0",
+    packages=find_packages(where="src"),
+    package_dir={"": "src"},
+    maintainer="Alex Arbogast",
+    maintainer_email="arbogastaw@gmail.com",
+    install_requires=["itertools", "networkx", "GcodeParser", "quaternion"],
 )

@@ -13,7 +13,8 @@ from .toolpath_collision import events_cause_collision
 
 @dataclass
 class PlanningOptions:
-    velocity: float = 50.0
+    contour_velocity: float = 50.0
+    travel_velocity: float = 100.0
     retract_height: float = 50.0
     collision_offset: float = 5.0
     collision_gap_threshold: float = 1.0
@@ -80,11 +81,11 @@ class EventBuilder(object):
 
     def build_move_event(self, t_start, p_start, p_end, options: PlanningOptions):
         path = [p_start, p_end]
-        event = MoveEvent(t_start, path, options.velocity)
+        event = MoveEvent(t_start, path, options.travel_velocity)
         return event
 
     def build_contour_event(self, t_start, contour: Contour, options: PlanningOptions):
-        event = ContourEvent(t_start, contour, options.velocity)
+        event = ContourEvent(t_start, contour, options.contour_velocity)
         return event
 
 
