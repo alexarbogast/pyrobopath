@@ -17,11 +17,6 @@ from pyrobopath.toolpath_scheduling import *
 
 from .agent_execution_context import AgentExecutionContext
 
-TRAVEL_VEL = 0.500
-CONTOUR_VEL = 0.300
-
-HOME_POSITION = [0.0, 0.53, 0.47, 0.0, -1.0, 0.0]
-
 
 def toolpath_from_gcode(filepath) -> Toolpath:
     """Parse gcode file to internal toolpath representation."""
@@ -32,6 +27,14 @@ def toolpath_from_gcode(filepath) -> Toolpath:
     toolpath = Toolpath.from_gcode(parsed_gcode.lines)
     return toolpath
 
+def print_schedule_info(schedule: MultiAgentToolpathSchedule):
+    print(f"Schedule duration: {schedule.duration()}")
+    print(f"Total Events: {schedule.n_events()}")
+    agents_info = "Agent Events: "
+    for agent, sched in schedule.schedules.items():
+        agents_info += f"{agent}: {len(sched._events)}, "
+    print(agents_info)
+
 
 class ScheduleExecution(object):
     def __init__(self) -> None:
@@ -39,11 +42,7 @@ class ScheduleExecution(object):
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
         rospy.sleep(0.1)
 
-        if not rospy.has_param("namespaces"):
-            rospy.logerr("pyrobopath 'namespace' parameter is missing")
-            return
         self._namespaces = rospy.get_param("namespaces")
-
         self._contexts = dict()
         for ns in self._namespaces:
             self._build_agent_contexts(ns)
@@ -64,13 +63,16 @@ class ScheduleExecution(object):
 
     def _initialize_pyrobopath(self):
         agent_models = {id: context.agent for id, context in self._contexts.items()}
+
+        retract_height = rospy.get_param("retract_height", 0.0)
+        collision_offset = rospy.get_param("collision_offset", 1.0)
+        collision_gap_threshold = rospy.get_param("collision_gap_treshold", 0.003)
+
         self._planner = MultiAgentToolpathPlanner(agent_models)
         self._options = PlanningOptions(
-            travel_velocity=TRAVEL_VEL,
-            contour_velocity=CONTOUR_VEL,
-            retract_height=0.1,
-            collision_offset=1.0,
-            collision_gap_threshold=0.003,
+            retract_height=retract_height,
+            collision_offset=collision_offset,
+            collision_gap_threshold=collision_gap_threshold,
         )
 
     def move_home(self):
@@ -83,7 +85,7 @@ class ScheduleExecution(object):
             point_start.time_from_start = rospy.Duration(0.0)
 
             point_goal = JointTrajectoryPoint()
-            point_goal.positions = HOME_POSITION
+            point_goal.positions = self._contexts[id].joint_home
             point_goal.time_from_start = rospy.Duration(2.0)
 
             goal = FollowJointTrajectoryGoal()
@@ -109,6 +111,7 @@ class ScheduleExecution(object):
         rospy.loginfo(f"\n{(50 * '#')}\nScheduling Toolpath:\n{(50 * '#')}\n")
         self._schedule = self._planner.plan(toolpath, dependency_graph, self._options)
         rospy.loginfo(f"\n{(50 * '#')}\nFound Toolpath Plan!\n{(50 * '#')}\n")
+        print_schedule_info(self._schedule)
 
         """ Cartesian motion planning for schedule events """
         self._plan_multi_agent_schedule(self._schedule)
@@ -156,19 +159,14 @@ class ScheduleExecution(object):
         req.start_state = start_state
 
         for point in path_base:
-            pose = Pose()
-            pose.position.x = point[0]
-            pose.position.y = point[1]
-            pose.position.z = point[2]
-
-            theta = np.arctan2(point[1], point[0])
-            pose.orientation.w = np.cos(theta / 2)
-            pose.orientation.x = 0.0
-            pose.orientation.y = 0.0
-            pose.orientation.z = np.sin(theta / 2)
+            pose = context.create_pose(point)
             req.path.append(pose)
 
-        req.velocity = CONTOUR_VEL if isinstance(event, ContourEvent) else TRAVEL_VEL
+        if isinstance(event, ContourEvent):
+            req.velocity = context.agent.velocity
+        else:
+            req.velocity = context.agent.travel_velocity
+
         resp = None
         try:
             resp = context.planning_client(req)

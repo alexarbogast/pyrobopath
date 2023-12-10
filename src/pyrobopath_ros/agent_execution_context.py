@@ -1,10 +1,13 @@
 import numpy as np
 import quaternion
 
+# ros
 import rospy
 import actionlib
 import tf2_ros
+from geometry_msgs.msg import Pose
 
+# pyrobopath
 from pyrobopath.collision_detection import FCLRobotBBCollisionModel
 from pyrobopath.toolpath_scheduling import AgentModel
 
@@ -29,7 +32,7 @@ class AgentExecutionContext(object):
     def __init__(self, id, tf_buffer: tf2_ros.Buffer):
         self.id = id
         self.agent = AgentModel()
-        
+
         self.read_parameters()
         self.update_tf(tf_buffer)
         self.agent.collision_model = FCLRobotBBCollisionModel(
@@ -49,14 +52,9 @@ class AgentExecutionContext(object):
         )
 
     def read_parameters(self):
-        self.base_frame = rospy.get_param(f"{self.id}/base_frame", None)
-        self.eef_frame = rospy.get_param(f"{self.id}/eef_frame", None)
-        self.task_frame = rospy.get_param(f"{self.id}/task_frame", None)
-        if self.base_frame is None or self.eef_frame is None or self.task_frame is None:
-            rospy.logerr(
-                "Could not find one of 'base_frame', 'eef_frame', or 'task_frame'"
-                + f" for pyrobopath in namespace {self.id}"
-            )
+        self.base_frame = rospy.get_param(f"{self.id}/base_frame")
+        self.eef_frame = rospy.get_param(f"{self.id}/eef_frame")
+        self.task_frame = rospy.get_param(f"{self.id}/task_frame")
 
         self.agent.capabilities = rospy.get_param(f"{self.id}/capabilities", [0])
         self.col_dim = (
@@ -69,6 +67,24 @@ class AgentExecutionContext(object):
                 "Could not find collision model parameters "
                 + f"(width or length or height) in namespace {self.id}/collision"
             )
+
+        self.joint_home = rospy.get_param(f"{self.id}/home_position")
+        eef_rotation = rospy.get_param(f"{self.id}/eef_rotation", [1.0, 0.0, 0.0, 0.0])
+        eef_rotation = [float(r) for r in eef_rotation]
+        self.eef_rotation = np.quaternion(
+            eef_rotation[0], eef_rotation[1], eef_rotation[2], eef_rotation[3]
+        )
+
+        self.agent.velocity = rospy.get_param(f"{self.id}/velocity")
+        self.agent.travel_velocity = rospy.get_param(
+            f"{self.id}/travel_velocity", self.agent.velocity
+        )
+
+    def _read_required_parameter(self, parameter):
+        param = rospy.get_param(f"{self.id}/{parameter}")
+        if param is None:
+            rospy.logerr(f"Failed to find parameter {parameter} in namespace {self.id}")
+        return param
 
     def update_tf(self, tf_buffer):
         try:
@@ -88,3 +104,19 @@ class AgentExecutionContext(object):
         self.base_to_task = transform_tf_to_np(base_to_task.transform)
         self.agent.home_position = self.eef_to_task[:3, 3]
         self.agent.base_frame_position = self.base_to_task[:3, 3]
+
+    def create_pose(self, point: np.ndarray):
+        pose = Pose()
+        pose.position.x = point[0]
+        pose.position.y = point[1]
+        pose.position.z = point[2]
+
+        theta = np.arctan2(point[1], point[0])
+        q = np.quaternion(np.cos(theta / 2), 0.0, 0.0, np.sin(theta / 2))
+        rot = q * self.eef_rotation
+
+        pose.orientation.w = rot.w
+        pose.orientation.x = rot.x
+        pose.orientation.y = rot.y
+        pose.orientation.z = rot.z
+        return pose

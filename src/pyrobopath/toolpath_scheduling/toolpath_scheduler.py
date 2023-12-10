@@ -13,16 +13,15 @@ from .toolpath_collision import events_cause_collision
 
 @dataclass
 class PlanningOptions:
-    contour_velocity: float = 50.0
-    travel_velocity: float = 100.0
     retract_height: float = 50.0
     collision_offset: float = 5.0
     collision_gap_threshold: float = 1.0
 
 
 class SchedulingContext(object):
-    def __init__(self, agent_models: Dict[str, AgentModel]):
+    def __init__(self, agent_models: Dict[str, AgentModel], options: PlanningOptions):
         self.agent_models = agent_models
+        self.options = options
         self.reset()
 
     def reset(self):
@@ -79,14 +78,32 @@ class EventBuilder(object):
     def __init__(self, context: SchedulingContext):
         self.context = context
 
-    def build_move_event(self, t_start, p_start, p_end, options: PlanningOptions):
-        path = [p_start, p_end]
-        event = MoveEvent(t_start, path, options.travel_velocity)
+    def build_move_event(self, t_start, path, agent):
+        event = MoveEvent(
+            t_start, path, self.context.agent_models[agent].travel_velocity
+        )
         return event
 
-    def build_contour_event(self, t_start, contour: Contour, options: PlanningOptions):
-        event = ContourEvent(t_start, contour, options.contour_velocity)
+    def build_contour_event(self, t_start, contour: Contour, agent):
+        event = ContourEvent(
+            t_start, contour, self.context.agent_models[agent].velocity
+        )
         return event
+
+    def build_travel_event(self, t_start, p_start, p_end, agent):
+        p_approach = p_end.copy()
+        p_approach[2] += self.context.options.retract_height
+        return self.build_move_event(t_start, [p_start, p_approach, p_end], agent)
+
+    def build_event_chain(self, t_start, p_start, contour: Contour, agent):
+        e_travel = self.build_travel_event(t_start, p_start, contour.path[0], agent)
+        e_contour = self.build_contour_event(e_travel.end, contour, agent)
+        e_home = self.build_move_event(
+            e_contour.end,
+            [contour.path[-1], self.context.agent_models[agent].home_position],
+            agent,
+        )
+        return [e_travel, e_contour, e_home]
 
 
 class MultiAgentToolpathPlanner(object):
@@ -98,7 +115,7 @@ class MultiAgentToolpathPlanner(object):
         schedule = MultiAgentToolpathSchedule()
         schedule.add_agents(self._agent_models.keys())
 
-        context = SchedulingContext(self._agent_models)
+        context = SchedulingContext(self._agent_models, options)
         tm = TaskManager(toolpath, dg)
         eb = EventBuilder(context)
 
@@ -132,21 +149,7 @@ class MultiAgentToolpathPlanner(object):
                         time, self._agent_models[agent].home_position
                     )
 
-                    travel_event = eb.build_move_event(
-                        time, p_start, contour.path[0], options
-                    )
-                    contour_event = eb.build_contour_event(
-                        travel_event.end, contour, options
-                    )
-                    home_event = eb.build_move_event(
-                        contour_event.end,
-                        contour.path[-1],
-                        self._agent_models[agent].home_position,
-                        options,
-                    )
-
-                    events = [travel_event, contour_event, home_event]
-
+                    events = eb.build_event_chain(time, p_start, contour, agent)
                     if events_cause_collision(
                         events,
                         agent,
@@ -157,19 +160,19 @@ class MultiAgentToolpathPlanner(object):
                         continue
 
                     # slice travel event if overlap
-                    if schedule[agent].end_time() > travel_event.start:
+                    if schedule[agent].end_time() > events[0].start:
                         prev_home_event = schedule[agent]._events.pop()
                         sliced_home = self._slice_home_event(
-                            prev_home_event, travel_event.start
+                            prev_home_event, events[0].start
                         )
                         schedule.add_event(sliced_home, agent)
 
                     schedule.add_events(events, agent)
-                    tm.add_inprogress(node, contour_event.end)
+                    tm.add_inprogress(node, events[1].end)
                     tm.frontier.remove(node)
                     tm.frontier.update(dg._graph.successors(node))
                     context.positions[agent] = events[1].data[-1]
-                    context.set_agent_start_time(agent, contour_event.end)
+                    context.set_agent_start_time(agent, events[1].end)
 
                     all_collide_flag = False
                     break

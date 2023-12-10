@@ -30,6 +30,8 @@ def simple_toolpath_example_two():
     agent1.base_frame_position = np.array([-350.0, 0.0, 0.0])
     agent1.home_position = np.array([-250.0, 0.0, 0.0])
     agent1.capabilities = [Materials.MATERIAL_A]
+    agent1.velocity = 50.0
+    agent1.travel_velocity = 50.0
     agent1.collision_model = FCLRobotBBCollisionModel(
         200.0, 50.0, 300.0, agent1.base_frame_position
     )
@@ -37,6 +39,8 @@ def simple_toolpath_example_two():
     agent2.base_frame_position = np.array([350.0, 0.0, 0.0])
     agent2.home_position = np.array([250.0, 0.0, 0.0])
     agent2.capabilities = [Materials.MATERIAL_B]
+    agent2.velocity = 50.0
+    agent2.travel_velocity = 50.0
     agent2.collision_model = FCLRobotBBCollisionModel(
         200.0, 50.0, 300.0, agent2.base_frame_position
     )
@@ -49,8 +53,6 @@ def simple_toolpath_example_two():
     # create planner
     planner = MultiAgentToolpathPlanner(agent_models)
     options = PlanningOptions(
-        contour_velocity=50.0,
-        travel_velocity=50.0,
         retract_height=0.1,
         collision_offset=1.0,
         collision_gap_threshold=1.0,
@@ -76,6 +78,8 @@ def simple_toolpath_example_three():
     agent1.base_frame_position = np.array([r * np.cos(np.pi/6), -r * np.sin(np.pi/6), 0.])
     agent1.home_position = np.array([rh * np.cos(np.pi/6), -rh * np.sin(np.pi/6), 0.])
     agent1.capabilities = [Materials.MATERIAL_B]
+    agent1.velocity = 50.0
+    agent1.travel_velocity = 50.0
     agent1.collision_model = FCLRobotBBCollisionModel(
         200., 50., 300., agent1.base_frame_position
     )
@@ -83,6 +87,8 @@ def simple_toolpath_example_three():
     agent2.base_frame_position = np.array([0., r, 0.])
     agent2.home_position = np.array([0., rh, 0.])
     agent2.capabilities = [Materials.MATERIAL_A]
+    agent2.velocity = 50.0
+    agent2.travel_velocity = 50.0
     agent2.collision_model = FCLRobotBBCollisionModel(
         200., 50., 300., agent2.base_frame_position
     )
@@ -90,6 +96,8 @@ def simple_toolpath_example_three():
     agent3.base_frame_position = np.array([-r * np.cos(np.pi/6), -r * np.sin(np.pi/6), 0.])
     agent3.home_position = np.array([-rh * np.cos(np.pi/6), -rh * np.sin(np.pi/6), 0.])
     agent3.capabilities = [Materials.MATERIAL_A]
+    agent3.velocity = 50.0
+    agent3.travel_velocity = 50.0
     agent3.collision_model = FCLRobotBBCollisionModel(
         200., 50., 300., agent3.base_frame_position
     )
@@ -103,8 +111,6 @@ def simple_toolpath_example_three():
     # create planner
     planner = MultiAgentToolpathPlanner(agent_models)
     options = PlanningOptions(
-        contour_velocity=50.0,
-        travel_velocity=50.0,
         retract_height=0.1,
         collision_offset=1.0,
         collision_gap_threshold=1.0,
@@ -126,6 +132,8 @@ def multi_material_squares():
     agent1.base_frame_position = np.array([-500.0, 0.0, 0.0])
     agent1.home_position = np.array([-300, 0.0, 0.0])
     agent1.capabilities = [0]
+    agent1.velocity = 50.0
+    agent1.travel_velocity = 50.0
     agent1.collision_model = FCLRobotBBCollisionModel(
         200.0, 50.0, 300, agent1.base_frame_position
     )
@@ -133,6 +141,8 @@ def multi_material_squares():
     agent2.base_frame_position = np.array([500.0, 0.0, 0.0])
     agent2.home_position = np.array([300.0, 0.0, 0.0])
     agent2.capabilities = [1]
+    agent2.velocity = 50.0
+    agent2.travel_velocity = 50.0
     agent2.collision_model = FCLRobotBBCollisionModel(
         200.0, 50.0, 300, agent2.base_frame_position
     )
@@ -147,8 +157,6 @@ def multi_material_squares():
     # create planner
     planner = MultiAgentToolpathPlanner(agent_models)
     options = PlanningOptions(
-        contour_velocity=50.0,
-        travel_velocity=50.0,
         retract_height=0.1,
         collision_offset=3.0,
         collision_gap_threshold=5.0,
@@ -170,6 +178,8 @@ def complex_two_material_two_robots():
     agent1.base_frame_position = np.array([-500.0, 0.0, 0.0])
     agent1.home_position = np.array([-300, 0.0, 0.0])
     agent1.capabilities = [0]
+    agent1.velocity = 50.0
+    agent1.travel_velocity = 50.0
     agent1.collision_model = FCLRobotBBCollisionModel(
         200.0, 50.0, 300, agent1.base_frame_position
     )
@@ -177,6 +187,8 @@ def complex_two_material_two_robots():
     agent2.base_frame_position = np.array([500.0, 0.0, 0.0])
     agent2.home_position = np.array([300.0, 0.0, 0.0])
     agent2.capabilities = [1]
+    agent2.velocity = 50.0
+    agent2.travel_velocity = 50.0
     agent2.collision_model = FCLRobotBBCollisionModel(
         200.0, 50.0, 300, agent2.base_frame_position
     )
@@ -190,8 +202,6 @@ def complex_two_material_two_robots():
     # create planner
     planner = MultiAgentToolpathPlanner(agent_models)
     options = PlanningOptions(
-        contour_velocity=50.0,
-        travel_velocity=50.0,
         retract_height=0.1,
         collision_offset=3.0,
         collision_gap_threshold=5.0,
@@ -217,6 +227,8 @@ def complex_two_material_four_robots():
     agent1.base_frame_position = np.array([r * np.cos(np.pi/4), -r * np.sin(np.pi/4), 0.])
     agent1.home_position = np.array([rh * np.cos(np.pi/4), -rh * np.sin(np.pi/4), 0.])
     agent1.capabilities = [0]
+    agent1.velocity = 50.0
+    agent1.travel_velocity = 50.0
     agent1.collision_model = FCLRobotBBCollisionModel(
         500., 50., 300., agent1.base_frame_position
     )
@@ -224,6 +236,8 @@ def complex_two_material_four_robots():
     agent2.base_frame_position = np.array([r * np.cos(np.pi/4), r * np.sin(np.pi/4), 0.])
     agent2.home_position = np.array([rh * np.cos(np.pi/4), rh * np.sin(np.pi/4), 0.])
     agent2.capabilities = [1]
+    agent2.velocity = 50.0
+    agent2.travel_velocity = 50.0
     agent2.collision_model = FCLRobotBBCollisionModel(
         500., 50., 300., agent2.base_frame_position
     )
@@ -231,6 +245,8 @@ def complex_two_material_four_robots():
     agent3.base_frame_position = np.array([-r * np.cos(np.pi/4), r * np.sin(np.pi/4), 0.])
     agent3.home_position = np.array([-rh * np.cos(np.pi/4), rh * np.sin(np.pi/4), 0.])
     agent3.capabilities = [1]
+    agent3.velocity = 50.0
+    agent3.travel_velocity = 50.0
     agent3.collision_model = FCLRobotBBCollisionModel(
         500., 50., 300., agent3.base_frame_position
     )
@@ -238,6 +254,8 @@ def complex_two_material_four_robots():
     agent4.base_frame_position = np.array([-r * np.cos(np.pi/4), -r * np.sin(np.pi/4), 0.])
     agent4.home_position = np.array([-rh * np.cos(np.pi/4), -rh * np.sin(np.pi/4), 0.])
     agent4.capabilities = [0]
+    agent4.velocity = 50.0
+    agent4.travel_velocity = 50.0
     agent4.collision_model = FCLRobotBBCollisionModel(
         500., 50., 300., agent4.base_frame_position
     )
@@ -258,8 +276,6 @@ def complex_two_material_four_robots():
     # create planner
     planner = MultiAgentToolpathPlanner(agent_models)
     options = PlanningOptions(
-        contour_velocity=50.0,
-        travel_velocity=50.0,
         retract_height=0.1,
         collision_offset=3.0,
         collision_gap_threshold=5.0,
