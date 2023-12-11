@@ -6,6 +6,7 @@ import collections
 class Interval(object):
     """
     An implementation of Allen's interval algebra
+
     See: https://cse.unl.edu/~choueiry/Documents/Allen-CACM1983.pdf
     """
 
@@ -25,8 +26,8 @@ class Interval(object):
 
     def overlaps(self, other):
         """
-        XXX
-         YYY
+        | XXX
+        |  YYY
         """
         return (
             self.start < other.start and self.end > other.start and self.end < other.end
@@ -34,57 +35,57 @@ class Interval(object):
 
     def starts(self, other):
         """
-        XXX
-        YYYYY
+        | XXX
+        | YYYYY
         """
         return self.start == other.start and self.end < other.end
 
     def during(self, other):
         """
-         XXX
-        YYYYY
+        |  XXX
+        | YYYYY
         """
         return self.start > other.start and self.end < other.end
 
     def finishes(self, other):
         """
-          XXX
-        YYYYY
+        |   XXX
+        | YYYYY
         """
         return self.start > other.start and self.end == other.end
 
     def equals(self, other):
         """
-        XXX
-        YYY
+        | XXX
+        | YYY
         """
         return self.start == other.start and self.end == other.end
 
     def finished_by(self, other):
         """
-        XXXXX
-          YYY
+        | XXXXX
+        |   YYY
         """
         return self.start < other.start and self.end == other.end
 
     def contains(self, other):
         """
-        XXXXX
-         YYY
+        | XXXXX
+        |  YYY
         """
         return self.start < other.start and self.end > other.end
 
     def started_by(self, other):
         """
-        XXXXX
-        YYY
+        | XXXXX
+        | YYY
         """
         return self.start == other.start and self.end > other.end
 
     def overlapped_by(self, other):
         """
-         XXX
-        YYY
+        |  XXX
+        | YYY
         """
         return (
             self.start > other.start and self.start < other.end and self.end > other.end

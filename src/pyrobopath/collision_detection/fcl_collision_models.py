@@ -7,8 +7,15 @@ from .collision_model import CollisionModel
 
 
 class FCLCollisionModel(CollisionModel):
+    """A collision model using the `python-fcl <pythonfcl>`_ library
+
+    The in_collision function checks model collisions against other 
+    FCLCollisionModel objects.
+
+    .. _pythonfcl: https://pypi.org/project/python-fcl/
+    """
     def __init__(self):
-        super().__init__()
+        super(FCLCollisionModel, self).__init__()
         self.obj = None
 
     def in_collision(self, other: FCLCollisionModel):
@@ -25,32 +32,43 @@ class FCLCollisionModel(CollisionModel):
 
 
 class FCLBoxCollisionModel(FCLCollisionModel):
+    """An fcl box collision model.
+
+    :param x: length of the box
+    :type x: float
+    :param y: width of the box
+    :type y: float
+    :param z: height of the box
+    :type z: float
+    """
+
     def __init__(self, x: float, y: float, z: float):
-        super().__init__()
+        super(FCLBoxCollisionModel, self).__init__()
         self.box = fcl.Box(x, y, z)
         self.obj = fcl.CollisionObject(self.box, fcl.Transform())
 
 
 class FCLRobotBBCollisionModel(FCLBoxCollisionModel):
-    """This model rotates about an axis orthogonal to the xy-plane.
+    """This model rotates about an axis orthogonal to the xy-plane located 
+    at anchor.
 
     The anchor point is the base of the robot, and the `translation`
-    property is used to set the radial distance of the farthest face.
+    property is used to set the radial distance of the farthest face. 
 
-                               <----- l ------>
-    axis of rotation -> |      +--------------+
-        (anchor)        |     /           w  /|
-                        |    /              / |
-                        |   +--------------+  |
-                        |-- |              |. |<-- translation point (p)
-                        |   |              |  +    end effector position
-                        |   |            h | /
-                        |   |              |/
-                        |   +--------------+
-                        |
+    :param x: The length of the box. The radial extension of the box towards
+              the end-effector from any given position. 
+    :type x: float
+    :param y: The width of the box. The approximate bounding width of the robot
+              as viewed from above. 
+    :type y: float
+    :param z: The height of the box. The total height of the box extruded in
+              both directions in z from `anchor`.
+    :type z: float
+    :param anchor: the anchor point about which the box rotates
+    :type anchor: np.ndarray
     """
 
-    def __init__(self, x: float, y: float, z: float, anchor: np.ndarray):
+    def __init__(self, x: float, y: float, z: float, anchor: np.ndarray):   
         super().__init__(x, y, z)
         self._anchor = np.array(anchor)
         self._eef_transform = np.identity(4)

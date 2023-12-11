@@ -13,24 +13,26 @@ from .system_model import AgentModel
 def schedule_to_trajectory(
     schedule: ToolpathSchedule, t_start: float, t_end: float, default_state
 ) -> Trajectory:
-    """
-    Slice a toolpath schedule to a continuous trajectory.
+    """Slice a toolpath schedule to a continuous trajectory.
 
     The trajectory is guaranteed to have points at times t_start and t_end.
     The trajectories in any ContourEvent that fall in the time window are
     concatenated in the resulting trajectory
 
-    Args:
-        schedule: The schedule to be sliced
-        t_start: start time of slice
-        t_end: end time of slice
-        default state: The default trajectory state for times with no known
-                       state in the schedule
-
-    Returns:
-        Trajectory: The trajectory inferred from the schedule
-
+    :param schedule: The schedule to be sliced
+    :type schedule: ToolpathSchedule
+    :param t_start: Start time of slice
+    :type t_start: float
+    :param t_end: End time of slice
+    :type t_end: float
+    :param default_state: The default trajectory state for times with no known
+                          state in the schedule
+    :type default_state: np.ndarray
+    
+    :return: The trajectory inferred from the schedule
+    :rtype: Trajectory
     """
+
     traj = Trajectory()
     traj.add_traj_point(TrajectoryPoint(None, float("nan")))
     for e in schedule._events:
@@ -67,21 +69,22 @@ def schedule_to_trajectory(
 
 def schedule_to_trajectories(
     schedule: ToolpathSchedule, t_start: float, t_end: float
-) -> Trajectory:
-    """
-    Slice a toolpath schedule to a list of continuous trajectories.
+) -> List[Trajectory]:
+    """Slice a toolpath schedule to a list of continuous trajectories.
+
     The trajectories of MoveEvents are sliced to fit in the window
     [t_start, t_end].
 
-    Args:
-        schedule: The schedule to be sliced
-        t_start: start time of slice
-        t_end: end time of slice
-
-    Returns:
-        List[Trajectory]: The list trajectories inferred from the schedule
-
-    """
+    :param schedule: The schedule to be sliced
+    :type schedule: ToolpathSchedule
+    :param t_start: start time of slice
+    :type t_start: float
+    :param t_end: end time of slice
+    :type t_end: float
+    
+    :return: The list trajectories inferred from the schedule
+    :rtype: List[Trajectory]
+    """    
 
     trajs = []
     interval = Interval(t_start, t_end)
@@ -124,21 +127,28 @@ def event_causes_collision(
     agent_models: Dict[str, AgentModel],
     threshold: float,
 ):
-    """
-    Determines if adding 'event' to 'schedule' will cause a collision in the
+    """Determines if adding 'event' to 'schedule' will cause a collision in the
     resulting trajectory.
 
     The events in schedule from event.start_time() to schedule.end_time() are
     checked for collision. This is necessary because adding an event at a
     previous time can cause collisions in the future.
 
-    Args:
-        event (ContourEvent): The event to be added (with Event.data = Contour)
-        agent (Hashable): The agent for the event
-        schedule (MultiAgentSchedule): A schedule that is assumed collision-free
-        agent_models (Dict[str, AgentModel]): Context info about the system
-        threshold: The maximum collision checking step distance
-    """
+    :param event: The event to be added (with Event.data = Contour)
+    :type event: ContourEvent
+    :param agent: The agent for the event
+    :type agent: Hashable
+    :param schedule: A schedule that is assumed collision-free
+    :type schedule: MultiAgentToolpathSchedule
+    :param agent_models: Context info about the system
+    :type agent_models: Dict[str, AgentModel]
+    :param threshold: The maximum collision checking step distance (in units 
+                      equivalent to points in `event`)
+    :type threshold: float
+
+    :return: True if event causes collision, False else
+    :rtype: bool
+    """    
 
     et = max(schedule.end_time(), event.end)
 
@@ -166,20 +176,20 @@ def event_causes_collision(
 
 
 def concurrent_trajectory_pairs(tr1: List[Trajectory], tr2: List[Trajectory]):
-    """
-    Finds the intersections of intervals in two lists of trajectories. 
-    Each trajectory is sliced according to the interval intersections.  
+    """Finds the intersections of intervals in two lists of trajectories.
+    Each trajectory is sliced according to the interval intersections.
 
     Runs in O(n + m)
 
-    Args:
-        tr1 (List[Trajectory]): The first list of trajectories
-        tr2 (List[Trajectory]): The second list of trajectories
+    :param tr1: The first list of trajectories
+    :type tr1: List[Trajectory]
+    :param tr2: The second list of trajectories
+    :type tr2: List[Trajectory]
 
-    Returns:
-        traj_pairs (List[Tuple(Trajectory, Trajectory)]): A list of concurrent
-                                                          trajectory pairs 
-    """
+    :return: A list of concurrent trajectory pairs
+    :rtype: List[Tuple(Trajectory, Trajectory)]
+    """    
+    
     i = j = 0
     traj_pairs = []
     while i < len(tr1) and j < len(tr2):

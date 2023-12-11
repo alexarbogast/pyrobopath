@@ -1,3 +1,7 @@
+"""Pyrobopath interfaces for schedule execution in ROS 
+
+"""
+
 import numpy as np
 from collections import defaultdict
 from gcodeparser import GcodeParser
@@ -5,7 +9,6 @@ from gcodeparser import GcodeParser
 # ros
 import rospy
 import tf2_ros
-from geometry_msgs.msg import Pose
 from sensor_msgs.msg import JointState
 from control_msgs.msg import FollowJointTrajectoryGoal
 from trajectory_msgs.msg import JointTrajectoryPoint
@@ -13,13 +16,21 @@ from cartesian_planning_server.srv import *
 
 # pyrobopath
 from pyrobopath.toolpath import Toolpath
+from pyrobopath.scheduling import DependencyGraph
 from pyrobopath.toolpath_scheduling import *
 
 from .agent_execution_context import AgentExecutionContext
 
 
 def toolpath_from_gcode(filepath) -> Toolpath:
-    """Parse gcode file to internal toolpath representation."""
+    """Parse gcode file to internal toolpath representation.
+
+    :param filepath: The absolute path to a Gcode file
+    :type filepath: str
+    :return: A toolpath created from the input filepath
+    :rtype: Toolpath
+    """
+
     with open(filepath, "r") as f:
         gcode = f.read()
     parsed_gcode = GcodeParser(gcode)
@@ -27,7 +38,14 @@ def toolpath_from_gcode(filepath) -> Toolpath:
     toolpath = Toolpath.from_gcode(parsed_gcode.lines)
     return toolpath
 
+
 def print_schedule_info(schedule: MultiAgentToolpathSchedule):
+    """Print the schedule duration, total number of events,
+    and events for each agent
+
+    :param schedule: The schedule to print info
+    :type schedule: MultiAgentToolpathSchedule
+    """
     print(f"Schedule duration: {schedule.duration()}")
     print(f"Total Events: {schedule.n_events()}")
     agents_info = "Agent Events: "
@@ -37,6 +55,12 @@ def print_schedule_info(schedule: MultiAgentToolpathSchedule):
 
 
 class ScheduleExecution(object):
+    """The ScheduleExecution class connects the necessary ROS interfaces to
+    execute probopath `ToolpathSchedules` in ROS
+
+    # TODO: List ROS parameters
+    """
+
     def __init__(self) -> None:
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
@@ -62,6 +86,9 @@ class ScheduleExecution(object):
         rospy.loginfo("Pyrobopath: ready to plan!")
 
     def _initialize_pyrobopath(self):
+        """Initialize the pyrobopath toolpath planner and planning options
+        from ROS parameters
+        """
         agent_models = {id: context.agent for id, context in self._contexts.items()}
 
         retract_height = rospy.get_param("retract_height", 0.0)
@@ -76,6 +103,9 @@ class ScheduleExecution(object):
         )
 
     def move_home(self):
+        """Moves all agents to the joint positions in the `/{ns}/home_position`
+        parameter.
+        """
         # send trajectories to home
         for id in self._contexts.keys():
             start_state = rospy.wait_for_message(f"/{id}/joint_states", JointState)
@@ -98,9 +128,28 @@ class ScheduleExecution(object):
             self._contexts[id].action_client.wait_for_result()
 
     def _build_agent_contexts(self, id: str):
+        """Build an AgentExecutionContext with a unique id
+
+        :param id: Unique id for agent.
+        :type id: str
+        """
         self._contexts[id] = AgentExecutionContext(id, self.tf_buffer)
 
-    def plan_toolpath(self, toolpath: Toolpath, dependency_graph=None):
+    def plan_toolpath(
+        self, toolpath: Toolpath, dependency_graph: DependencyGraph = None
+    ):
+        """Finds the schedule for the provided toolpath and performs
+        Cartesian motion planning on the resulting schedule.
+
+        If no dependency graph is provided, a default all-to-all dependency
+        graph is created between the layers in the toolpath. The resulting plan
+        is stored internally.
+
+        :param toolpath: The pyrobopath toolpath
+        :type toolpath: Toolpath
+        :param dependency_graph: an optional dependency graph, defaults to None
+        :type dependency_graph: DependencyGraph, optional
+        """
         if dependency_graph is None:
             dependency_graph = create_dependency_graph_by_layers(toolpath)
 
@@ -112,11 +161,11 @@ class ScheduleExecution(object):
         self._schedule = self._planner.plan(toolpath, dependency_graph, self._options)
         rospy.loginfo(f"\n{(50 * '#')}\nFound Toolpath Plan!\n{(50 * '#')}\n")
         print_schedule_info(self._schedule)
-
         """ Cartesian motion planning for schedule events """
         self._plan_multi_agent_schedule(self._schedule)
 
     def execute_plan(self):
+        """Executes the plan created by plan_toolpath"""
         rospy.loginfo(f"\n\n{(50 * '#')}\nExecuting Schedule\n{(50 * '#')}\n")
         start_time = rospy.get_time()
         rate = rospy.Rate(10)
@@ -134,25 +183,41 @@ class ScheduleExecution(object):
     def _plan_multi_agent_schedule(self, schedule: MultiAgentToolpathSchedule):
         """Populates the schedule plan buffer with motion plans from each
         event in `schedule`.
+
+        :param schedule: The schedule
+        :type schedule: MultiAgentToolpathSchedule
         """
+
         rospy.loginfo(f"\n{(50 * '#')}\nPlanning events\n{(50 * '#')}\n")
         rospy.loginfo("Planning and buffering events in schedule")
         for agent, sched in schedule.schedules.items():
             start_state = rospy.wait_for_message(f"/{agent}/joint_states", JointState)
             for event in sched._events:
                 resp = self._plan_event(event, agent, start_state)
+                if resp.success:
+                    # create trajectory action server goal
+                    goal = FollowJointTrajectoryGoal()
+                    goal.trajectory = resp.trajectory
+                    self._schedule_plan_buffer[agent].append((event.start, goal))
 
-                # create trajectory action server goal
-                goal = FollowJointTrajectoryGoal()
-                goal.trajectory = resp.trajectory
-                self._schedule_plan_buffer[agent].append((event.start, goal))
-
-                start_state.position = resp.trajectory.points[-1].positions
-                start_state.velocity = resp.trajectory.points[-1].velocities
+                    start_state.position = resp.trajectory.points[-1].positions
+                    start_state.velocity = resp.trajectory.points[-1].velocities
 
     def _plan_event(
         self, event: MoveEvent, agent, start_state: JointState
     ) -> PlanCartesianTrajectoryResponse:
+        """Peforms Cartesian motion planning for a pyrobopath MoveEvent
+
+        :param event: event with cartesian path
+        :type event: MoveEvent
+        :param agent: the agent to plan for
+        :type agent: Hashable
+        :param start_state: the starting joint configuration
+        :type start_state: JointState
+        
+        :return: the response from the cartesian planning server
+        :rtype: PlanCartesianTrajectoryResponse
+        """
         context = self._contexts[agent]
         path_base = [(context.task_to_base @ np.array([*p, 1]))[:3] for p in event.data]
         req = PlanCartesianTrajectoryRequest()
