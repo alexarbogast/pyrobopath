@@ -205,7 +205,7 @@ class ScheduleExecution(object):
 
     def _plan_event(
         self, event: MoveEvent, agent, start_state: JointState
-    ) -> PlanCartesianTrajectoryResponse:
+    ):
         """Peforms Cartesian motion planning for a pyrobopath MoveEvent
 
         :param event: event with cartesian path

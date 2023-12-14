@@ -15,7 +15,6 @@ setup(
         "gcodeparser",
         "python-fcl",
         "numpy",
-        "quaternion",
-        "rospy"
+        "numpy-quaternion",
     ],
 )

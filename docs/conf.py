@@ -162,3 +162,15 @@ texinfo_documents = [
 
 
 # -- Extension configuration -------------------------------------------------
+
+# ignore ros packages
+autodoc_mock_imports = [
+    'rospy',
+    'tf2_ros',
+    'sensor_msgs',
+    'control_msgs',
+    'trajectory_msgs',
+    'cartesian_planning_server',
+    'actionlib', 
+    'geometry_msgs'
+]
