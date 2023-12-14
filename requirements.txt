@@ -4,3 +4,4 @@ gcodeparser
 python-fcl
 numpy
 quaternion
+rospy
