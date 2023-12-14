@@ -9,5 +9,12 @@ setup(
     package_dir={"": "src"},
     maintainer="Alex Arbogast",
     maintainer_email="arbogastaw@gmail.com",
-    install_requires=["networkx", "GcodeParser", "python-fcl", "numpy", "quaternion"],
+    install_requires=[
+        "matplotlib",
+        "networkx",
+        "gcodeparser",
+        "python-fcl",
+        "numpy",
+        "quaternion"
+    ],
 )
