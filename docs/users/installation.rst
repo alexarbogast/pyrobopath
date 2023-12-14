@@ -9,6 +9,12 @@ Install the **Python** dependencies
 - `NetworkX <https://networkx.org/>`_
 - `GcodeParser <https://github.com/AndyEveritt/GcodeParser>`_
 - `python-fcl <https://github.com/BerkeleyAutomation/python-fcl>`_
+- `Quaternion <https://pypi.org/project/Quaternion>`_
+
+.. code-block:: sh
+
+    $ pip install 
+    $ git clone git@github.com:alexarbogast/pyrobopath.git
 
 Install the **ROS** dependencies
 

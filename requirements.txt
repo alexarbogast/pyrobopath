@@ -1,0 +1,6 @@
+matplotlib
+networkx
+gcodeparser
+python-fcl
+numpy
+quaternion

@@ -9,5 +9,5 @@ setup(
     package_dir={"": "src"},
     maintainer="Alex Arbogast",
     maintainer_email="arbogastaw@gmail.com",
-    install_requires=["itertools", "networkx", "GcodeParser", "quaternion"],
+    install_requires=["networkx", "GcodeParser", "python-fcl", "numpy", "quaternion"],
 )
