@@ -2,7 +2,7 @@ src
 ===
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 3
 
    pyrobopath
    pyrobopath_ros

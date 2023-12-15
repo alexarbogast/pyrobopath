@@ -1,51 +1,67 @@
 Installation
 ============
 
-Step 1: Install dependencies
-----------------------------
+Pyrobopath can be installed as a standalone Python package or ROS package if 
+you plan to use ROS to execute Pyrobopath schedules. 
 
-Install the **Python** dependencies
+Step 1: Installing Python Package
+---------------------------------
 
-- `NetworkX <https://networkx.org/>`_
-- `GcodeParser <https://github.com/AndyEveritt/GcodeParser>`_
-- `python-fcl <https://github.com/BerkeleyAutomation/python-fcl>`_
-- `Quaternion <https://pypi.org/project/Quaternion>`_
+To install the python package locally, clone the repository and install with pip.
 
 .. code-block:: sh
 
-    $ pip install 
     $ git clone git@github.com:alexarbogast/pyrobopath.git
 
-Install the **ROS** dependencies
+.. code-block:: sh
 
-- `cartesian_planning <https://github.com/alexarbogast/cartesian_planning>`_
+    $ pip install .
 
-Step 2: Build package
----------------------
+If you plan to only use the Python package provided by Pyrobopath, you can stop 
+here and skip the following steps installing the ROS dependencies.
 
-Create a catkin workspace and clone the repository
+
+Step 2: Installing ROS Package
+------------------------------
+
+Create a catkin workspace
 
 .. code-block:: sh
 
     $ mkdir pyrobopath_ws/src && cd pyrobopath_ws/src 
-    $ git clone git@github.com:alexarbogast/pyrobopath.git
 
-Build the workspace 
+The Pyrobopath ROS interface depends on the `cartesian_planning
+<https://github.com/alexarbogast/cartesian_planning>`_ package for executing
+toolpath schedules. 
+
+To use the package, clone the https://github.com/alexarbogast/cartesian_planning
+repository and Pyrobopath into your catkin workspace and build the packages.
 
 .. code-block:: sh
 
-    $ cd ../ 
+    $ git clone git@github.com:alexarbogast/cartesian_planning.git
+    $ git clone git@github.com:alexarbogast/pyrobopath.git
+    $ cd ../
     $ catkin build
+
 
 Step 3: Multi-robot system packages
 -----------------------------------
 
-If you plan to use pyrobopath with ROS, see the package layout of 
-`hydra_ros <https://github.com/alexarbogast/hydra_ros>`_ for a reference
-multi-robot system ROS configuration.
+Specific robot and multi-robot system layouts ( `urdf
+<https://wiki.ros.org/urdf>`_, `ros_control
+<https://github.com/ros-controls/ros_control>`_, and `parameter files
+<https://wiki.ros.org/rosparam>`_) are required by `cartesian_planning
+<https://github.com/alexarbogast/cartesian_planning>`_ and pyrobopath.
 
 .. note:: Pyrobopath is configured to work with system configurations similar to the one pictured below.
 
 .. figure:: https://user-images.githubusercontent.com/46149643/221465891-7995e74a-185d-49c6-80c6-7d63d122b182.png
 
     hydra_ros
+
+See the examples below for reference when creating a system:
+
+- `cartesian_planning examples <https://github.com/alexarbogast/cartesian_planning/tree/master/cartesian_planning_examples>`_
+- `za_ros <https://github.com/alexarbogast/za_ros>`_
+- `hydra_ros <https://github.com/alexarbogast/hydra_ros>`_

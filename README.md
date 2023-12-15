@@ -1,5 +1,5 @@
 # PyRoboPath
-[![python](https://img.shields.io/badge/Python-3.8-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
+![Static Badge](https://img.shields.io/badge/Python-3.8%2B-blue?logo=python&logoColor=white)
 [![Documentation Status](https://readthedocs.org/projects/pyrobopath/badge/?version=latest)](https://pyrobopath.readthedocs.io/en/latest/?badge=latest)
 
 This project contains python and ROS packages for working with robotic toolpaths. The target functionalities include:
@@ -12,10 +12,6 @@ _This project is under heavy development and subject to changes in API and funct
 ## Documentation
 Checkout the [Pyrobopath Documentation](https://pyrobopath.readthedocs.io/en/latest/) for installation help, examples, and API reference. 
 
-## Dependencies
-- [NetworkX](https://networkx.org/)
-- [GcodeParser](https://github.com/AndyEveritt/GcodeParser)
-- [python-fcl](https://github.com/BerkeleyAutomation/python-fcl)
 
 ## Usage
-See [examples.py](./examples/examples.py) for usage demos.
+See [examples.py](./examples/examples.py) for python usage demos.

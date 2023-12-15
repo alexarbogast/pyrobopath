@@ -1,0 +1,13 @@
+/*******************************************************************************
+* dark theme
+*
+* all the variables used for dark theme coloring
+*/
+html[data-theme="dark"] {
+  /*****************************************************************************
+  * main colors
+  */
+  --pst-color-primary: rgb(113, 185, 69);
+  --pst-color-secondary: rgb(92, 71, 168);
+
+}

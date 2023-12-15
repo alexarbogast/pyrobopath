@@ -1,9 +1,15 @@
 
-Installation
-============
+Users Guide
+===========
 
 .. toctree::
-  :maxdepth: 3
+  :caption: Getting Started
 
   installation
-  examples
+
+.. toctree::
+  :caption: Examples
+  
+  examples/python_examples.rst
+  examples/ros_examples.rst
+  
