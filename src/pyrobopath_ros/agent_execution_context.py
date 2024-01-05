@@ -1,21 +1,28 @@
 import numpy as np
 import quaternion
+from typing import Hashable
 
 # ros
 import rospy
 import actionlib
 import tf2_ros
 from geometry_msgs.msg import Pose
+from control_msgs.msg import FollowJointTrajectoryAction, FollowJointTrajectoryGoal
+from cartesian_planning_server.srv import *
 
 # pyrobopath
 from pyrobopath.collision_detection import FCLRobotBBCollisionModel
 from pyrobopath.toolpath_scheduling import AgentModel
 
-from control_msgs.msg import FollowJointTrajectoryAction, FollowJointTrajectoryGoal
-from cartesian_planning_server.srv import *
-
 
 def transform_tf_to_np(transform):
+    """Returns a 4x4 numpy homogeneous transformation from a provided tf frame 
+
+    :param transform: the tf transform to convert
+    :type transform: :class:`geometry_msgs.msg.TransformStamped`
+    :return: a 4x4 homogeneous transformation matrix
+    :rtype: np.ndarray
+    """
     p = transform.translation
     q = transform.rotation
 
@@ -29,7 +36,27 @@ def transform_tf_to_np(transform):
 
 
 class AgentExecutionContext(object):
-    def __init__(self, id, tf_buffer: tf2_ros.Buffer):
+    """All items related to a single agents execution. The context is composed
+    of the following components:
+
+    PlanCartesianTrajectory client:
+        This service client finds joint trajectories from Cartesian schedules
+        found with pyrobopath.
+
+    FollowJointTrajectory client:
+        This action client executes joint trajectories found from the Cartesian
+        planning server.
+
+    This class also stores a copy of the AgentModel that is created from
+    parameters on the ROS parameter server.
+
+    :param id: A unique ID for the agent
+    :type id: Hashable
+    :param tf_buffer: A reference to the tf2 buffer for locating agent frames
+    :type tf_buffer: tf2_ros.Buffer
+    """
+
+    def __init__(self, id: Hashable, tf_buffer: tf2_ros.Buffer):
         self.id = id
         self.agent = AgentModel()
 
@@ -52,14 +79,15 @@ class AgentExecutionContext(object):
         )
 
     def read_parameters(self):
+        """Initialize the context with values from the ROS parameter server"""
         self.base_frame = rospy.get_param(f"{self.id}/base_frame")
         self.eef_frame = rospy.get_param(f"{self.id}/eef_frame")
         self.task_frame = rospy.get_param(f"{self.id}/task_frame")
 
         self.agent.capabilities = rospy.get_param(f"{self.id}/capabilities", [0])
         self.col_dim = (
-            rospy.get_param(f"{self.id}/collision/width", None),
             rospy.get_param(f"{self.id}/collision/length", None),
+            rospy.get_param(f"{self.id}/collision/width", None),
             rospy.get_param(f"{self.id}/collision/height", None),
         )
         if any([dim is None for dim in self.col_dim]):
@@ -80,13 +108,13 @@ class AgentExecutionContext(object):
             f"{self.id}/travel_velocity", self.agent.velocity
         )
 
-    def _read_required_parameter(self, parameter):
-        param = rospy.get_param(f"{self.id}/{parameter}")
-        if param is None:
-            rospy.logerr(f"Failed to find parameter {parameter} in namespace {self.id}")
-        return param
+    def update_tf(self, tf_buffer: tf2_ros.Buffer):
+        """Updates the values of the task frame, base frame, and end effector
+        frame from the tf2 buffer
 
-    def update_tf(self, tf_buffer):
+        :param tf_buffer: the buffer from which to update the frame data
+        :type tf_buffer: :class:`tf2_ros.Buffer`
+        """
         try:
             base_to_task = tf_buffer.lookup_transform(
                 self.task_frame, self.base_frame, rospy.Time()
@@ -106,6 +134,19 @@ class AgentExecutionContext(object):
         self.agent.base_frame_position = self.base_to_task[:3, 3]
 
     def create_pose(self, point: np.ndarray):
+        """Create a pose from a given point that aligns the robot configuration
+        with that required from an FCLRobotBBCollisionModel
+
+        The default pose is a frame that is initially coincident with the robot's
+        base frame. This frame is rotated about the vertical z-axis until the
+        x-axis aims towards the end effector. Then the frame is translated to
+        `point`.
+
+        :param point: A 3D point from which to make the pose
+        :type point: np.ndarray
+        :return: A pose from the provided point
+        :rtype: geometry_msgs.msg.Pose
+        """
         pose = Pose()
         pose.position.x = point[0]
         pose.position.y = point[1]

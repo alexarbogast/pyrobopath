@@ -161,6 +161,7 @@ class ScheduleExecution(object):
         self._schedule = self._planner.plan(toolpath, dependency_graph, self._options)
         rospy.loginfo(f"\n{(50 * '#')}\nFound Toolpath Plan!\n{(50 * '#')}\n")
         print_schedule_info(self._schedule)
+
         """ Cartesian motion planning for schedule events """
         self._plan_multi_agent_schedule(self._schedule)
 
@@ -203,9 +204,7 @@ class ScheduleExecution(object):
                     start_state.position = resp.trajectory.points[-1].positions
                     start_state.velocity = resp.trajectory.points[-1].velocities
 
-    def _plan_event(
-        self, event: MoveEvent, agent, start_state: JointState
-    ):
+    def _plan_event(self, event: MoveEvent, agent, start_state: JointState):
         """Peforms Cartesian motion planning for a pyrobopath MoveEvent
 
         :param event: event with cartesian path
@@ -214,7 +213,7 @@ class ScheduleExecution(object):
         :type agent: Hashable
         :param start_state: the starting joint configuration
         :type start_state: JointState
-        
+
         :return: the response from the cartesian planning server
         :rtype: PlanCartesianTrajectoryResponse
         """

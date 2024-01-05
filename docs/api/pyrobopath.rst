@@ -5,7 +5,7 @@ Subpackages
 -----------
 
 .. toctree::
-   :maxdepth: 4
+   :maxdepth: 3
 
    pyrobopath.collision_detection
    pyrobopath.scheduling

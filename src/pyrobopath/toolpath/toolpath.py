@@ -41,12 +41,33 @@ class Toolpath(object):
         self.contours: List[Contour] = []
 
     def tools(self):
-        """Returns a unique list of tools in the toolpath"""
+        """Find a unique list of tools in the toolpath
+
+        :return: A unique list of tools in the toolpath
+        :rtype: List(Hashable)
+        """        
         tools = set(c.tool for c in self.contours)
         return list(tools)
+    
+    def scale(self, value):
+        """Uniformly scale the points in each contour by value
+
+        :param value: the value to scale each point
+        :type value: float
+        """
+        for c in self.contours:
+            for p in c.path:
+                p *= value    
 
     @classmethod
     def from_gcode(cls, gcode: List[GcodeLine]) -> Toolpath:
+        """Create a toolpath from a list of Gcode lines
+
+        :param gcode: The list of gcode lines from which to create the Toolpath
+        :type gcode: List[GcodeLine]
+        :return: A Toolpath created from gcode 
+        :rtype: Toolpath
+        """        
         toolpath = Toolpath()
         contour = Contour()
         xyze = np.array([0.0, 0.0, 0.0, 0.0])
