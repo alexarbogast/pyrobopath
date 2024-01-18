@@ -8,7 +8,7 @@ import actionlib
 import tf2_ros
 from geometry_msgs.msg import Pose
 from control_msgs.msg import FollowJointTrajectoryAction, FollowJointTrajectoryGoal
-from cartesian_planning_server.srv import *
+from cartesian_planning_msgs.srv import *
 
 # pyrobopath
 from pyrobopath.collision_detection import FCLRobotBBCollisionModel
@@ -16,7 +16,7 @@ from pyrobopath.toolpath_scheduling import AgentModel
 
 
 def transform_tf_to_np(transform):
-    """Returns a 4x4 numpy homogeneous transformation from a provided tf frame 
+    """Returns a 4x4 numpy homogeneous transformation from a provided tf frame
 
     :param transform: the tf transform to convert
     :type transform: :class:`geometry_msgs.msg.TransformStamped`

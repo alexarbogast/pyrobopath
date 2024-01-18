@@ -12,7 +12,8 @@ import tf2_ros
 from sensor_msgs.msg import JointState
 from control_msgs.msg import FollowJointTrajectoryGoal
 from trajectory_msgs.msg import JointTrajectoryPoint
-from cartesian_planning_server.srv import *
+from cartesian_planning_msgs.msg import ErrorCodes
+from cartesian_planning_msgs.srv import *
 
 # pyrobopath
 from pyrobopath.toolpath import Toolpath
@@ -20,6 +21,9 @@ from pyrobopath.scheduling import DependencyGraph
 from pyrobopath.toolpath_scheduling import *
 
 from .agent_execution_context import AgentExecutionContext
+
+
+JOINT_STATE_TIMEOUT = 5  # seconds
 
 
 def toolpath_from_gcode(filepath) -> Toolpath:
@@ -55,10 +59,19 @@ def print_schedule_info(schedule: MultiAgentToolpathSchedule):
 
 
 class ScheduleExecution(object):
-    """The ScheduleExecution class connects the necessary ROS interfaces to
-    execute probopath `ToolpathSchedules` in ROS
+    """
+    The ScheduleExecution class connects the necessary ROS interfaces to execute
+    probopath `ToolpathSchedules` in ROS.
 
-    # TODO: List ROS parameters
+    This object creates and manages an :class:`AgentExecutionContext` for each
+    namespace in the list provided by the ros parameter namespace. This class
+    acts as the interface between pyrobopath scheduling and cartesian
+    trajectory planning and execution.
+
+    ROS Parameters:
+        |  `namespaces`: A list of unique namespaces for each robot.
+        |  `retract_height`: The distance a robot should move upward between contours
+        |  `collision_gap_threshold`: The linear interpolation distance for collision checking
     """
 
     def __init__(self) -> None:
@@ -85,6 +98,10 @@ class ScheduleExecution(object):
         self._initialize_pyrobopath()
         rospy.loginfo("Pyrobopath: ready to plan!")
 
+    @property
+    def agent_models(self):
+        return {id: context.agent for id, context in self._contexts.items()}
+
     def _initialize_pyrobopath(self):
         """Initialize the pyrobopath toolpath planner and planning options
         from ROS parameters
@@ -101,6 +118,14 @@ class ScheduleExecution(object):
             collision_offset=collision_offset,
             collision_gap_threshold=collision_gap_threshold,
         )
+
+    def _build_agent_contexts(self, id: str):
+        """Build an AgentExecutionContext with a unique id
+
+        :param id: Unique id for agent.
+        :type id: str
+        """
+        self._contexts[id] = AgentExecutionContext(id, self.tf_buffer)
 
     def move_home(self):
         """Moves all agents to the joint positions in the `/{ns}/home_position`
@@ -127,15 +152,7 @@ class ScheduleExecution(object):
         for id in self._contexts.keys():
             self._contexts[id].action_client.wait_for_result()
 
-    def _build_agent_contexts(self, id: str):
-        """Build an AgentExecutionContext with a unique id
-
-        :param id: Unique id for agent.
-        :type id: str
-        """
-        self._contexts[id] = AgentExecutionContext(id, self.tf_buffer)
-
-    def plan_toolpath(
+    def schedule_toolpath(
         self, toolpath: Toolpath, dependency_graph: DependencyGraph = None
     ):
         """Finds the schedule for the provided toolpath and performs
@@ -150,6 +167,7 @@ class ScheduleExecution(object):
         :param dependency_graph: an optional dependency graph, defaults to None
         :type dependency_graph: DependencyGraph, optional
         """
+
         if dependency_graph is None:
             dependency_graph = create_dependency_graph_by_layers(toolpath)
 
@@ -162,14 +180,19 @@ class ScheduleExecution(object):
         rospy.loginfo(f"\n{(50 * '#')}\nFound Toolpath Plan!\n{(50 * '#')}\n")
         print_schedule_info(self._schedule)
 
-        """ Cartesian motion planning for schedule events """
-        self._plan_multi_agent_schedule(self._schedule)
-
-    def execute_plan(self):
-        """Executes the plan created by plan_toolpath"""
+    def execute_schedule(self):
+        """
+        Perform Cartesian motion planning for the stored schedule
+        and execute the motion plan on success.
+        """
         rospy.loginfo(f"\n\n{(50 * '#')}\nExecuting Schedule\n{(50 * '#')}\n")
         start_time = rospy.get_time()
         rate = rospy.Rate(10)
+
+        """ Cartesian motion planning for scheduled events """
+        if not self._plan_multi_agent_schedule(self._schedule):
+            return
+
         while any(self._schedule_plan_buffer.values()) and not rospy.is_shutdown():
             now = rospy.get_time()
             for agent, plans in self._schedule_plan_buffer.items():
@@ -189,13 +212,23 @@ class ScheduleExecution(object):
         :type schedule: MultiAgentToolpathSchedule
         """
 
-        rospy.loginfo(f"\n{(50 * '#')}\nPlanning events\n{(50 * '#')}\n")
-        rospy.loginfo("Planning and buffering events in schedule")
+        rospy.loginfo("Planning events in multi-agent schedule")
         for agent, sched in schedule.schedules.items():
-            start_state = rospy.wait_for_message(f"/{agent}/joint_states", JointState)
+            joint_state_topic = f"/{agent}/joint_states"
+            start_state = JointState()
+            try:
+                start_state = rospy.wait_for_message(
+                    joint_state_topic, JointState, JOINT_STATE_TIMEOUT
+                )
+            except rospy.ROSException as e:
+                rospy.logerr(
+                    "Timed out waiting for JointState on topic: " + joint_state_topic
+                )
+                return False
+
             for event in sched._events:
                 resp = self._plan_event(event, agent, start_state)
-                if resp.success:
+                if resp.error_code.val == ErrorCodes.SUCCESS:
                     # create trajectory action server goal
                     goal = FollowJointTrajectoryGoal()
                     goal.trajectory = resp.trajectory
@@ -203,6 +236,14 @@ class ScheduleExecution(object):
 
                     start_state.position = resp.trajectory.points[-1].positions
                     start_state.velocity = resp.trajectory.points[-1].velocities
+                else:
+                    rospy.logerr(
+                        "Failed to plan Cartesian trajectory. "
+                        + "Planning service returned with ERROR_CODE: "
+                        + str(resp.error_code.val)
+                    )
+                    return False
+        return True
 
     def _plan_event(self, event: MoveEvent, agent, start_state: JointState):
         """Peforms Cartesian motion planning for a pyrobopath MoveEvent
@@ -231,9 +272,9 @@ class ScheduleExecution(object):
         else:
             req.velocity = context.agent.travel_velocity
 
-        resp = None
+        resp = PlanCartesianTrajectoryResponse()
         try:
             resp = context.planning_client(req)
         except rospy.ServiceException as e:
-            rospy.logerr("Failed to plan cartesian trajectory: " + str(e))
+            rospy.logerr(f"Cartesian planning service failed with exception: {e}")
         return resp
