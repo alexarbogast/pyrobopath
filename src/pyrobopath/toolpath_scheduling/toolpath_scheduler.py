@@ -95,14 +95,19 @@ class EventBuilder(object):
         p_approach[2] += self.context.options.retract_height
         return self.build_move_event(t_start, [p_start, p_approach, p_end], agent)
 
+    def build_home_event(self, t_start, p_start, agent):
+        p_retract = p_start.copy()
+        p_retract[2] += self.context.options.retract_height
+        return self.build_move_event(
+            t_start,
+            [p_start, p_retract, self.context.agent_models[agent].home_position],
+            agent,
+        )
+
     def build_event_chain(self, t_start, p_start, contour: Contour, agent):
         e_travel = self.build_travel_event(t_start, p_start, contour.path[0], agent)
         e_contour = self.build_contour_event(e_travel.end, contour, agent)
-        e_home = self.build_move_event(
-            e_contour.end,
-            [contour.path[-1], self.context.agent_models[agent].home_position],
-            agent,
-        )
+        e_home = self.build_home_event(e_contour.end, contour.path[-1], agent)
         return [e_travel, e_contour, e_home]
 
 

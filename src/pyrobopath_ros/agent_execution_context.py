@@ -73,7 +73,7 @@ class AgentExecutionContext(object):
             f"{self.id}/cartesian_planning_server/plan_cartesian_trajectory",
             PlanCartesianTrajectory,
         )
-        self.action_client = actionlib.SimpleActionClient(
+        self.execution_client = actionlib.SimpleActionClient(
             f"{self.id}/position_trajectory_controller/follow_joint_trajectory",
             FollowJointTrajectoryAction,
         )
@@ -132,6 +132,9 @@ class AgentExecutionContext(object):
         self.base_to_task = transform_tf_to_np(base_to_task.transform)
         self.agent.home_position = self.eef_to_task[:3, 3]
         self.agent.base_frame_position = self.base_to_task[:3, 3]
+
+    def shutdown(self):
+        self.execution_client.cancel_all_goals()
 
     def create_pose(self, point: np.ndarray):
         """Create a pose from a given point that aligns the robot configuration

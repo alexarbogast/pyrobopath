@@ -80,7 +80,7 @@ class ScheduleExecution(object):
         rospy.sleep(0.1)
 
         self._namespaces = rospy.get_param("namespaces")
-        self._contexts = dict()
+        self._contexts = defaultdict(AgentExecutionContext)
         for ns in self._namespaces:
             self._build_agent_contexts(ns)
 
@@ -90,13 +90,15 @@ class ScheduleExecution(object):
 
         rospy.loginfo("Waiting for follow_trajectory_action servers...")
         for context in self._contexts.values():
-            context.action_client.wait_for_server()
+            context.execution_client.wait_for_server()
 
         self._schedule = None
         self._schedule_plan_buffer = defaultdict(list)
 
         self._initialize_pyrobopath()
         rospy.loginfo("Pyrobopath: ready to plan!")
+
+        rospy.on_shutdown(self._shutdown)
 
     @property
     def agent_models(self):
@@ -146,11 +148,11 @@ class ScheduleExecution(object):
             goal = FollowJointTrajectoryGoal()
             goal.trajectory.joint_names = start_state.name
             goal.trajectory.points = [point_start, point_goal]
-            self._contexts[id].action_client.send_goal(goal)
+            self._contexts[id].execution_client.send_goal(goal)
 
         # wait for completion
         for id in self._contexts.keys():
-            self._contexts[id].action_client.wait_for_result()
+            self._contexts[id].execution_client.wait_for_result()
 
     def schedule_toolpath(
         self, toolpath: Toolpath, dependency_graph: DependencyGraph = None
@@ -189,11 +191,15 @@ class ScheduleExecution(object):
         start_time = rospy.get_time()
         rate = rospy.Rate(10)
 
-        """ Cartesian motion planning for scheduled events """
+        # Cartesian motion planning for scheduled events
         if not self._plan_multi_agent_schedule(self._schedule):
             return
 
-        while any(self._schedule_plan_buffer.values()) and not rospy.is_shutdown():
+        # Execute Cartesian motion plan
+        while any(self._schedule_plan_buffer.values()):
+            if rospy.is_shutdown():
+                return
+
             now = rospy.get_time()
             for agent, plans in self._schedule_plan_buffer.items():
                 if not plans or now - start_time < plans[0][0]:
@@ -201,7 +207,7 @@ class ScheduleExecution(object):
 
                 _, jt_goal = self._schedule_plan_buffer[agent].pop(0)
                 rospy.loginfo(f"Starting event for {agent}")
-                self._contexts[agent].action_client.send_goal(jt_goal)
+                self._contexts[agent].execution_client.send_goal(jt_goal)
             rate.sleep()
 
     def _plan_multi_agent_schedule(self, schedule: MultiAgentToolpathSchedule):
@@ -211,7 +217,6 @@ class ScheduleExecution(object):
         :param schedule: The schedule
         :type schedule: MultiAgentToolpathSchedule
         """
-
         rospy.loginfo("Planning events in multi-agent schedule")
         for agent, sched in schedule.schedules.items():
             joint_state_topic = f"/{agent}/joint_states"
@@ -278,3 +283,8 @@ class ScheduleExecution(object):
         except rospy.ServiceException as e:
             rospy.logerr(f"Cartesian planning service failed with exception: {e}")
         return resp
+
+    def _shutdown(self):
+        rospy.logwarn("Received shutdown request. Cancelling all active goals")
+        for context in self._contexts.values():
+            context.shutdown()
