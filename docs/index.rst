@@ -13,7 +13,7 @@ Contents
     :maxdepth: 1
 
     Users Guide <users/index.rst>
-    Reference <api/modules.rst>
+    Reference <api.rst>
     Demos <demos.rst>
     🚀 Github <https://github.com/alexarbogast/pyrobopath>
 

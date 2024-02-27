@@ -1,8 +1,10 @@
 from __future__ import annotations
-from typing import List
+from typing import List, Sequence
 import numpy as np
 import bisect
 from itertools import tee
+
+from pyrobopath.tools.types import ArrayLike
 
 
 def pairwise(iterable):
@@ -14,18 +16,18 @@ def pairwise(iterable):
 class TrajectoryPoint(object):
     """Generic trajectory point described as a one dimensional vector"""
 
-    def __init__(self, data, time):
+    def __init__(self, data: ArrayLike, time: float):
         self.data = np.array(data)
         self.time = time
 
     def __lt__(self, other: TrajectoryPoint):
         return self.time < other.time
 
-    def __eq__(self, other: TrajectoryPoint):
+    def __eq__(self, other: object):
         if isinstance(other, TrajectoryPoint):
             return (self.data == other.data).all() and self.time == other.time
-        return False
-    
+        raise NotImplemented
+
     def __repr__(self):
         return f"(Time: {self.time}, Point: {self.data})"
 
@@ -47,10 +49,10 @@ class Trajectory:
     Trajectory points should maintain a stricly increasing sorted order
     """
 
-    def __init__(self, points: List[TrajectoryPoint]=None):
+    def __init__(self, points: List[TrajectoryPoint] | None = None):
         self.points: List[TrajectoryPoint] = []
         if points is not None:
-            self.points = points        
+            self.points = points
         self.idx = 0
 
     def __iter__(self):
@@ -68,11 +70,11 @@ class Trajectory:
         new = Trajectory()
         new.points = self.points + other.points
         return new
-    
-    def __eq__(self, other: Trajectory):
+
+    def __eq__(self, other: object):
         if isinstance(other, Trajectory):
             return all([tp1 == tp2 for tp1, tp2 in zip(self, other)])
-        return False
+        raise NotImplemented
 
     def __getitem__(self, key):
         return self.points[key]
@@ -86,17 +88,17 @@ class Trajectory:
 
     def start_time(self):
         if not self.points:
-            return None
+            return 0.0
         return self.points[0].time
 
     def end_time(self):
         if not self.points:
-            return None
+            return 0.0
         return self.points[-1].time
 
     def elapsed(self):
         if not self.points:
-            return None
+            return 0.0
         return self.points[-1].time - self.points[0].time
 
     def add_traj_point(self, point):
@@ -114,17 +116,17 @@ class Trajectory:
             length += s.dist(e)
         return length
 
-    def get_point_at_time(self, time):
+    def get_point_at_time(self, time) -> TrajectoryPoint | None:
         """
         Interpolate the trajectory at 'time'. This function returns 'None'
         for queries outside of the interval [start_time(), end_time()]
         """
         if not self.points:
             return None
-        
+
         if time < self.start_time() or time > self.end_time():
             return None
-        
+
         ans = bisect.bisect_left([p.time for p in self.points], time)
         s = self.points[ans]
         e = self.points[ans - 1]
@@ -140,10 +142,10 @@ class Trajectory:
         in the closed interval [start, end].
         """
         if not self.points:
-            return None
-        
+            return self
+
         if start > self.end_time() or end < self.start_time():
-            return None
+            return Trajectory()
 
         new_traj = Trajectory()
         start_point = self.get_point_at_time(start)
@@ -163,7 +165,7 @@ class Trajectory:
         return new_traj
 
     @staticmethod
-    def from_const_vel_path(path: List[np.ndarray], velocity, start_time=0.0):
+    def from_const_vel_path(path: Sequence[ArrayLike], velocity, start_time=0.0):
         traj = Trajectory()
         distance_trav = 0.0
         traj.add_traj_point(TrajectoryPoint(path[0], start_time))

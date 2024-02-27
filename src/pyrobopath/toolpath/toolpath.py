@@ -2,14 +2,8 @@ from __future__ import annotations
 from typing import List
 from gcodeparser import GcodeParser, GcodeLine
 import numpy as np
-from itertools import tee
 
-
-def pairwise(iterable):
-    a, b = tee(iterable)
-    next(b, None)
-    return zip(a, b)
-
+from pyrobopath.tools.utils import pairwise
 
 class Contour(object):
     counter: int = 0

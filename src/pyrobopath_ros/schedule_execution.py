@@ -20,7 +20,7 @@ from pyrobopath.toolpath import Toolpath
 from pyrobopath.scheduling import DependencyGraph
 from pyrobopath.toolpath_scheduling import *
 
-from .agent_execution_context import AgentExecutionContext
+from pyrobopath_ros.agent_execution_context import AgentExecutionContext
 
 
 JOINT_STATE_TIMEOUT = 5  # seconds

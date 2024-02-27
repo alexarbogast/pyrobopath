@@ -1,14 +1,17 @@
 from __future__ import annotations
 from typing import Dict
-import numpy as np
 from dataclasses import dataclass
 
-from ..toolpath import Toolpath, Contour
-from ..scheduling import DependencyGraph
+from pyrobopath.toolpath import Toolpath, Contour
+from pyrobopath.scheduling import DependencyGraph
 
-from .system_model import AgentModel
-from .schedule import ContourEvent, MoveEvent, MultiAgentToolpathSchedule
-from .toolpath_collision import events_cause_collision
+from pyrobopath.toolpath_scheduling.system_model import AgentModel
+from pyrobopath.toolpath_scheduling.schedule import (
+    ContourEvent,
+    MoveEvent,
+    MultiAgentToolpathSchedule,
+)
+from pyrobopath.toolpath_scheduling.toolpath_collision import events_cause_collision
 
 
 @dataclass

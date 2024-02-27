@@ -1,10 +1,10 @@
 from __future__ import annotations
-from typing import List, Hashable
+from typing import List, Dict, Hashable 
 import collections
 
-from ..scheduling import Event, Schedule, MultiAgentSchedule
-from ..collision_detection import Trajectory
-from ..toolpath import Contour
+from pyrobopath.scheduling import Event, Schedule, MultiAgentSchedule
+from pyrobopath.collision_detection import Trajectory
+from pyrobopath.tools.types import NDArray
 
 
 class MoveEvent(Event):
@@ -26,15 +26,15 @@ class ToolpathSchedule(Schedule):
         self._events: List[MoveEvent] = []
 
     # schedule sampling
-    def get_state(self, time, default=None):
+    def get_state(self, time, default: NDArray | None=None) -> NDArray | None:
         """Samples the state (position) in the toolpath schedule at time"""
         state = default
         if time < self.start_time():
             return state
-        
+
         for e in self._events:
             if e.end < time:
-                state = e.data[-1] # keep track of current state
+                state = e.data[-1]  # keep track of current state
                 continue
 
             if e.start <= time:
@@ -42,11 +42,12 @@ class ToolpathSchedule(Schedule):
             break
 
         return state
-    
+
+
 class MultiAgentToolpathSchedule(MultiAgentSchedule):
     def __init__(self):
         super().__init__()
-        self.schedules = collections.defaultdict(ToolpathSchedule)
+        self.schedules: Dict[Hashable, ToolpathSchedule] = collections.defaultdict(ToolpathSchedule)
 
     def add_agent(self, agent: Hashable):
         self.schedules[agent] = ToolpathSchedule()

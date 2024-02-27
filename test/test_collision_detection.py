@@ -23,8 +23,8 @@ class TestCollisionDetection(unittest.TestCase):
     def test_trajectory(self):
         traj = Trajectory()
 
-        self.assertIsNone(traj.start_time())
-        self.assertIsNone(traj.end_time())
+        self.assertEqual(traj.start_time(), 0.0)
+        self.assertEqual(traj.end_time(), 0.0)
 
         traj.add_traj_point(TrajectoryPoint([-1.0, 1.0, 0.0], -20.0))
         traj.add_traj_point(TrajectoryPoint([1.0, 0.0, -1.0], 40.0))
@@ -61,7 +61,7 @@ class TestCollisionDetection(unittest.TestCase):
         # fmt: off
         # before start time
         sliced = traj.slice(-2.0, -1.0)
-        self.assertIsNone(sliced, "Sliced is not None")
+        self.assertEqual(sliced, Trajectory(), "Sliced is not empty")
 
         # up to start time
         sliced = traj.slice(-2.0, 0.0)
@@ -110,7 +110,7 @@ class TestCollisionDetection(unittest.TestCase):
 
         # after end time
         sliced = traj.slice(3.0, 4.0)
-        self.assertIsNone(sliced, "Sliced is not None")
+        self.assertEqual(sliced, Trajectory(), "Sliced is not empty")
         # fmt: on
 
     def test_collision_group(self):
@@ -352,16 +352,16 @@ class TestTrajectoryCollision(unittest.TestCase):
         self.assertTrue(ret)
 
     def test_trajectory_collision(self):
-        base_A = [-2.0, 0.0, 0.0]
-        base_B = [2.0, 0.0, 0.0]
+        base_A = np.array([-2.0, 0.0, 0.0])
+        base_B = np.array([2.0, 0.0, 0.0])
 
         model_A = LineCollisionModel(base_A)
         model_B = LineCollisionModel(base_B)
         collision_group = CollisionGroup([model_A, model_B])
 
         # trajectories with the same start time
-        path1 = [[-1, 1, 0], [-1, -1, 0]]
-        path2 = [[1, -1, 0], [1, 1, 0]]
+        path1 = [np.array([-1., 1., 0.]), np.array([-1., -1., 0.])]
+        path2 = [np.array([1., -1., 0.]), np.array([1., 1., 0.])]
         trajA = Trajectory.from_const_vel_path(path1, 1.0)
         trajB = Trajectory.from_const_vel_path(path2, 1.0)
 
@@ -376,8 +376,8 @@ class TestTrajectoryCollision(unittest.TestCase):
         self.assertTrue(collision, "Colliding trajectory returned with collision-free")
 
         # trajectories with different start times
-        path1 = [[0, 1, 0], [0, -1, 0]]
-        path2 = [[1.5, 0, 0], [-0.5, 0, 0]]
+        path1 = [np.array([0, 1, 0]), np.array([0, -1, 0])]
+        path2 = [np.array([1.5, 0, 0]), np.array([-0.5, 0, 0])]
         trajA = Trajectory.from_const_vel_path(path1, 1.0)
         trajB = Trajectory.from_const_vel_path(path2, 1.0)
 
@@ -398,8 +398,8 @@ class TestTrajectoryCollision(unittest.TestCase):
         model2 = FCLBoxCollisionModel(1., 1., 1.)
         threshold = 0.01
 
-        path1 = [[-3., 0., 0.], [3., 0., 0.]]
-        path2 = [[0., -3., 0.], [0., 3., 0.]]
+        path1 = [np.array([-3., 0., 0.]), np.array([3., 0., 0.])]
+        path2 = [np.array([0., -3., 0.]), np.array([0., 3., 0.])]
         traj1 = Trajectory.from_const_vel_path(path1, 1.0, 0.0)
         traj2 = Trajectory.from_const_vel_path(path2, 1.0, 0.0)
         ret = trajectory_collision_query(model1, traj1, model2, traj2, threshold)

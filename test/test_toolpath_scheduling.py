@@ -1,11 +1,13 @@
 import unittest
 import numpy as np
+from pyrobopath.collision_detection.fcl_collision_models import FCLCollisionModel
 
 from pyrobopath.toolpath import Contour
 from pyrobopath.collision_detection import (
     FCLRobotBBCollisionModel,
     TrajectoryPoint,
     Trajectory,
+    collision_model,
 )
 from pyrobopath.toolpath_scheduling import *
 
@@ -62,22 +64,27 @@ class TestToolpathSchedule(unittest.TestCase):
 
 class TestToolpathCollision(unittest.TestCase):
     def test_event_causes_collision_two(self):
-        agent1 = AgentModel()
-        agent1.base_frame_position = [-5.0, 0.0, 0.0]
-        agent1.home_position = [-3.0, 0.0, 0.0]
-        agent1.collision_model = FCLRobotBBCollisionModel(
-            3.0, 0.2, 1.0, agent1.base_frame_position
-        )
+        bf1 = np.array([-5.0, 0.0, 0.0])
+        bf2 = np.array([5.0, 0.0, 0.0])
 
-        agent2 = AgentModel()
-        agent2.base_frame_position = [5.0, 0.0, 0.0]
-        agent2.home_position = [3.0, 0.0, 0.0]
-        agent2.collision_model = FCLRobotBBCollisionModel(
-            3.0, 0.2, 1.0, agent2.base_frame_position
+        agent1 = AgentModel(
+            capabilities=[0],
+            collision_model=FCLRobotBBCollisionModel(3.0, 0.2, 1.0, bf1),
+            base_frame_position=bf1,
+            home_position=np.array([-3.0, 0.0, 0.0]),
+            velocity=10.0,
+            travel_velocity=10.0,
         )
-        threshold = 0.05
-
+        agent2 = AgentModel(
+            capabilities=[0],
+            collision_model=FCLRobotBBCollisionModel(3.0, 0.2, 1.0, bf2),
+            base_frame_position=bf2,
+            home_position=np.array([3.0, 0.0, 0.0]),
+            velocity=10.0,
+            travel_velocity=10.0,
+        )
         agent_models = {"agent1": agent1, "agent2": agent2}
+        threshold = 0.05
 
         c1 = Contour([np.array([0.0, 2.0, 0.0]), np.array([0.0, -2.0, 0.0])])
         c2 = Contour([np.array([2.0, 0.0, 0.0]), np.array([-2.0, 0.0, 0.0])])
@@ -124,29 +131,38 @@ class TestToolpathCollision(unittest.TestCase):
         self.assertTrue(collide)
 
     def test_event_causes_collision_three(self):
-        agent1 = AgentModel()
-        agent1.base_frame_position = [-5.0, 0.0, 0.0]
-        agent1.home_position = [-3.0, 0.0, 0.0]
-        agent1.collision_model = FCLRobotBBCollisionModel(
-            3.0, 0.2, 1.0, agent1.base_frame_position
+        agent1 = AgentModel(
+            capabilities=[0],
+            base_frame_position=np.array([-5.0, 0.0, 0.0]),
+            home_position=np.array([-3.0, 0.0, 0.0]),
+            velocity=10.0,
+            travel_velocity=10.0,
+            collision_model=FCLRobotBBCollisionModel(
+                3.0, 0.2, 1.0, np.array([-5.0, 0.0, 0.0])
+            ),
         )
-
-        agent2 = AgentModel()
-        agent2.base_frame_position = [5.0, 0.0, 0.0]
-        agent2.home_position = [3.0, 0.0, 0.0]
-        agent2.collision_model = FCLRobotBBCollisionModel(
-            3.0, 0.2, 1.0, agent2.base_frame_position
+        agent2 = AgentModel(
+            capabilities=[0],
+            base_frame_position=np.array([5.0, 0.0, 0.0]),
+            home_position=np.array([3.0, 0.0, 0.0]),
+            velocity=10.0,
+            travel_velocity=10.0,
+            collision_model=FCLRobotBBCollisionModel(
+                3.0, 0.2, 1.0, np.array([5.0, 0.0, 0.0])
+            ),
         )
-
-        agent3 = AgentModel()
-        agent3.base_frame_position = [0.0, 5.0, 0.0]
-        agent3.home_position = [0.0, 3.0, 0.0]
-        agent3.collision_model = FCLRobotBBCollisionModel(
-            3.0, 0.2, 1.0, agent3.base_frame_position
+        agent3 = AgentModel(
+            capabilities=[0],
+            base_frame_position=np.array([0.0, 5.0, 0.0]),
+            home_position=np.array([0.0, 3.0, 0.0]),
+            velocity=10.0,
+            travel_velocity=10.0,
+            collision_model=FCLRobotBBCollisionModel(
+                3.0, 0.2, 1.0, np.array([0.0, 5.0, 0.0])
+            ),
         )
-        threshold = 0.05
-
         agent_models = {"agent1": agent1, "agent2": agent2, "agent3": agent3}
+        threshold = 0.05
 
         c1 = Contour([np.array([-4.0, 0.0, 0.0]), np.array([-2.0, 0.0, 0.0])])
         c2 = Contour([np.array([4.0, 0.0, 0.0]), np.array([2.0, 0.0, 0.0])])
@@ -240,34 +256,35 @@ class TestToolpathCollision(unittest.TestCase):
         self.assertTrue(collide, "Colliding event returned False")
 
     def test_events_cause_collision_two(self):
-        agent1 = AgentModel()
-        agent1.base_frame_position = [-5.0, 0.0, 0.0]
-        agent1.home_position = [-3.0, 0.0, 0.0]
-        agent1.collision_model = FCLRobotBBCollisionModel(
-            3.0, 0.2, 1.0, agent1.base_frame_position
+        agent1 = AgentModel(
+            capabilities=[0],
+            base_frame_position=np.array([-5.0, 0.0, 0.0]),
+            home_position=np.array([-3.0, 0.0, 0.0]),
+            velocity=10.0,
+            travel_velocity=10.0,
+            collision_model=FCLRobotBBCollisionModel(
+                3.0, 0.2, 1.0, np.array([-5.0, 0.0, 0.0])
+            ),
         )
-
-        agent2 = AgentModel()
-        agent2.base_frame_position = [5.0, 0.0, 0.0]
-        agent2.home_position = [3.0, 0.0, 0.0]
-        agent2.collision_model = FCLRobotBBCollisionModel(
-            3.0, 0.2, 1.0, agent2.base_frame_position
+        agent2 = AgentModel(
+            capabilities=[0],
+            base_frame_position=np.array([5.0, 0.0, 0.0]),
+            home_position=np.array([3.0, 0.0, 0.0]),
+            velocity=10.0,
+            travel_velocity=10.0,
+            collision_model=FCLRobotBBCollisionModel(
+                3.0, 0.2, 1.0, np.array([5.0, 0.0, 0.0])
+            ),
         )
+        agent_models = {"agent1": agent1, "agent2": agent2}
         threshold = 0.05
 
-        agent_models = {"agent1": agent1, "agent2": agent2}
         schedule = MultiAgentToolpathSchedule()
         schedule.add_agent("agent1")
         schedule.add_agent("agent2")
 
         c1s = [
-            Contour(
-                [
-                    np.array([-3.0, 0.0, 0.0]),
-                    np.array([-2.0, 0.0, 0.0]),
-                ],
-                tool=-1,
-            ),
+            Contour([np.array([-3.0, 0.0, 0.0]), np.array([-2.0, 0.0, 0.0])], tool=-1),
             Contour([np.array([-2.0, 0.0, 0.0]), np.array([1.0, 0.0, 0.0])], tool=0),
             Contour(
                 [
@@ -453,26 +470,26 @@ class TestToolpathCollision(unittest.TestCase):
     def test_chop_concurrent_trajectories(self):
         # list 1
         t11 = Trajectory()
-        t11.add_traj_point(TrajectoryPoint(np.array([0., 0., 0.]), 0.))
-        t11.add_traj_point(TrajectoryPoint(np.array([1., 0., 0.]), 1.))
+        t11.add_traj_point(TrajectoryPoint(np.array([0.0, 0.0, 0.0]), 0.0))
+        t11.add_traj_point(TrajectoryPoint(np.array([1.0, 0.0, 0.0]), 1.0))
 
         t12 = Trajectory()
-        t12.add_traj_point(TrajectoryPoint(np.array([5., 0., 0.]), 5.))
-        t12.add_traj_point(TrajectoryPoint(np.array([8., 0., 0.]), 8.))
+        t12.add_traj_point(TrajectoryPoint(np.array([5.0, 0.0, 0.0]), 5.0))
+        t12.add_traj_point(TrajectoryPoint(np.array([8.0, 0.0, 0.0]), 8.0))
 
         t13 = Trajectory()
-        t13.add_traj_point(TrajectoryPoint(np.array([8., 0., 0.]), 8.))
-        t13.add_traj_point(TrajectoryPoint(np.array([9., 0., 0.]), 9.))
-        list1 = [t11, t12, t13] 
+        t13.add_traj_point(TrajectoryPoint(np.array([8.0, 0.0, 0.0]), 8.0))
+        t13.add_traj_point(TrajectoryPoint(np.array([9.0, 0.0, 0.0]), 9.0))
+        list1 = [t11, t12, t13]
 
         # list 2
         t21 = Trajectory()
-        t21.add_traj_point(TrajectoryPoint(np.array([0., 0., 0.]), 0.))
-        t21.add_traj_point(TrajectoryPoint(np.array([6., 0., 0.]), 6.))
+        t21.add_traj_point(TrajectoryPoint(np.array([0.0, 0.0, 0.0]), 0.0))
+        t21.add_traj_point(TrajectoryPoint(np.array([6.0, 0.0, 0.0]), 6.0))
 
         t22 = Trajectory()
-        t22.add_traj_point(TrajectoryPoint(np.array([7., 0., 0.]), 7.))
-        t22.add_traj_point(TrajectoryPoint(np.array([10., 0., 0.]), 10.))
+        t22.add_traj_point(TrajectoryPoint(np.array([7.0, 0.0, 0.0]), 7.0))
+        t22.add_traj_point(TrajectoryPoint(np.array([10.0, 0.0, 0.0]), 10.0))
         list2 = [t21, t22]
 
         concurrent_pairs = concurrent_trajectory_pairs(list1, list2)
@@ -498,16 +515,16 @@ class TestToolpathCollision(unittest.TestCase):
 
         # single point duplicate trajectory (edge case)
         t11 = Trajectory()
-        t11.add_traj_point(TrajectoryPoint(np.array([2., 0., 0.]), 2.))
+        t11.add_traj_point(TrajectoryPoint(np.array([2.0, 0.0, 0.0]), 2.0))
 
         t12 = Trajectory()
-        t12.add_traj_point(TrajectoryPoint(np.array([2., 0., 0.]), 2.))
-        t12.add_traj_point(TrajectoryPoint(np.array([3., 0., 0.]), 3.))
+        t12.add_traj_point(TrajectoryPoint(np.array([2.0, 0.0, 0.0]), 2.0))
+        t12.add_traj_point(TrajectoryPoint(np.array([3.0, 0.0, 0.0]), 3.0))
         list1 = [t11, t12]
 
         t21 = Trajectory()
-        t21.add_traj_point(TrajectoryPoint(np.array([0., 0., 0.]), 0.))
-        t21.add_traj_point(TrajectoryPoint(np.array([5., 0., 0.]), 5.))
+        t21.add_traj_point(TrajectoryPoint(np.array([0.0, 0.0, 0.0]), 0.0))
+        t21.add_traj_point(TrajectoryPoint(np.array([5.0, 0.0, 0.0]), 5.0))
         list2 = [t21]
 
         concurrent_pairs = concurrent_trajectory_pairs(list1, list2)
@@ -519,8 +536,8 @@ class TestToolpathCollision(unittest.TestCase):
 
         pair1 = concurrent_pairs[1]
         self.assertEqual(pair1[0], t12)
-        self.assertEqual(pair1[1], t12)        
+        self.assertEqual(pair1[1], t12)
 
- 
+
 if __name__ == "__main__":
     unittest.main()

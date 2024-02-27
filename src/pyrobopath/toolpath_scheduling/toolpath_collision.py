@@ -1,13 +1,19 @@
 from typing import List, Dict, Hashable
+import numpy as np
 
-from ..collision_detection import (
+from pyrobopath.collision_detection import (
     Trajectory,
     TrajectoryPoint,
     trajectory_collision_query,
 )
-from ..scheduling import Interval
-from .schedule import ContourEvent, ToolpathSchedule, MultiAgentToolpathSchedule
-from .system_model import AgentModel
+from pyrobopath.scheduling import Interval
+
+from pyrobopath.toolpath_scheduling.schedule import (
+    ContourEvent,
+    ToolpathSchedule,
+    MultiAgentToolpathSchedule,
+)
+from pyrobopath.toolpath_scheduling.system_model import AgentModel
 
 
 def schedule_to_trajectory(
@@ -28,13 +34,13 @@ def schedule_to_trajectory(
     :param default_state: The default trajectory state for times with no known
                           state in the schedule
     :type default_state: np.ndarray
-    
+
     :return: The trajectory inferred from the schedule
     :rtype: Trajectory
     """
 
     traj = Trajectory()
-    traj.add_traj_point(TrajectoryPoint(None, float("nan")))
+    traj.add_traj_point(TrajectoryPoint(np.empty(3), float("nan")))
     for e in schedule._events:
         if e.end < t_start:
             continue
@@ -50,20 +56,21 @@ def schedule_to_trajectory(
     traj.points.pop(0)
 
     # add endpoints if traj_start != t_start or traj_end != t_end
+    start_state, end_state = None, None
     if traj.n_points():
         if traj.start_time() > t_start:
             start_state = schedule.get_state(t_start, default_state)
-            traj.insert_traj_point(0, TrajectoryPoint(start_state, t_start))
         if traj.end_time() < t_end:
             end_state = schedule.get_state(t_end, default_state)
-            traj.add_traj_point(TrajectoryPoint(end_state, t_end))
     # add last known states as start and end of traj
     else:
         start_state = schedule.get_state(t_start, default_state)
         end_state = schedule.get_state(t_end, default_state)
+    
+    if start_state is not None:
         traj.insert_traj_point(0, TrajectoryPoint(start_state, t_start))
-        traj.add_traj_point(TrajectoryPoint(end_state, t_end))
-
+    if end_state is not None:
+        traj.add_traj_point((TrajectoryPoint(end_state, t_end)))
     return traj
 
 
@@ -81,10 +88,10 @@ def schedule_to_trajectories(
     :type t_start: float
     :param t_end: end time of slice
     :type t_end: float
-    
+
     :return: The list trajectories inferred from the schedule
     :rtype: List[Trajectory]
-    """    
+    """
 
     trajs = []
     interval = Interval(t_start, t_end)
@@ -124,7 +131,7 @@ def event_causes_collision(
     event: ContourEvent,
     agent: Hashable,
     schedule: MultiAgentToolpathSchedule,
-    agent_models: Dict[str, AgentModel],
+    agent_models: Dict[Hashable, AgentModel],
     threshold: float,
 ):
     """Determines if adding 'event' to 'schedule' will cause a collision in the
@@ -142,13 +149,13 @@ def event_causes_collision(
     :type schedule: MultiAgentToolpathSchedule
     :param agent_models: Context info about the system
     :type agent_models: Dict[str, AgentModel]
-    :param threshold: The maximum collision checking step distance (in units 
+    :param threshold: The maximum collision checking step distance (in units
                       equivalent to points in `event`)
     :type threshold: float
 
     :return: True if event causes collision, False else
     :rtype: bool
-    """    
+    """
 
     et = max(schedule.end_time(), event.end)
 
@@ -188,8 +195,8 @@ def concurrent_trajectory_pairs(tr1: List[Trajectory], tr2: List[Trajectory]):
 
     :return: A list of concurrent trajectory pairs
     :rtype: List[Tuple(Trajectory, Trajectory)]
-    """    
-    
+    """
+
     i = j = 0
     traj_pairs = []
     while i < len(tr1) and j < len(tr2):
@@ -211,7 +218,7 @@ def events_cause_collision(
     events: List[ContourEvent],
     agent: Hashable,
     schedule: MultiAgentToolpathSchedule,
-    agent_models: Dict[str, AgentModel],
+    agent_models: Dict[Hashable, AgentModel],
     threshold: float,
 ):
     """

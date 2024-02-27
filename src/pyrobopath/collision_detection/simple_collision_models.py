@@ -1,8 +1,8 @@
 from __future__ import annotations
 import numpy as np
 
-from .collision_model import CollisionModel
-from .utilities import orientation, on_segment
+from pyrobopath.tools.geometry import orientation, on_segment
+from pyrobopath.collision_detection.collision_model import CollisionModel
 
 
 class LineCollisionModel(CollisionModel):
@@ -18,7 +18,10 @@ class LineCollisionModel(CollisionModel):
     def base(self, value):
         self._base = value
 
-    def in_collision(self, other: LineCollisionModel) -> bool:
+    def in_collision(self, other: CollisionModel) -> bool:
+        if not isinstance(other, LineCollisionModel):
+            raise NotImplementedError
+
         p1, q1 = np.round(self.base, 5), np.round(self.translation, 5)
         p2, q2 = np.round(other.base, 5), np.round(other.translation, 5)
 
@@ -63,9 +66,12 @@ class LollipopCollisionModel(LineCollisionModel):
     def radius(self, value):
         self._radius = value
 
-    def in_collision(self, other: LollipopCollisionModel) -> bool:
+    def in_collision(self, other: CollisionModel) -> bool:
+        if not isinstance(other, LollipopCollisionModel):
+            raise NotImplementedError
+
         if super().in_collision(other):
             return True
 
         tip_to_tip = np.linalg.norm(self.translation - other.translation)
-        return tip_to_tip < (self.radius + other.radius)
+        return bool(tip_to_tip < (self.radius + other.radius))

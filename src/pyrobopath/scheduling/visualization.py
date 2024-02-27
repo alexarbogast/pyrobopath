@@ -1,17 +1,17 @@
 import numpy as np
 
-from .schedule import Schedule, MultiAgentSchedule
-from .schedule import Event
+from pyrobopath.scheduling.schedule import Event, Schedule, MultiAgentSchedule
+
 
 def draw_schedule(s: Schedule, show=True):
     import matplotlib.pyplot as plt
+
     fig, ax = plt.subplots(figsize=(9, 4))
     ax.set_xlim(s.start_time(), s.end_time())
     ax.set_ylim(-1.0, 1.0)
     ax.set_xlabel("time")
 
-    colors = plt.get_cmap('Pastel2')(
-        np.linspace(0.15, 0.85, s.n_events()))
+    colors = plt.get_cmap("Pastel2")(np.linspace(0.15, 0.85, s.n_events()))
 
     for event, color in zip(s._events, colors):
         p = ax.barh(
@@ -20,7 +20,7 @@ def draw_schedule(s: Schedule, show=True):
             width=event.duration,
             height=0.5,
             edgecolor="black",
-            color=color
+            color=color,
         )
         ax.bar_label(p, label_type="center")
 
@@ -31,9 +31,9 @@ def draw_schedule(s: Schedule, show=True):
 
 def draw_multi_agent_schedule(s: MultiAgentSchedule, show=True):
     import matplotlib.pyplot as plt
+
     fig, ax = plt.subplots(figsize=(9, 4))
-    category_colors = plt.get_cmap('Pastel1')(
-        np.linspace(0.15, 0.85, s.n_agents()))
+    category_colors = plt.get_cmap("Pastel1")(np.linspace(0.15, 0.85, s.n_agents()))
 
     for (agent, schedule), color in zip(s.schedules.items(), category_colors):
         for event in schedule._events:
@@ -43,7 +43,7 @@ def draw_multi_agent_schedule(s: MultiAgentSchedule, show=True):
                 width=event.duration,
                 height=0.5,
                 edgecolor="black",
-                color=color
+                color=color,
             )
             ax.bar_label(p, label_type="center")
 

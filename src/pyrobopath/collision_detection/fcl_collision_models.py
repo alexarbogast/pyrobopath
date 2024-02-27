@@ -3,22 +3,27 @@ import numpy as np
 import math
 import fcl
 
-from .collision_model import CollisionModel
+from pyrobopath.tools.types import ArrayLike
+from pyrobopath.collision_detection.collision_model import CollisionModel
 
 
 class FCLCollisionModel(CollisionModel):
     """A collision model using the `python-fcl <pythonfcl>`_ library
 
-    The in_collision function checks model collisions against other 
+    The in_collision function checks model collisions against other
     FCLCollisionModel objects.
 
     .. _pythonfcl: https://pypi.org/project/python-fcl/
     """
+
     def __init__(self):
         super(FCLCollisionModel, self).__init__()
-        self.obj = None
+        self.obj: fcl.CollisionObject = None
 
-    def in_collision(self, other: FCLCollisionModel):
+    def in_collision(self, other: CollisionModel) -> bool:
+        if not isinstance(other, FCLCollisionModel):
+            raise NotImplementedError
+
         this_tf = fcl.Transform(self._transform[:3, :3], self._transform[:3, 3])
         other_tf = fcl.Transform(other._transform[:3, :3], other._transform[:3, 3])
 
@@ -27,7 +32,7 @@ class FCLCollisionModel(CollisionModel):
 
         req = fcl.CollisionRequest(enable_contact=True)
         res = fcl.CollisionResult()
-        n_contacts = fcl.collide(self.obj, other.obj, req, res)
+        fcl.collide(self.obj, other.obj, req, res)
         return res.is_collision
 
 
@@ -49,17 +54,17 @@ class FCLBoxCollisionModel(FCLCollisionModel):
 
 
 class FCLRobotBBCollisionModel(FCLBoxCollisionModel):
-    """This model rotates about an axis orthogonal to the xy-plane located 
+    """This model rotates about an axis orthogonal to the xy-plane located
     at anchor.
 
     The anchor point is the base of the robot, and the `translation`
-    property is used to set the radial distance of the farthest face. 
+    property is used to set the radial distance of the farthest face.
 
     :param x: The length of the box. The radial extension of the box towards
-              the end-effector from any given position. 
+              the end-effector from any given position.
     :type x: float
     :param y: The width of the box. The approximate bounding width of the robot
-              as viewed from above. 
+              as viewed from above.
     :type y: float
     :param z: The height of the box. The total height of the box extruded in
               both directions in z from `anchor`.
@@ -68,7 +73,7 @@ class FCLRobotBBCollisionModel(FCLBoxCollisionModel):
     :type anchor: np.ndarray
     """
 
-    def __init__(self, x: float, y: float, z: float, anchor: np.ndarray):   
+    def __init__(self, x: float, y: float, z: float, anchor: ArrayLike):
         super().__init__(x, y, z)
         self._anchor = np.array(anchor)
         self._eef_transform = np.identity(4)
@@ -96,7 +101,6 @@ class FCLRobotBBCollisionModel(FCLBoxCollisionModel):
         self._transform[:2, 3] = box_origin
         self._transform[2, 3] = self.anchor[2]
 
-
     @property
     def anchor(self):
         return self._anchor
@@ -105,8 +109,8 @@ class FCLRobotBBCollisionModel(FCLBoxCollisionModel):
     def anchor(self, value):
         self._anchor = value
 
-    def _norm(self, v): # 2x as fast as np.linalg.norm()
-        return math.sqrt(v[0]*v[0] + v[1]*v[1])
+    def _norm(self, v):  # 2x as fast as np.linalg.norm()
+        return math.sqrt(v[0] * v[0] + v[1] * v[1])
 
 
 def _continuous_collision_check(
@@ -130,7 +134,7 @@ def _continuous_collision_check(
     request.ccd_motion_type = fcl.CCDMotionType.CCDM_LINEAR
     request.ccd_solver_type = fcl.CCDSolverType.CCDC_CONSERVATIVE_ADVANCEMENT
     request.gjk_solver_type = fcl.GJKSolverType.GST_LIBCCD
-    
+
     result = fcl.ContinuousCollisionResult()
     ret = fcl.continuousCollide(
         model1.obj, t1_final, model2.obj, t2_final, request, result

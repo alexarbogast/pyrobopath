@@ -7,10 +7,15 @@ import matplotlib.patheffects as pe
 from matplotlib.widgets import Slider
 from matplotlib.gridspec import GridSpec
 
-from ..toolpath import Toolpath
-from ..collision_detection import FCLRobotBBCollisionModel
-from .system_model import AgentModel
-from .schedule import ContourEvent, MultiAgentToolpathSchedule, ToolpathSchedule
+from pyrobopath.toolpath import Toolpath
+from pyrobopath.collision_detection import FCLRobotBBCollisionModel
+
+from pyrobopath.toolpath_scheduling.system_model import AgentModel
+from pyrobopath.toolpath_scheduling.schedule import (
+    ContourEvent,
+    MultiAgentToolpathSchedule,
+    ToolpathSchedule,
+)
 
 
 def draw_multi_agent_schedule(s: MultiAgentToolpathSchedule, show=True):
@@ -87,7 +92,7 @@ def animate_multi_agent_toolpath_schedule(
         fig.canvas.draw_idle()
 
     # add slider control
-    axtime = plt.axes([0.25, 0.1, 0.65, 0.03])
+    axtime = plt.axes((0.25, 0.1, 0.65, 0.03))
     anim_slider = Slider(
         ax=axtime,
         label="time",
@@ -120,7 +125,9 @@ def animate_multi_agent_toolpath_full(
 
     # ================= schedule =================
     _plot_multi_agent_schedule(schedule, sched_ax)
-    (sched_line,) = sched_ax.plot([], [],
+    (sched_line,) = sched_ax.plot(
+        [],
+        [],
         lw=2,
         color=(0, 1, 0.31),
         path_effects=[
@@ -191,9 +198,9 @@ def animate_multi_agent_toolpath_full(
     for a in schedule.agents():
         model = None
         if isinstance(agent_models[a].collision_model, FCLRobotBBCollisionModel):
-            model = RobotBBAnimationModel(agent_models[a], schedule[a], anim_ax)
+            model = RobotBBAnimationModel(agent_models[a], schedule[a], anim_ax) # type: ignore
         else:
-            model = AnimationModel(agent_models[a], schedule[a], anim_ax)
+            model = AnimationModel(agent_models[a], schedule[a], anim_ax) # type: ignore
         anim_models.append(model)
 
     # update all models and schedule line on slider change
@@ -224,11 +231,11 @@ def animate_multi_agent_toolpath_full(
     return fig
 
     # Animation
-    #import matplotlib.animation as animation
-    #fps=30
-    #writer = animation.FFMpegWriter(fps=fps) 
-    #anim = animation.FuncAnimation(fig, update_anim, frames=np.arange(schedule.start_time(), schedule.end_time(), 0.6))
-    #anim.save('test2.mp4', writer=writer)
+    # import matplotlib.animation as animation
+    # fps=30
+    # writer = animation.FFMpegWriter(fps=fps)
+    # anim = animation.FuncAnimation(fig, update_anim, frames=np.arange(schedule.start_time(), schedule.end_time(), 0.6))
+    # anim.save('test2.mp4', writer=writer)
 
 
 class AnimationModel(object):

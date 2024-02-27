@@ -1,7 +1,7 @@
 import numpy as np
 
-from ..toolpath import Toolpath
-from ..scheduling import DependencyGraph
+from pyrobopath.toolpath import Toolpath
+from pyrobopath.scheduling import DependencyGraph
 
 
 def create_dependency_graph_by_layers(toolpath: Toolpath) -> DependencyGraph:

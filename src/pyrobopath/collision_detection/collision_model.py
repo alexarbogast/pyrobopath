@@ -2,8 +2,6 @@ from __future__ import annotations
 from typing import List
 import numpy as np
 
-from .utilities import orientation, on_segment
-
 
 class CollisionModel(object):
     "A collision model is used by a collision checker"
@@ -14,7 +12,7 @@ class CollisionModel(object):
     @property
     def translation(self):
         return self._transform[:3, 3]
-    
+
     @translation.setter
     def translation(self, value):
         self._transform[:3, 3] = value
@@ -30,7 +28,7 @@ class CollisionModel(object):
     @property
     def transform(self):
         return self._transform
-    
+
     @transform.setter
     def transform(self, value):
         self._transform = value

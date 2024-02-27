@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
 from matplotlib.widgets import Slider
 
-from .toolpath import Toolpath
+from pyrobopath.toolpath.toolpath import Toolpath
 
 
 def visualize_toolpath(toolpath: Toolpath, show=True):

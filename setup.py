@@ -4,7 +4,7 @@ package_name = "pyrobopath"
 
 setup(
     name=package_name,
-    version="0.2.1",
+    version="0.2.2",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     maintainer="Alex Arbogast",
@@ -16,5 +16,6 @@ setup(
         "python-fcl",
         "numpy",
         "numpy-quaternion",
+        "scipy",
     ],
 )

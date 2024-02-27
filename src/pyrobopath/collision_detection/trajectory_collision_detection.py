@@ -2,17 +2,21 @@ from __future__ import annotations
 from typing import List
 import numpy as np
 
-from .collision_model import CollisionGroup, CollisionModel
-from .trajectory import Trajectory
+from pyrobopath.tools.types import NDArray
+from pyrobopath.collision_detection.collision_model import (
+    CollisionGroup,
+    CollisionModel,
+)
+from pyrobopath.collision_detection.trajectory import Trajectory
 
 
 def continuous_collide(
     model1: CollisionModel,
-    trans1_final: np.ndarray,
+    trans1_final: NDArray,
     model2: CollisionModel,
-    trans2_final: np.ndarray,
+    trans2_final: NDArray,
     threshold,
-):
+) -> bool:
     start1 = np.copy(model1.translation)
     start2 = np.copy(model2.translation)
 
@@ -71,7 +75,7 @@ def trajectory_collision_query(
     model2: CollisionModel,
     traj2: Trajectory,
     threshold: float,
-):
+) -> bool:
     """Determine if two models collide along trajectories"""
     for traj_pair in _ConcurrentSegmentIterator([traj1, traj2]):
         model1.translation = traj_pair[0][0].data  # first point
@@ -136,7 +140,7 @@ class _TrajectoryStateInterpolator(object):
 
 def check_trajectory_collision(
     group: CollisionGroup, trajectories: List[Trajectory], threshold: float
-):
+) -> bool:
     start_time, end_time = 0.0, 0.0
     for traj in trajectories:
         start_time = min(start_time, traj.start_time())

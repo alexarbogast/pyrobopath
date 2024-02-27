@@ -26,7 +26,7 @@ author = 'Alex Arbogast'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '0.2.1'
+release = '0.2.2'
 
 
 # -- General configuration ---------------------------------------------------
@@ -43,7 +43,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.viewcode',
-    "sphinx.ext.intersphinx",
+    'sphinx.ext.intersphinx',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -173,7 +173,8 @@ autodoc_mock_imports = [
     'trajectory_msgs',
     'cartesian_planning_msgs',
     'actionlib', 
-    'geometry_msgs'
+    'geometry_msgs',
 ]
 
-autodoc_class_signature = "separated"
+autosummary_generate = True
+templates_path = ['_templates']
