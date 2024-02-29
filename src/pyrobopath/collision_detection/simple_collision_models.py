@@ -1,21 +1,22 @@
 from __future__ import annotations
 import numpy as np
 
+from pyrobopath.tools.types import NDArray
 from pyrobopath.tools.geometry import orientation, on_segment
 from pyrobopath.collision_detection.collision_model import CollisionModel
 
 
 class LineCollisionModel(CollisionModel):
-    def __init__(self, base: np.ndarray):
+    def __init__(self, base: NDArray):
         super().__init__()
         self._base = base
 
     @property
-    def base(self):
+    def base(self) -> NDArray:
         return self._base
 
     @base.setter
-    def base(self, value):
+    def base(self, value: NDArray):
         self._base = value
 
     def in_collision(self, other: CollisionModel) -> bool:
@@ -54,7 +55,7 @@ class LineCollisionModel(CollisionModel):
 
 
 class LollipopCollisionModel(LineCollisionModel):
-    def __init__(self, base: np.ndarray, radius: float):
+    def __init__(self, base: NDArray, radius: float):
         super().__init__(base)
         self._radius = radius
 

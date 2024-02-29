@@ -63,7 +63,7 @@ def _plot_multi_agent_schedule(s: MultiAgentToolpathSchedule, ax):
 
 def animate_multi_agent_toolpath_schedule(
     schedule: MultiAgentToolpathSchedule,
-    agent_models: Dict[Hashable, AgentModel],
+    agent_models: Dict[str, AgentModel],
     step,
     plot_toolpath=True,
     show=True,
@@ -113,7 +113,7 @@ def animate_multi_agent_toolpath_schedule(
 def animate_multi_agent_toolpath_full(
     toolpath: Toolpath,
     schedule: MultiAgentToolpathSchedule,
-    agent_models: Dict[Hashable, AgentModel],
+    agent_models: Dict[str, AgentModel],
     step=0.01,
     limits=((-500, 500), (-500, 500)),
     show=True,

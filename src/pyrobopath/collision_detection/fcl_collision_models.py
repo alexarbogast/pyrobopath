@@ -1,9 +1,9 @@
 from __future__ import annotations
 import numpy as np
-import math
 import fcl
 
-from pyrobopath.tools.types import ArrayLike
+from pyrobopath.tools.types import ArrayLike3
+from pyrobopath.tools.linalg import SE3, R3, unit_vector
 from pyrobopath.collision_detection.collision_model import CollisionModel
 
 
@@ -24,8 +24,8 @@ class FCLCollisionModel(CollisionModel):
         if not isinstance(other, FCLCollisionModel):
             raise NotImplementedError
 
-        this_tf = fcl.Transform(self._transform[:3, :3], self._transform[:3, 3])
-        other_tf = fcl.Transform(other._transform[:3, :3], other._transform[:3, 3])
+        this_tf = fcl.Transform(self._transform.R, self._transform.t)
+        other_tf = fcl.Transform(other._transform.R, other._transform.t)
 
         self.obj.setTransform(this_tf)
         other.obj.setTransform(other_tf)
@@ -73,44 +73,41 @@ class FCLRobotBBCollisionModel(FCLBoxCollisionModel):
     :type anchor: np.ndarray
     """
 
-    def __init__(self, x: float, y: float, z: float, anchor: ArrayLike):
+    def __init__(self, x: float, y: float, z: float, anchor: ArrayLike3):
         super().__init__(x, y, z)
         self._anchor = np.array(anchor)
-        self._eef_transform = np.identity(4)
+        self._eef_transform = SE3()
 
     @property
     def translation(self):
-        return self._eef_transform[:3, 3]
+        return self._eef_transform.t
 
     @translation.setter
-    def translation(self, value):
-        self._eef_transform[:3, 3] = value
+    def translation(self, value: R3):
+        self._eef_transform.t = value
 
         # find box center location (z_height matches anchor)
         p_tip_anchor = (value - self.anchor)[:2]
-        dir = p_tip_anchor / self._norm(p_tip_anchor)
+        dir = unit_vector(p_tip_anchor)
         box_origin = value[:2] - self.box.side[0] * 0.5 * dir
 
         # set rotation
         y_axis = np.array([-dir[1], dir[0]])
-        self._eef_transform[:2, 0] = dir
-        self._eef_transform[:2, 1] = y_axis
-        self._transform[:2, 0] = dir
-        self._transform[:2, 1] = y_axis
+        self._eef_transform.matrix[:2, 0] = dir
+        self._eef_transform.matrix[:2, 1] = y_axis
+        self._transform.matrix[:2, 0] = dir
+        self._transform.matrix[:2, 1] = y_axis
 
-        self._transform[:2, 3] = box_origin
-        self._transform[2, 3] = self.anchor[2]
+        self._transform.matrix[:2, 3] = box_origin
+        self._transform.matrix[2, 3] = self.anchor[2]
 
     @property
     def anchor(self):
         return self._anchor
 
     @anchor.setter
-    def anchor(self, value):
+    def anchor(self, value: ArrayLike3):
         self._anchor = value
-
-    def _norm(self, v):  # 2x as fast as np.linalg.norm()
-        return math.sqrt(v[0] * v[0] + v[1] * v[1])
 
 
 def _continuous_collision_check(

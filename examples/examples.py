@@ -25,24 +25,29 @@ def print_schedule_info(schedule: MultiAgentToolpathSchedule):
 
 # ========================== example demos ==========================
 def simple_toolpath_example_two():
+    bf1 = np.array([-350.0, 0.0, 0.0])
+    bf2 = np.array([350.0, 0.0, 0.0])
+        
     # create agent collision models
-    agent1 = AgentModel()
-    agent1.base_frame_position = np.array([-350.0, 0.0, 0.0])
-    agent1.home_position = np.array([-250.0, 0.0, 0.0])
-    agent1.capabilities = [Materials.MATERIAL_A]
-    agent1.velocity = 50.0
-    agent1.travel_velocity = 50.0
-    agent1.collision_model = FCLRobotBBCollisionModel(
-        200.0, 50.0, 300.0, agent1.base_frame_position
+    agent1 = AgentModel( 
+        base_frame_position = bf1,
+        home_position = np.array([-250.0, 0.0, 0.0]),
+        capabilities = [Materials.MATERIAL_A],
+        velocity = 50.0,
+        travel_velocity = 50.0,
+        collision_model = FCLRobotBBCollisionModel(
+            200.0, 50.0, 300.0, bf1
+        )
     )
-    agent2 = AgentModel()
-    agent2.base_frame_position = np.array([350.0, 0.0, 0.0])
-    agent2.home_position = np.array([250.0, 0.0, 0.0])
-    agent2.capabilities = [Materials.MATERIAL_B]
-    agent2.velocity = 50.0
-    agent2.travel_velocity = 50.0
-    agent2.collision_model = FCLRobotBBCollisionModel(
-        200.0, 50.0, 300.0, agent2.base_frame_position
+    agent2 = AgentModel( 
+        base_frame_position = bf2,
+        home_position = np.array([250.0, 0.0, 0.0]),
+        capabilities = [Materials.MATERIAL_B],
+        velocity = 50.0,
+        travel_velocity = 50.0,
+        collision_model = FCLRobotBBCollisionModel(
+            200.0, 50.0, 300.0, bf2
+        )
     )
     agent_models = {"robot1": agent1, "robot2": agent2}
 
@@ -73,35 +78,41 @@ def simple_toolpath_example_three():
     r = 400
     rh = 300
 
+    bf1 = np.array([r * np.cos(np.pi/6), -r * np.sin(np.pi/6), 0.])
+    bf2 = np.array([0., r, 0.])
+    bf3 = np.array([-r * np.cos(np.pi/6), -r * np.sin(np.pi/6), 0.])
+
     # fmt: off
-    agent1 = AgentModel()
-    agent1.base_frame_position = np.array([r * np.cos(np.pi/6), -r * np.sin(np.pi/6), 0.])
-    agent1.home_position = np.array([rh * np.cos(np.pi/6), -rh * np.sin(np.pi/6), 0.])
-    agent1.capabilities = [Materials.MATERIAL_B]
-    agent1.velocity = 50.0
-    agent1.travel_velocity = 50.0
-    agent1.collision_model = FCLRobotBBCollisionModel(
-        200., 50., 300., agent1.base_frame_position
+    agent1 = AgentModel(
+        base_frame_position = bf1,
+        home_position = np.array([rh * np.cos(np.pi/6), -rh * np.sin(np.pi/6), 0.]),
+        capabilities = [Materials.MATERIAL_B],
+        velocity = 50.0,
+        travel_velocity = 50.0,
+        collision_model = FCLRobotBBCollisionModel(
+            200., 50., 300., bf1
+        ),
     )
-    agent2 = AgentModel()
-    agent2.base_frame_position = np.array([0., r, 0.])
-    agent2.home_position = np.array([0., rh, 0.])
-    agent2.capabilities = [Materials.MATERIAL_A]
-    agent2.velocity = 50.0
-    agent2.travel_velocity = 50.0
-    agent2.collision_model = FCLRobotBBCollisionModel(
-        200., 50., 300., agent2.base_frame_position
+    agent2 = AgentModel(
+        base_frame_position = bf2,
+        home_position = np.array([0., rh, 0.]),
+        capabilities = [Materials.MATERIAL_A],
+        velocity = 50.0,
+        travel_velocity = 50.0,
+        collision_model = FCLRobotBBCollisionModel(
+            200., 50., 300., bf2
+        ),
     )
-    agent3 = AgentModel()
-    agent3.base_frame_position = np.array([-r * np.cos(np.pi/6), -r * np.sin(np.pi/6), 0.])
-    agent3.home_position = np.array([-rh * np.cos(np.pi/6), -rh * np.sin(np.pi/6), 0.])
-    agent3.capabilities = [Materials.MATERIAL_A]
-    agent3.velocity = 50.0
-    agent3.travel_velocity = 50.0
-    agent3.collision_model = FCLRobotBBCollisionModel(
-        200., 50., 300., agent3.base_frame_position
+    agent3 = AgentModel(
+        base_frame_position = bf3,
+        home_position = np.array([-rh * np.cos(np.pi/6), -rh * np.sin(np.pi/6), 0.]),
+        capabilities = [Materials.MATERIAL_A],
+        velocity = 50.0,
+        travel_velocity = 50.0,
+        collision_model = FCLRobotBBCollisionModel(
+            200., 50., 300., bf3
+        ),
     )
-    # fmt: on
     agent_models = {"robot1": agent1, "robot2": agent2, "robot3": agent3}
 
     # create toolpath
@@ -127,24 +138,29 @@ def simple_toolpath_example_three():
 
 
 def multi_material_squares():
+    bf1 = np.array([-500.0, 0.0, 0.0])
+    bf2 = np.array([500.0, 0.0, 0.0])
+
     # create agent_models
-    agent1 = AgentModel()
-    agent1.base_frame_position = np.array([-500.0, 0.0, 0.0])
-    agent1.home_position = np.array([-300, 0.0, 0.0])
-    agent1.capabilities = [0]
-    agent1.velocity = 50.0
-    agent1.travel_velocity = 50.0
-    agent1.collision_model = FCLRobotBBCollisionModel(
-        200.0, 50.0, 300, agent1.base_frame_position
+    agent1 = AgentModel(
+        base_frame_position = bf1,
+        home_position = np.array([-300, 0.0, 0.0]),
+        capabilities = [0],
+        velocity = 50.0,
+        travel_velocity = 50.0,
+        collision_model = FCLRobotBBCollisionModel(
+            200.0, 50.0, 300, bf1 
+        ),
     )
-    agent2 = AgentModel()
-    agent2.base_frame_position = np.array([500.0, 0.0, 0.0])
-    agent2.home_position = np.array([300.0, 0.0, 0.0])
-    agent2.capabilities = [1]
-    agent2.velocity = 50.0
-    agent2.travel_velocity = 50.0
-    agent2.collision_model = FCLRobotBBCollisionModel(
-        200.0, 50.0, 300, agent2.base_frame_position
+    agent2 = AgentModel(
+        base_frame_position = bf2,
+        home_position = np.array([300.0, 0.0, 0.0]),
+        capabilities = [1],
+        velocity = 50.0,
+        travel_velocity = 50.0,
+        collision_model = FCLRobotBBCollisionModel(
+            200.0, 50.0, 300, bf2 
+        ),
     )
     agent_models = {"robot1": agent1, "robot2": agent2}
 
@@ -173,24 +189,29 @@ def multi_material_squares():
 
 
 def complex_two_material_two_robots():
+    bf1 = np.array([-500.0, 0.0, 0.0])
+    bf2 = np.array([500.0, 0.0, 0.0])
+
     # create agent_models
-    agent1 = AgentModel()
-    agent1.base_frame_position = np.array([-500.0, 0.0, 0.0])
-    agent1.home_position = np.array([-300, 0.0, 0.0])
-    agent1.capabilities = [0]
-    agent1.velocity = 50.0
-    agent1.travel_velocity = 50.0
-    agent1.collision_model = FCLRobotBBCollisionModel(
-        200.0, 50.0, 300, agent1.base_frame_position
+    agent1 = AgentModel(
+        base_frame_position = bf1,
+        home_position = np.array([-300, 0.0, 0.0]),
+        capabilities = [0],
+        velocity = 50.0,
+        travel_velocity = 50.0,
+        collision_model = FCLRobotBBCollisionModel(
+            200.0, 50.0, 300, bf1 
+        ),
     )
-    agent2 = AgentModel()
-    agent2.base_frame_position = np.array([500.0, 0.0, 0.0])
-    agent2.home_position = np.array([300.0, 0.0, 0.0])
-    agent2.capabilities = [1]
-    agent2.velocity = 50.0
-    agent2.travel_velocity = 50.0
-    agent2.collision_model = FCLRobotBBCollisionModel(
-        200.0, 50.0, 300, agent2.base_frame_position
+    agent2 = AgentModel(
+        base_frame_position = bf2,
+        home_position = np.array([300.0, 0.0, 0.0]),
+        capabilities = [1],
+        velocity = 50.0,
+        travel_velocity = 50.0,
+        collision_model = FCLRobotBBCollisionModel(
+            200.0, 50.0, 300, bf2 
+        ),
     )
     agent_models = {"robot1": agent1, "robot2": agent2}
 
@@ -222,42 +243,51 @@ def complex_two_material_four_robots():
     r = 400
     rh = 300
 
+    bf1 = np.array([r * np.cos(np.pi/4), -r * np.sin(np.pi/4), 0.])
+    bf2 = np.array([r * np.cos(np.pi/4), r * np.sin(np.pi/4), 0.])
+    bf3 = np.array([-r * np.cos(np.pi/4), r * np.sin(np.pi/4), 0.])
+    bf4 = np.array([-r * np.cos(np.pi/4), -r * np.sin(np.pi/4), 0.])
+    
     # fmt: off
-    agent1 = AgentModel()
-    agent1.base_frame_position = np.array([r * np.cos(np.pi/4), -r * np.sin(np.pi/4), 0.])
-    agent1.home_position = np.array([rh * np.cos(np.pi/4), -rh * np.sin(np.pi/4), 0.])
-    agent1.capabilities = [0]
-    agent1.velocity = 50.0
-    agent1.travel_velocity = 50.0
-    agent1.collision_model = FCLRobotBBCollisionModel(
-        500., 50., 300., agent1.base_frame_position
+    agent1 = AgentModel(
+        base_frame_position = bf1,
+        home_position = np.array([rh * np.cos(np.pi/4), -rh * np.sin(np.pi/4), 0.]),
+        capabilities = [0],
+        velocity = 50.0,
+        travel_velocity = 50.0,
+        collision_model = FCLRobotBBCollisionModel(
+            500., 50., 300., bf1
+        ),
     )
-    agent2 = AgentModel()
-    agent2.base_frame_position = np.array([r * np.cos(np.pi/4), r * np.sin(np.pi/4), 0.])
-    agent2.home_position = np.array([rh * np.cos(np.pi/4), rh * np.sin(np.pi/4), 0.])
-    agent2.capabilities = [1]
-    agent2.velocity = 50.0
-    agent2.travel_velocity = 50.0
-    agent2.collision_model = FCLRobotBBCollisionModel(
-        500., 50., 300., agent2.base_frame_position
+    agent2 = AgentModel(
+        base_frame_position = bf2,
+        home_position = np.array([rh * np.cos(np.pi/4), rh * np.sin(np.pi/4), 0.]),
+        capabilities = [1],
+        velocity = 50.0,
+        travel_velocity = 50.0,
+        collision_model = FCLRobotBBCollisionModel(
+            500., 50., 300., bf2 
+        ),
     )
-    agent3 = AgentModel()
-    agent3.base_frame_position = np.array([-r * np.cos(np.pi/4), r * np.sin(np.pi/4), 0.])
-    agent3.home_position = np.array([-rh * np.cos(np.pi/4), rh * np.sin(np.pi/4), 0.])
-    agent3.capabilities = [1]
-    agent3.velocity = 50.0
-    agent3.travel_velocity = 50.0
-    agent3.collision_model = FCLRobotBBCollisionModel(
-        500., 50., 300., agent3.base_frame_position
+    agent3 = AgentModel(
+        base_frame_position = bf3,
+        home_position = np.array([-rh * np.cos(np.pi/4), rh * np.sin(np.pi/4), 0.]),
+        capabilities = [1],
+        velocity = 50.0,
+        travel_velocity = 50.0,
+        collision_model = FCLRobotBBCollisionModel(
+            500., 50., 300., bf3
+        ),
     )
-    agent4 = AgentModel()
-    agent4.base_frame_position = np.array([-r * np.cos(np.pi/4), -r * np.sin(np.pi/4), 0.])
-    agent4.home_position = np.array([-rh * np.cos(np.pi/4), -rh * np.sin(np.pi/4), 0.])
-    agent4.capabilities = [0]
-    agent4.velocity = 50.0
-    agent4.travel_velocity = 50.0
-    agent4.collision_model = FCLRobotBBCollisionModel(
-        500., 50., 300., agent4.base_frame_position
+    agent4 = AgentModel(
+        base_frame_position = bf4, 
+        home_position = np.array([-rh * np.cos(np.pi/4), -rh * np.sin(np.pi/4), 0.]),
+        capabilities = [0],
+        velocity = 50.0,
+        travel_velocity = 50.0,
+        collision_model = FCLRobotBBCollisionModel(
+            500., 50., 300., bf4
+        ),
     )
     # fmt: on
 

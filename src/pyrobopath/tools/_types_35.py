@@ -1,12 +1,13 @@
+# for Python <= 3.8
+
 from typing import Tuple, Union, List, Set
 
 from numpy import floating 
 from numpy.typing import NDArray
 
 #NDArray = ndarray
-PyArrayLike = Union[List[float], Tuple[float, ...], Set[float]]
-
-ArrayLike = Union[NDArray, PyArrayLike]
+ArrayLike = Union[List[float], Tuple[float, ...], NDArray]
+ArrayLike3 = Union[List, Tuple[float, float, float], NDArray]
 
 # real vectors
 R1 = NDArray[floating]  # R^1

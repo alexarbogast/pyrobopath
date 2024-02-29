@@ -2,15 +2,9 @@ from __future__ import annotations
 from typing import List, Sequence
 import numpy as np
 import bisect
-from itertools import tee
 
 from pyrobopath.tools.types import ArrayLike
-
-
-def pairwise(iterable):
-    a, b = tee(iterable)
-    next(b, None)
-    return zip(a, b)
+from pyrobopath.tools.utils import pairwise
 
 
 class TrajectoryPoint(object):

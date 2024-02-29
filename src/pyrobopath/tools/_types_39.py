@@ -1,11 +1,19 @@
-from typing import Tuple, Union, List, Set
+# for Python >= 3.9
+
+from typing import Tuple, Union, List, Any
 from typing import Literal as L
 from numpy import ndarray, dtype, floating
+from numpy.typing import NDArray
 
-NDArray = ndarray
-PyArrayLike = Union[List[float], Tuple[float, ...], Set[float]]
-
-ArrayLike = Union[NDArray, PyArrayLike]
+ArrayLike = Union[List[float], Tuple[float, ...], ndarray[Any, dtype[floating]]]
+ArrayLike3 = Union[
+    List[float],
+    Tuple[float, float, float],
+    ndarray[
+        Tuple[L[3,]],
+        dtype[floating],
+    ],
+]
 
 # real vectors
 R1 = ndarray[

@@ -17,8 +17,8 @@ def continuous_collide(
     trans2_final: NDArray,
     threshold,
 ) -> bool:
-    start1 = np.copy(model1.translation)
-    start2 = np.copy(model2.translation)
+    start1 = model1.translation.copy()
+    start2 = model2.translation.copy()
 
     dir1 = trans1_final - start1
     dir2 = trans2_final - start2
