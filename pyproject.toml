@@ -39,7 +39,7 @@ dev = [
 ]
 
 docs = [
-  "sphinx",
+  "sphinx>=3.1",
   "pydata-sphinx-theme",
 ]
 
