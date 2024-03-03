@@ -7,6 +7,7 @@ from numpy.typing import NDArray
 
 #NDArray = ndarray
 ArrayLike = Union[List[float], Tuple[float, ...], NDArray]
+ArrayLike2 = Union[List, Tuple[float, float], NDArray]
 ArrayLike3 = Union[List, Tuple[float, float, float], NDArray]
 
 # real vectors

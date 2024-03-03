@@ -6,6 +6,14 @@ from numpy import ndarray, dtype, floating
 from numpy.typing import NDArray
 
 ArrayLike = Union[List[float], Tuple[float, ...], ndarray[Any, dtype[floating]]]
+ArrayLike2 = Union[
+    List[float],
+    Tuple[float, float],
+    ndarray[
+        Tuple[L[2,]],
+        dtype[floating],
+    ],
+]
 ArrayLike3 = Union[
     List[float],
     Tuple[float, float, float],

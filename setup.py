@@ -17,5 +17,6 @@ setup(
         "numpy",
         "numpy-quaternion",
         "scipy",
+        "colorama",
     ],
 )

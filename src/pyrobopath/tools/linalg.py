@@ -1,7 +1,8 @@
 from __future__ import annotations
-import warnings
 import numpy as np
 import math
+
+from colorama import Fore, Style
 from scipy.spatial.transform import Rotation, Slerp
 
 from pyrobopath.tools.types import *
@@ -18,13 +19,42 @@ def unit_vector(vec: NDArray) -> NDArray:
     return vec / np.linalg.norm(vec)
 
 
-def norm2(v):  # 2x as fast as np.linalg.norm()
+def unit_vector3(vec: NDArray) -> NDArray:
+    """A simple unit vector for vectors of length 3
+
+    """
+    return vec / norm3(vec)
+
+
+def norm3(v: ArrayLike3) -> float:
+    """A simple vector norm for vectors of length 3
+
+    ~2x as fast as np.linalg.norm()
+
+    :param v: a three dimensional vector
+    :type vec: ArrayLike3
+    :return: the magnitude of the vector v
+    :rtype: float
+    """
+    return math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2])
+
+
+def norm2(v: ArrayLike2):  # 2x as fast as np.linalg.norm()
+    """A simple vector norm for vectors of length 3
+
+    ~2x as fast as np.linalg.norm()
+
+    :param v: a two dimensional vector
+    :type vec: ArrayLike2
+    :return: the magnitude of the vector v
+    :rtype: float
+    """
     return math.sqrt(v[0] * v[0] + v[1] * v[1])
 
 
 def angle_between(v1: NDArray, v2: NDArray):
-    v1_u = unit_vector(v1)
-    v2_u = unit_vector(v2)
+    v1_u = unit_vector3(v1)
+    v2_u = unit_vector3(v2)
     return np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
 
 
@@ -120,7 +150,7 @@ def rotz(theta: float) -> R3x3:
 class SO3:
     def __init__(self, matrix: R3x3 | None = None):
         if matrix is None:
-            matrix = np.eye(3)
+            matrix = np.eye(3, dtype=np.float64)
         elif matrix.shape != (3, 3):
             raise ValueError("Matrix shape is not 3x3")
 
@@ -146,6 +176,15 @@ class SO3:
         rotations or rigid-body motions apply.
         """
         return 3
+
+    def __str__(self) -> str:
+        out = f"{Style.BRIGHT}{Fore.RED}"
+        col_maxes = [max([len(("{:g}").format(x)) for x in col]) for col in self.data.T]
+        out_fmt = lambda i, j: ("{:" + str(col_maxes[j]) + "g}").format(self.data[i, j])
+        for i in range(3):
+            out += "".join([out_fmt(i, j) + "  " for j in range(3)]) + "\n"
+        out += f"{Style.RESET_ALL}"
+        return out
 
     def __eq__(self, other) -> bool:
         return bool(np.all(self.data == other.data))
@@ -255,7 +294,7 @@ class SE3:
 
     def __init__(self, matrix: R4x4 | None = None):
         if matrix is None:
-            matrix = np.eye(4)
+            matrix = np.eye(4, dtype=np.float64)
         elif matrix.shape != (4, 4):
             raise ValueError("Matrix shape is not 4x4")
 
@@ -311,6 +350,19 @@ class SE3:
         rotations or rigid-body motions apply.
         """
         return 3
+
+    def __str__(self) -> str:
+        out = f"{Style.BRIGHT}"
+        col_maxes = [max([len(("{:g}").format(x)) for x in col]) for col in self.data.T]
+        out_fmt = lambda i, j: ("{:" + str(col_maxes[j]) + "g}").format(self.data[i, j])
+        for i in range(3):
+            out += f"{Fore.RED}" + "".join([out_fmt(i, j) + "  " for j in range(3)])
+            out += f"{Fore.BLUE}{out_fmt(i, 3)}\n"
+        out += (
+            f"{Fore.RESET}" + "".join([out_fmt(3, j) + "  " for j in range(4)]) + "\n"
+        )
+        out += f"{Style.RESET_ALL}"
+        return out
 
     def __eq__(self, other) -> bool:
         return bool(np.all(self.data == other.data))
