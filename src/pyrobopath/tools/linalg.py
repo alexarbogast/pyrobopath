@@ -221,8 +221,11 @@ class SO3:
         """Interpolate between SO(3) instances
 
         :param other: the ending orientation at s = 1.0
-        :type other:
-        :
+        :type other: SO3
+        :param s: the interpolation variable s in [0, 1]
+        :type s: float
+        :returns: the SO(3) instances interpolated at value s
+        :rtype: SO(3)
         """
         return self.__class__(matrix_slerp(self.matrix, other.matrix, s))
 
@@ -406,11 +409,12 @@ class SE3:
     def interp(self, other: SE3, s: float) -> SE3:
         """Interpolate between SE(3) instances
 
-        :param other: the ending pose at s = 1.0
+        :param other: the ending orientation at s = 1.0
         :type other: SE3
-        :param s: the interpolation parameter in [0, 1]
+        :param s: the interpolation variable s in [0, 1]
         :type s: float
-
+        :returns: the SE(3) instances interpolated at value s
+        :rtype: SE(3)
         """
         new = SE3()
         new.R = matrix_slerp(self.R, other.R, s)

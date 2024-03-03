@@ -16,6 +16,7 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('../'))
 
+from pyrobopath import __version__
 
 # -- Project information -----------------------------------------------------
 
@@ -24,9 +25,9 @@ copyright = '2023, Alex Arbogast'
 author = 'Alex Arbogast'
 
 # The short X.Y version
-version = ''
+version = __version__ 
 # The full version, including alpha/beta/rc tags
-release = '0.2.2'
+release = version
 
 
 # -- General configuration ---------------------------------------------------
