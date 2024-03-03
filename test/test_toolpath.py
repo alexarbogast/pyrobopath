@@ -3,10 +3,12 @@ import unittest
 import numpy as np
 import numpy.testing as nt
 from gcodeparser import GcodeParser
+from pyrobopath.toolpath.path.spline import CubicBSpline2
 
 from pyrobopath.tools.linalg import SO3, SE3
 from pyrobopath.toolpath import Toolpath, Contour
 from pyrobopath.toolpath.path import *
+
 
 TEST_GCODE1 = os.path.join(
     os.path.dirname(__file__), "test_gcode", "hollow_square.gcode"
@@ -51,20 +53,21 @@ class TestPath(unittest.TestCase):
         cp = [[0.0, 0.0], [0.0, 1.0], [0.0, 1.0], [1.0, 1.0]]
         knots = [0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0]
         bspline = BSpline(cp, knots, 3)
-        nt.assert_array_almost_equal(bspline(0.0),  [0.0, 0.0])
-        nt.assert_equal(np.round(bspline(0.25), 3), [0.016, 0.578])
+        nt.assert_array_almost_equal(bspline(0.0), [0.0, 0.0])
+        nt.assert_equal(np.round(bspline(0.25), 4), [0.0156, 0.5781])
         nt.assert_equal(np.round(bspline(0.50), 3), [0.125, 0.875])
-        nt.assert_equal(np.round(bspline(0.75), 3), [0.422, 0.984])
+        nt.assert_equal(np.round(bspline(0.75), 4), [0.4219, 0.9844])
         nt.assert_equal(np.round(bspline(1.0), 3), [1.0, 1.0])
 
         cp = [[0.0, 0.0], [0.0, 0.5], [0.5, 1.0], [1.0, 1.0]]
-        bspline = CubicBSpline(cp)
-        nt.assert_equal(np.round(bspline(0.1), 3),  [0.105, 0.54])
-        nt.assert_equal(np.round(bspline(0.25), 3), [0.15, 0.609])
-        nt.assert_equal(np.round(bspline(0.50), 3), [0.26, 0.74])
-        nt.assert_equal(np.round(bspline(0.75), 3), [0.357, 0.825])
-        nt.assert_equal(np.round(bspline(1.0), 3), [0.495, 0.914])
-
+        bspline_types = [CubicBSpline, CubicBSpline2]
+        for spline_type in bspline_types:
+            bspline = spline_type(cp)
+            nt.assert_equal(np.round(bspline(0.0), 4), [0.0833, 0.5])
+            nt.assert_equal(np.round(bspline(0.25), 4), [0.1602, 0.6237])
+            nt.assert_equal(np.round(bspline(0.50), 4), [0.2604, 0.7396])
+            nt.assert_equal(np.round(bspline(0.75), 4), [0.3763, 0.8398])
+            nt.assert_equal(np.round(bspline(1.0), 4), [0.5, 0.9167])
 
     def test_segments(self):
         # linear segment
@@ -80,9 +83,6 @@ class TestPath(unittest.TestCase):
         self.assertIsInstance(sample_half, SE3)
         nt.assert_array_almost_equal(sample_half.t, np.array([0.5, 0.0, 0.0]))
         nt.assert_array_almost_equal(sample_half.R, SO3.Rx(np.pi / 4).matrix)
-
-        # bspline segments
-        # bspline = CubicBSplineSegment([])
 
 
 if __name__ == "__main__":
