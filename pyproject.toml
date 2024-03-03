@@ -1,0 +1,62 @@
+[build-system]
+requires = ["setuptools", "oldest-supported-numpy"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyrobopath"
+version = "0.2.2"
+authors = [
+  { name="Alex Arbogast", email="arbogastaw@gmail.com"},
+]
+description = "This project contains python and ROS packages for working with robotic toolpaths"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+
+dependencies = [
+  "matplotlib",
+  "networkx",
+  "gcodeparser",
+  "python-fcl",
+  "numpy>=1.20.0",
+  "numpy-quaternion",
+  "scipy",
+  "colorama",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest",
+]
+
+docs = [
+  "sphinx",
+  "pydata-sphinx-theme",
+]
+
+[project.urls]
+homepage = "https://github.com/alexarbogast/pyrobopath"
+documentation = "https://pyrobopath.readthedocs.io/en/latest/"
+issues = "https://github.com/alexarbogast/pyrobopath/issues"
+
+[tools.setuptools]
+
+packages = [
+  "pyrobopath",
+  "pyrobopath.collision_detection",
+  "pyrobopath.scheduling",
+  "pyrobopath.toolpath",
+  "pyrobopath.toolpath.path",
+  "pyrobopath.toolpath_scheduling",
+  "pyrobopath.tools",
+  "pyrobopath_ros",
+]

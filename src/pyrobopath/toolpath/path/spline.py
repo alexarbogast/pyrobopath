@@ -1,4 +1,5 @@
-from typing import List, Sequence
+from __future__ import annotations
+from typing import Sequence
 import numpy as np
 from scipy import interpolate
 
@@ -19,7 +20,7 @@ class CubicBSpline(BSpline):
     KNOTS = (-3.0, -2.0, -1.0, 0.0, 1.0, 2.0, 3.0, 4.0)
 
     def __init__(
-        self, control_points: Sequence[ArrayLike], knots: ArrayLike | None = None
+        self, control_points: Sequence[ArrayLike], knots: ArrayLike | None=None
     ):
         self.knots = CubicBSpline.KNOTS if knots is None else knots
         super(CubicBSpline, self).__init__(control_points, self.knots, 3)

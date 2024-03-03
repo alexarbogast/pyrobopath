@@ -225,8 +225,8 @@ class TestFCLCollisionDetection(unittest.TestCase):
         )
 
         # collision-free
-        box_model_1.translation =np.array([-1, 0, 0])
-        box_model_2.translation =np.array([1, 0, 0])
+        box_model_1.translation = np.array([-1, 0, 0])
+        box_model_2.translation = np.array([1, 0, 0])
         self.assertFalse(
             box_model_1.in_collision(box_model_2),
             "Collision-free state returned with collision",
