@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools", "oldest-supported-numpy"]
+requires = ["setuptools", "setuptools_scm"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyrobopath"
-version = "0.2.2"
+dynamic = ["version"]
 authors = [
   { name="Alex Arbogast", email="arbogastaw@gmail.com"},
 ]
@@ -60,3 +60,5 @@ packages = [
   "pyrobopath.tools",
   "pyrobopath_ros",
 ]
+
+[tool.setuptools_scm]

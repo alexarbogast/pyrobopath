@@ -16,6 +16,6 @@ catkin_python_setup()
 catkin_package(CATKIN_DEPENDS rospy cartesian_planning_server)
 
 catkin_install_python(PROGRAMS
-  scripts/ros_test.py
+  scripts/robopath_ros.py
   	DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
