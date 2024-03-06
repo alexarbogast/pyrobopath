@@ -5,7 +5,7 @@ Python Examples
 Creating a toolpath
 -------------------
 
-A toolpath is created from a collection of :class:`.Contour` s. 
+A toolpath is created from a collection of :class:`.Contour` s.
 Contours represent a contiguous path that is traversed by a specified tool.
 The toolpath can either be created manually, or parsed from a standard
 Gcode file.
@@ -15,7 +15,7 @@ tool with an enum.
 
 .. code-block:: python
   :caption: Example tool represenation
-  
+
   from enum import Enum
 
   class Materials(Enum):
@@ -27,7 +27,7 @@ Manual Toolpath Creation
 To create a toolpath manually, we must first define a set of contours.
 
 .. code-block:: python
-  
+
   from pyrobopath.toolpath import Contour, Toolpath
 
   path1 = [np.array(1.0, 0.0, 0.0), np.array(0.0, 0.0, 0.0), np.array(0.0, 1.0, 0.0)]
@@ -43,7 +43,7 @@ To create a toolpath manually, we must first define a set of contours.
 
 Gcode Toolpath Creation
 ^^^^^^^^^^^^^^^^^^^^^^^
-A toolpath can be created from standard Gcode flavors. 
+A toolpath can be created from standard Gcode flavors.
 
 .. Caution::
   Only the reprap flavor from slic3r has been tested thus far. It should be
@@ -86,24 +86,25 @@ We will create a simple two robot system.
   from pyrobopath.collision_detection import FCLRobotBBCollisionModel
   from pyrobopath.toolpath_scheduling import *
 
-  agent1 = AgentModel()
-  agent1.base_frame_position = np.array([-350.0, 0.0, 0.0])
-  agent1.home_position = np.array([-250.0, 0.0, 0.0])
-  agent1.capabilities = [Materials.MATERIAL_A]
-  agent1.velocity = 50.0
-  agent1.travel_velocity = 50.0
-  agent1.collision_model = FCLRobotBBCollisionModel(
-      200.0, 50.0, 300.0, agent1.base_frame_position
-  )
-  agent2 = AgentModel()
-  agent2.base_frame_position = np.array([350.0, 0.0, 0.0])
-  agent2.home_position = np.array([250.0, 0.0, 0.0])
-  agent2.capabilities = [Materials.MATERIAL_B]
-  agent2.velocity = 50.0
-  agent2.travel_velocity = 50.0
-  agent2.collision_model = FCLRobotBBCollisionModel(
-      200.0, 50.0, 300.0, agent2.base_frame_position
-  )
+  bf1 = np.array([-350.0, 0.0, 0.0])
+  bf2 = np.array([350.0, 0.0, 0.0])
 
+  # create agent collision models
+  agent1 = AgentModel(
+      base_frame_position=bf1,
+      home_position=np.array([-250.0, 0.0, 0.0]),
+      capabilities=[Materials.MATERIAL_A],
+      velocity=50.0,
+      travel_velocity=50.0,
+      collision_model=FCLRobotBBCollisionModel(200.0, 50.0, 300.0, bf1),
+  )
+  agent2 = AgentModel(
+      base_frame_position=bf2,
+      home_position=np.array([250.0, 0.0, 0.0]),
+      capabilities=[Materials.MATERIAL_B],
+      velocity=50.0,
+      travel_velocity=50.0,
+      collision_model=FCLRobotBBCollisionModel(200.0, 50.0, 300.0, bf2),
+  )
   agent_models = {"robot1": agent1, "robot2": agent2}
-  
+

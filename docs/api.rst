@@ -7,4 +7,3 @@ Pyrobopath Reference
    :recursive:
 
    pyrobopath
-   pyrobopath_ros

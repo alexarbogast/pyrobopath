@@ -1,8 +1,0 @@
-matplotlib
-networkx
-gcodeparser
-python-fcl
-numpy>=1.20.0
-numpy-quaternion
-scipy
-colorama

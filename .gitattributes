@@ -1,0 +1,5 @@
+# as binaries to avoid giant diffs
+*.gcode filter=lfs diff=lfs merge=lfs -text
+
+# remove noise from github language stats
+*.gcode linguist-vendored

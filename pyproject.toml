@@ -58,7 +58,6 @@ packages = [
   "pyrobopath.toolpath.path",
   "pyrobopath.toolpath_scheduling",
   "pyrobopath.tools",
-  "pyrobopath_ros",
 ]
 
 [tool.setuptools_scm]
