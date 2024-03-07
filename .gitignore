@@ -1,5 +1,24 @@
+# Editors
 .vscode/
+
+### Python template
+# Byte-compiled / optimized
 __pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+.env/
+env/
+.venv/
+venv/
+build/
+dist/
+.eggs/
+lib/
+lib64/
+*.egg-info/
+
+# Sphinx documentation
+docs/_build/
 docs/_api/
-*build/
-*.egg-info

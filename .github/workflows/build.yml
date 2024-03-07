@@ -19,11 +19,41 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build
+      - name: Build package
+        run: python -m build
+      - name: Store the distribution packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: Packages
+          path: ./dist/pyrobopath-*
 
-      - uses: hynek/build-and-inspect-python-package@v2
+  upload_github:
+    name: Upload to Github Release
+    needs: [build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # IMPORTANT: mandatory for making GitHub Releases
+    if: github.repository == 'alexarbogast/pyrobopath' && github.event_name == 'push' && github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: Packages
+          path: dist
+      - uses: softprops/action-gh-release@v1
+        with:
+          files: dist/pyrobopath-*
 
   upload_pypi_test:
     name: Upload to PyPI (test)
+    environment: testpypi
     needs: [build]
     runs-on: ubuntu-latest
     if: github.repository == 'alexarbogast/pyrobopath'
@@ -42,6 +72,7 @@ jobs:
 
   upload_pypi:
     name: Upload to PyPI (prod)
+    environment: pypi
     needs: [build]
     runs-on: ubuntu-latest
     if: github.repository == 'alexarbogast/pyrobopath' && github.event_name == 'push' && github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
