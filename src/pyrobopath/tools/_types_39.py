@@ -4,6 +4,7 @@ from typing import Tuple, Union, List, Any
 from typing import Literal as L
 from numpy import ndarray, dtype, floating
 from numpy.typing import NDArray
+from quaternion import quaternion
 
 ArrayLike = Union[List[float], Tuple[float, ...], ndarray[Any, dtype[floating]]]
 ArrayLike2 = Union[
@@ -19,6 +20,14 @@ ArrayLike3 = Union[
     Tuple[float, float, float],
     ndarray[
         Tuple[L[3,]],
+        dtype[floating],
+    ],
+]
+ArrayLike4 = Union[
+    List[float],
+    Tuple[float, float, float, float],
+    ndarray[
+        Tuple[L[4,]],
         dtype[floating],
     ],
 ]
@@ -56,3 +65,5 @@ R1x3 = ndarray[Tuple[L[1], L[3]], dtype[floating]]  # R^{1x3} row vector
 R3x1 = ndarray[Tuple[L[3], L[1]], dtype[floating]]  # R^{3x1} column vector
 R1x2 = ndarray[Tuple[L[1], L[2]], dtype[floating]]  # R^{1x2} row vector
 R2x1 = ndarray[Tuple[L[2], L[1]], dtype[floating]]  # R^{2x1} column vector
+
+Quat = Union[ArrayLike4, quaternion]

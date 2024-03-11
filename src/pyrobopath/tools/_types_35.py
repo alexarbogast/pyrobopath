@@ -1,9 +1,10 @@
 # for Python <= 3.8
 
-from typing import Tuple, Union, List, Set
+from typing import Tuple, Union, List
 
 from numpy import floating
 from numpy.typing import NDArray
+from quaternion import quaternion
 
 #NDArray = ndarray
 ArrayLike = Union[List[float], Tuple[float, ...], NDArray]
@@ -29,3 +30,5 @@ R1x3 = NDArray  # R^{1x3} row vector
 R3x1 = NDArray  # R^{3x1} column vector
 R1x2 = NDArray  # R^{1x2} row vector
 R2x1 = NDArray  # R^{2x1} column vector
+
+Quaternion = quaternion
