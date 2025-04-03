@@ -77,7 +77,7 @@ class TestCollisionDetection(unittest.TestCase):
         for a, b in zip(sliced.points, traj.points):
             self.assertTrue(np.allclose(a.data, b.data),
                             "Sliced trajectory points are incorrect")
-            
+
         # sandwiching start time
         sliced = traj.slice(-1.0, 0.5)
         self.assertEqual(len(sliced.points), 2, "Sliced trajectory does not have 2 points")

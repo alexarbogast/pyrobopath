@@ -25,7 +25,7 @@ copyright = '2023, Alex Arbogast'
 author = 'Alex Arbogast'
 
 # The short X.Y version
-version = __version__ 
+version = __version__
 # The full version, including alpha/beta/rc tags
 release = version
 
@@ -173,7 +173,7 @@ autodoc_mock_imports = [
     'control_msgs',
     'trajectory_msgs',
     'cartesian_planning_msgs',
-    'actionlib', 
+    'actionlib',
     'geometry_msgs',
 ]
 

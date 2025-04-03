@@ -94,7 +94,7 @@ class TestSE3(unittest.TestCase):
         self.assertIsInstance(se3, SE3)
         nt.assert_array_almost_equal(se3.matrix, Rx_pi_2)
 
-        Ry_pi_2 = np.array([[ 0.0, 0.0, 1.0, 0.0], 
+        Ry_pi_2 = np.array([[ 0.0, 0.0, 1.0, 0.0],
                             [ 0.0, 1.0, 0.0, 0.0],
                             [-1.0, 0.0, 0.0, 0.0],
                             [ 0.0, 0.0, 0.0, 1.0]])
@@ -103,7 +103,7 @@ class TestSE3(unittest.TestCase):
         nt.assert_array_almost_equal(se3.matrix, Ry_pi_2)
 
         Rz_pi_2 = np.array([[0.0, -1.0, 0.0, 0.0],
-                            [1.0,  0.0, 0.0, 0.0], 
+                            [1.0,  0.0, 0.0, 0.0],
                             [0.0,  0.0, 1.0, 0.0],
                             [0.0,  0.0, 0.0, 1.0]])
         se3 = SE3.Rz(np.pi / 2)

@@ -49,7 +49,7 @@ class TestSchedule(unittest.TestCase):
         i2 = Interval(2, 4)
         ans = test_all_relations(i1, i2)
         self.assertListEqual(ans, [False] * 2 + [True] + [False] * 10)
-        
+
         # starts
         i1 = Interval(2, 3)
         i2 = Interval(2, 4)
@@ -91,7 +91,7 @@ class TestSchedule(unittest.TestCase):
         i2 = Interval(1, 2)
         ans = test_all_relations(i1, i2)
         self.assertListEqual(ans, [False] * 9 + [True] + [False] * 3)
-        
+
         # overlapped_by
         i1 = Interval(2, 4)
         i2 = Interval(1, 3)

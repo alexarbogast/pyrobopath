@@ -25,7 +25,7 @@ ArrayLike3 = Union[
 
 # real vectors
 R1 = ndarray[
-    Tuple[L[1]], 
+    Tuple[L[1]],
     dtype[floating],
 ]  # R^1
 R2 = ndarray[

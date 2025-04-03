@@ -11,7 +11,7 @@ class DependencyGraph(object):
         self._graph.add_node(node, complete=False)
         if dependencies is None:
             return
-        
+
         for d in dependencies:
             if not d in self._graph.nodes:
                 self._graph.add_node(d, complete=False)
@@ -35,6 +35,6 @@ class DependencyGraph(object):
 
         pos = graphviz_layout(self._graph, prog="dot")
         nx.draw(self._graph, pos, with_labels=True, )
-        
+
         if show:
             plt.show()

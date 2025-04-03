@@ -254,7 +254,7 @@ def complex_two_material_four_robots():
         velocity = 50.0,
         travel_velocity = 50.0,
         collision_model = FCLRobotBBCollisionModel(
-            500., 50., 300., bf2 
+            500., 50., 300., bf2
         ),
     )
     agent3 = AgentModel(
@@ -268,7 +268,7 @@ def complex_two_material_four_robots():
         ),
     )
     agent4 = AgentModel(
-        base_frame_position = bf4, 
+        base_frame_position = bf4,
         home_position = np.array([-rh * np.cos(np.pi/4), -rh * np.sin(np.pi/4), 0.]),
         capabilities = [0],
         velocity = 50.0,

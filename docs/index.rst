@@ -3,7 +3,7 @@ Pyrobopath Documentation
 
 Pyrobopath is an early version of a project targeted towards collaborative
 industrial robotic applications. The current functionalities include coordinated
-toolpath scheduling and execution. 
+toolpath scheduling and execution.
 
 
 Contents

@@ -2,7 +2,7 @@
 
 from typing import Tuple, Union, List, Set
 
-from numpy import floating 
+from numpy import floating
 from numpy.typing import NDArray
 
 #NDArray = ndarray

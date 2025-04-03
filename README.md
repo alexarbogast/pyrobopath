@@ -16,7 +16,8 @@ target functionalities include:
 * Planning algorithms for scheduling multi-agent toolpaths 
 
 > [!NOTE]
-> _This project is under heavy development and subject to changes in API and functionality._ 
+> _This project is under heavy development and subject to changes in API and
+> functionality._
 
 ## Installation
 
@@ -48,7 +49,8 @@ python3 -m unittest # unittest
 ```
 
 ## ROS interfaces
-See the [pyrobopath_ros](https://github.com/alexarbogast/pyrobopath_ros) package for ROS interfaces to pyrobopath. 
+See the [pyrobopath_ros](https://github.com/alexarbogast/pyrobopath_ros) package
+for ROS interfaces to pyrobopath.
 
 
 

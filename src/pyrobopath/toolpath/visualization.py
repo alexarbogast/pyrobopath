@@ -30,7 +30,7 @@ def visualize_toolpath(toolpath: Toolpath, show=True):
 
 def visualize_toolpath_projection(toolpath: Toolpath, show=True):
     fig, ax = plt.subplots(figsize=(10, 8))
-    
+
     layer_slider = _plot_toolpath_projection(toolpath, fig, ax)
     ax.set_aspect("equal")
 

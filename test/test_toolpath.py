@@ -40,7 +40,7 @@ class TestToolpath(unittest.TestCase):
         contour = Contour(
             [np.array([0.0, 0.0, 0.0]),
              np.array([0.0, 1.0, 0.0]),
-             np.array([1.0, 1.0, 0.0])], 
+             np.array([1.0, 1.0, 0.0])],
              tool=0
         )
         # fmt: on

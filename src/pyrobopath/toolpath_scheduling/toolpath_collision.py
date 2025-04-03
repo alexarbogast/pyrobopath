@@ -66,7 +66,7 @@ def schedule_to_trajectory(
     else:
         start_state = schedule.get_state(t_start, default_state)
         end_state = schedule.get_state(t_end, default_state)
-    
+
     if start_state is not None:
         traj.insert_traj_point(0, TrajectoryPoint(start_state, t_start))
     if end_state is not None:
