@@ -1,6 +1,18 @@
+.. _python_examples:
+
 ===============
 Python Examples
 ===============
+
+A few Python examples are provided in :file:`examples/example.py`. The basic
+components of these examples, such as creating toolpaths and defining robot
+systems, are explained below. First, :ref:`install <installation>` pyrobopath,
+then cd to the :file:`examples` directory, and run the following command:
+
+.. code-block:: sh
+  :caption: Run the provided examples
+
+  python3 examples.py
 
 Creating a toolpath
 -------------------
