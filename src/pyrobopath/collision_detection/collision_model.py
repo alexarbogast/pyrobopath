@@ -1,16 +1,16 @@
 from __future__ import annotations
 from typing import List
+from abc import ABC, abstractmethod
 
 from pyrobopath.tools.types import R3, R3x3
-from pyrobopath.tools.linalg import SE3
+from pyrobopath.toolpath.path.transform import Transform
 
 
-class CollisionModel(object):
+class CollisionModel(ABC):
     "A collision model is used by a collision checker"
 
     def __init__(self):
-        # self._transform = np.identity(4)
-        self._transform = SE3()
+        self._transform = Transform()
 
     @property
     def translation(self) -> R3:
@@ -33,9 +33,10 @@ class CollisionModel(object):
         return self._transform
 
     @transform.setter
-    def transform(self, value: SE3):
+    def transform(self, value: Transform):
         self._transform = value
 
+    @abstractmethod
     def in_collision(self, other: CollisionModel) -> bool:
         raise NotImplementedError
 

@@ -6,7 +6,6 @@ import numpy.testing as nt
 from gcodeparser import GcodeParser
 from pyrobopath.toolpath.path.spline import CubicBSpline2
 
-from pyrobopath.tools.linalg import SO3, SE3
 from pyrobopath.toolpath import Toolpath, Contour
 from pyrobopath.toolpath.path import *
 
@@ -70,10 +69,11 @@ class TestPath(unittest.TestCase):
             nt.assert_equal(np.round(bspline(0.75), 4), [0.3763, 0.8398])
             nt.assert_equal(np.round(bspline(1.0), 4), [0.5, 0.9167])
 
+
     def test_segments(self):
         # linear segment
-        start = SE3()
-        end = SE3.Trans([1.0, 0.0, 0.0]) @ SE3.Rx(np.pi / 2)
+        start = Transform()
+        end = Transform.Trans([1.0, 0.0, 0.0]) @ Transform.Rx(np.pi / 2)
 
         lin = LinearSegment(start, end)
         self.assertEqual(lin.length(), 1.0)
@@ -81,9 +81,9 @@ class TestPath(unittest.TestCase):
         self.assertTrue(lin.sample(1.0).almost_equal(end))
 
         sample_half = lin.sample(0.5)
-        self.assertIsInstance(sample_half, SE3)
+        self.assertIsInstance(sample_half, Transform)
         nt.assert_array_almost_equal(sample_half.t, np.array([0.5, 0.0, 0.0]))
-        nt.assert_array_almost_equal(sample_half.R, SO3.Rx(np.pi / 4).matrix)
+        nt.assert_array_almost_equal(sample_half.R, Rotation.Rx(np.pi / 4).matrix)
 
 
 class TestRotation(unittest.TestCase):

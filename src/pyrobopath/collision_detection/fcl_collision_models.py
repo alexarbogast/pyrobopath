@@ -2,8 +2,9 @@ from __future__ import annotations
 import numpy as np
 import fcl
 
-from pyrobopath.tools.types import ArrayLike3
-from pyrobopath.tools.linalg import SE3, R3, unit_vector
+from pyrobopath.tools.types import ArrayLike3, R3
+from pyrobopath.tools.linalg import unit_vector
+from pyrobopath.toolpath.path.transform import Transform
 from pyrobopath.collision_detection.collision_model import CollisionModel
 
 
@@ -76,30 +77,26 @@ class FCLRobotBBCollisionModel(FCLBoxCollisionModel):
     def __init__(self, x: float, y: float, z: float, anchor: ArrayLike3):
         super().__init__(x, y, z)
         self._anchor = np.array(anchor)
-        self._eef_transform = SE3()
+        self._eef_transform = Transform()
 
     @property
-    def translation(self):
+    def translation(self) -> R3:
         return self._eef_transform.t
 
     @translation.setter
     def translation(self, value: R3):
-        self._eef_transform.t = value
-
         # find box center location (z_height matches anchor)
         p_tip_anchor = (value - self.anchor)[:2]
         dir = unit_vector(p_tip_anchor)
         box_origin = value[:2] - self.box.side[0] * 0.5 * dir
 
-        # set rotation
-        y_axis = np.array([-dir[1], dir[0]])
-        self._eef_transform.matrix[:2, 0] = dir
-        self._eef_transform.matrix[:2, 1] = y_axis
-        self._transform.matrix[:2, 0] = dir
-        self._transform.matrix[:2, 1] = y_axis
+        # set transformations
+        self._eef_transform = Transform.Rz(np.arctan2(dir[1], dir[0]))
+        self._eef_transform.t = value
+        self._transform.quat = self._eef_transform.quat
 
-        self._transform.matrix[:2, 3] = box_origin
-        self._transform.matrix[2, 3] = self.anchor[2]
+        self._transform.t[:2] = box_origin
+        self._transform.t[2] = self.anchor[2]
 
     @property
     def anchor(self):
@@ -115,14 +112,14 @@ def _continuous_collision_check(
     trans1_final: np.ndarray,
     model2: FCLCollisionModel,
     trans2_final: np.ndarray,
-):
-    t1_initial = fcl.Transform(model1._transform[:3, :3], model1._transform[:3, 3])
-    t2_initial = fcl.Transform(model2._transform[:3, :3], model2._transform[:3, 3])
+) -> bool:
+    t1_initial = fcl.Transform(model1.rotation, model1.translation)
+    t2_initial = fcl.Transform(model2.rotation, model2.translation)
 
     model1.translation = trans1_final
     model2.translation = trans2_final
-    t1_final = fcl.Transform(model1._transform[:3, :3], model1._transform[:3, 3])
-    t2_final = fcl.Transform(model2._transform[:3, :3], model2._transform[:3, 3])
+    t1_final = fcl.Transform(model1.rotation, model1.translation)
+    t2_final = fcl.Transform(model2.rotation, model2.translation)
 
     model1.obj.setTransform(t1_initial)
     model2.obj.setTransform(t2_initial)

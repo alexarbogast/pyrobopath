@@ -2,8 +2,9 @@ from typing import List, Sequence
 import numpy as np
 
 from pyrobopath.tools.types import ArrayLike3, NDArray
-from pyrobopath.tools.linalg import unit_vector, unit_vector3, angle_between, SO3, SE3
+from pyrobopath.tools.linalg import unit_vector3, angle_between
 from pyrobopath.toolpath.path import Path, CubicBSplineSegment
+from pyrobopath.toolpath.path.transform import Rotation, Transform
 
 
 def _continuous_cubic_splines(
@@ -11,7 +12,8 @@ def _continuous_cubic_splines(
 ) -> List[CubicBSplineSegment]:
     v = control_points
     return [
-        CubicBSplineSegment(v[i : (i + 4)], SO3(), SO3()) for i in range(len(v) - 3)
+        CubicBSplineSegment(v[i : (i + 4)], Rotation(), Rotation())
+        for i in range(len(v) - 3)
     ]
 
 
@@ -19,7 +21,7 @@ def _entry_length(p0: NDArray, p1: NDArray, p2: NDArray, tol: float) -> float:
     return 3 * tol / np.cos(angle_between(p0 - p1, p2 - p1) / 2)
 
 
-def smooth_cubic_bspline(path: List[SE3], tol: float) -> Sequence[Path]:
+def smooth_cubic_bspline(path: List[Transform], tol: float) -> Sequence[Path]:
     """Smooth a piecewise linear path within tolerance `tol` using cubic splines
 
     :param path: a list of SE(3) poses representing piecewise linear paths
