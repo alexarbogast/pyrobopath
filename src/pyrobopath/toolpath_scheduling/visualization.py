@@ -1,4 +1,4 @@
-from typing import Hashable, Dict
+from typing import Dict
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -16,6 +16,12 @@ from pyrobopath.toolpath_scheduling.schedule import (
     MultiAgentToolpathSchedule,
     ToolpathSchedule,
 )
+
+# temporary fix to override user-specific rcParams that distort scheduling
+# animations
+import matplotlib as mpl
+
+mpl.rcParams = mpl.rcParamsDefault
 
 
 def draw_multi_agent_schedule(s: MultiAgentToolpathSchedule, show=True):
@@ -198,9 +204,9 @@ def animate_multi_agent_toolpath_full(
     for a in schedule.agents():
         model = None
         if isinstance(agent_models[a].collision_model, FCLRobotBBCollisionModel):
-            model = RobotBBAnimationModel(agent_models[a], schedule[a], anim_ax) # type: ignore
+            model = RobotBBAnimationModel(agent_models[a], schedule[a], anim_ax)  # type: ignore
         else:
-            model = AnimationModel(agent_models[a], schedule[a], anim_ax) # type: ignore
+            model = AnimationModel(agent_models[a], schedule[a], anim_ax)  # type: ignore
         anim_models.append(model)
 
     # update all models and schedule line on slider change

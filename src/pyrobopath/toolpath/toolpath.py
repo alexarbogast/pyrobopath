@@ -1,5 +1,6 @@
 from __future__ import annotations
-from typing import List
+from typing import List, Union
+from enum import Enum
 from gcodeparser import GcodeParser, GcodeLine
 import numpy as np
 
@@ -9,11 +10,11 @@ from pyrobopath.tools.utils import pairwise
 class Contour(object):
     counter: int = 0
 
-    def __init__(self, path=None, tool=0):
+    def __init__(self, path=None, tool: Union[int, Enum] = 0):
         if path is None:
             path = []
         self.path: List[np.ndarray] = path
-        self.tool: int = tool
+        self.tool: Union[int, Enum] = tool
 
         Contour.counter += 1
         self.id = Contour.counter
