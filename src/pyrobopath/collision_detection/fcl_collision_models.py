@@ -69,7 +69,7 @@ class FCLRobotBBCollisionModel(FCLBoxCollisionModel):
 
     See the pyrobopath documentation for further details.
 
-    :param dims: The dimensions of the box [width (X), length (Y), height (Z)].
+    :param dims: The dimensions of the box [length (X), width (Y), height (Z)].
     :type dims: ArrayLike3
     :param anchor: The 3D anchor point about which the box rotates. Typically
                    the robot base in world coordinates.

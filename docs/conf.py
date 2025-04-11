@@ -90,6 +90,7 @@ html_theme = 'pydata_sphinx_theme'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 html_theme_options = {
+  "github_url": "https://github.com/alexarbogast/pyrobopath",
   "header_links_before_dropdown": 4
 }
 html_css_files = [

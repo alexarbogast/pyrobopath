@@ -146,7 +146,7 @@ image below.
   :align: center
 
 The dimensions of the bounding box are defined by the :file:`dims` parameter
-:math:`\textrm{dims}=\left(w, l, h\right)`. The anchor vector
+:math:`\textrm{dims}=\left(l, w, h\right)`. The anchor vector
 :math:`\vec{v}_{anchor}` defines the base frame location of the robot with
 respect to the world, and the offset :math:`\vec{v}_{offset}` defines the rigid
 translation between the end effector and the center face of the bounding box.

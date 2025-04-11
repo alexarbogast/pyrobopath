@@ -14,8 +14,7 @@ Contents
 
     Users Guide <users/index.rst>
     Reference <api.rst>
-    Demos <demos.rst>
-    🚀 Github <https://github.com/alexarbogast/pyrobopath>
+    Gallary <gallary.rst>
 
 
 Indices and tables
