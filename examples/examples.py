@@ -35,7 +35,7 @@ def simple_toolpath_example_two():
         capabilities=[Materials.MATERIAL_A],
         velocity=50.0,
         travel_velocity=50.0,
-        collision_model=FCLRobotBBCollisionModel(200.0, 50.0, 300.0, bf1),
+        collision_model=FCLRobotBBCollisionModel((200.0, 50.0, 300.0), bf1),
     )
     agent2 = AgentModel(
         base_frame_position=bf2,
@@ -43,7 +43,7 @@ def simple_toolpath_example_two():
         capabilities=[Materials.MATERIAL_B],
         velocity=50.0,
         travel_velocity=50.0,
-        collision_model=FCLRobotBBCollisionModel(200.0, 50.0, 300.0, bf2),
+        collision_model=FCLRobotBBCollisionModel((200.0, 50.0, 300.0), bf2),
     )
     agent_models = {"robot1": agent1, "robot2": agent2}
 
@@ -85,9 +85,7 @@ def simple_toolpath_example_three():
         capabilities = [Materials.MATERIAL_B],
         velocity = 50.0,
         travel_velocity = 50.0,
-        collision_model = FCLRobotBBCollisionModel(
-            200., 50., 300., bf1
-        ),
+        collision_model = FCLRobotBBCollisionModel((200., 50., 300.), bf1),
     )
     agent2 = AgentModel(
         base_frame_position = bf2,
@@ -95,9 +93,7 @@ def simple_toolpath_example_three():
         capabilities = [Materials.MATERIAL_A],
         velocity = 50.0,
         travel_velocity = 50.0,
-        collision_model = FCLRobotBBCollisionModel(
-            200., 50., 300., bf2
-        ),
+        collision_model = FCLRobotBBCollisionModel((200., 50., 300.), bf2),
     )
     agent3 = AgentModel(
         base_frame_position = bf3,
@@ -105,9 +101,7 @@ def simple_toolpath_example_three():
         capabilities = [Materials.MATERIAL_A],
         velocity = 50.0,
         travel_velocity = 50.0,
-        collision_model = FCLRobotBBCollisionModel(
-            200., 50., 300., bf3
-        ),
+        collision_model = FCLRobotBBCollisionModel((200., 50., 300.), bf3),
     )
     agent_models = {"robot1": agent1, "robot2": agent2, "robot3": agent3}
 
@@ -144,7 +138,7 @@ def multi_material_squares():
         capabilities=[0],
         velocity=50.0,
         travel_velocity=50.0,
-        collision_model=FCLRobotBBCollisionModel(200.0, 50.0, 300, bf1),
+        collision_model=FCLRobotBBCollisionModel((200.0, 50.0, 300.0), bf1),
     )
     agent2 = AgentModel(
         base_frame_position=bf2,
@@ -152,7 +146,7 @@ def multi_material_squares():
         capabilities=[1],
         velocity=50.0,
         travel_velocity=50.0,
-        collision_model=FCLRobotBBCollisionModel(200.0, 50.0, 300, bf2),
+        collision_model=FCLRobotBBCollisionModel((200.0, 50.0, 300.0), bf2),
     )
     agent_models = {"robot1": agent1, "robot2": agent2}
 
@@ -191,7 +185,7 @@ def complex_two_material_two_robots():
         capabilities=[0],
         velocity=50.0,
         travel_velocity=50.0,
-        collision_model=FCLRobotBBCollisionModel(200.0, 50.0, 300, bf1),
+        collision_model=FCLRobotBBCollisionModel((200.0, 50.0, 300.0), bf1),
     )
     agent2 = AgentModel(
         base_frame_position=bf2,
@@ -199,7 +193,7 @@ def complex_two_material_two_robots():
         capabilities=[1],
         velocity=50.0,
         travel_velocity=50.0,
-        collision_model=FCLRobotBBCollisionModel(200.0, 50.0, 300, bf2),
+        collision_model=FCLRobotBBCollisionModel((200.0, 50.0, 300.0), bf2),
     )
     agent_models = {"robot1": agent1, "robot2": agent2}
 
@@ -243,9 +237,7 @@ def complex_two_material_four_robots():
         capabilities = [0],
         velocity = 50.0,
         travel_velocity = 50.0,
-        collision_model = FCLRobotBBCollisionModel(
-            500., 50., 300., bf1
-        ),
+        collision_model = FCLRobotBBCollisionModel((500., 50., 300.), bf1),
     )
     agent2 = AgentModel(
         base_frame_position = bf2,
@@ -253,9 +245,7 @@ def complex_two_material_four_robots():
         capabilities = [1],
         velocity = 50.0,
         travel_velocity = 50.0,
-        collision_model = FCLRobotBBCollisionModel(
-            500., 50., 300., bf2
-        ),
+        collision_model = FCLRobotBBCollisionModel((500., 50., 300.), bf2),
     )
     agent3 = AgentModel(
         base_frame_position = bf3,
@@ -263,9 +253,7 @@ def complex_two_material_four_robots():
         capabilities = [1],
         velocity = 50.0,
         travel_velocity = 50.0,
-        collision_model = FCLRobotBBCollisionModel(
-            500., 50., 300., bf3
-        ),
+        collision_model = FCLRobotBBCollisionModel((500., 50., 300.), bf3),
     )
     agent4 = AgentModel(
         base_frame_position = bf4,
@@ -273,9 +261,7 @@ def complex_two_material_four_robots():
         capabilities = [0],
         velocity = 50.0,
         travel_velocity = 50.0,
-        collision_model = FCLRobotBBCollisionModel(
-            500., 50., 300., bf4
-        ),
+        collision_model = FCLRobotBBCollisionModel((500., 50., 300.), bf4),
     )
     # fmt: on
 

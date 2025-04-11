@@ -108,7 +108,7 @@ We will create a simple two robot system.
       capabilities=[Materials.MATERIAL_A],
       velocity=50.0,
       travel_velocity=50.0,
-      collision_model=FCLRobotBBCollisionModel(200.0, 50.0, 300.0, bf1),
+      collision_model=FCLRobotBBCollisionModel((200.0, 50.0, 300.0), bf1),
   )
   agent2 = AgentModel(
       base_frame_position=bf2,
@@ -116,7 +116,40 @@ We will create a simple two robot system.
       capabilities=[Materials.MATERIAL_B],
       velocity=50.0,
       travel_velocity=50.0,
-      collision_model=FCLRobotBBCollisionModel(200.0, 50.0, 300.0, bf2),
+      collision_model=FCLRobotBBCollisionModel((200.0, 50.0, 300.0), bf2),
   )
   agent_models = {"robot1": agent1, "robot2": agent2}
 
+Collision Geometry
+^^^^^^^^^^^^^^^^^^
+
+There are a few options for defining the collision geometry of robots. Each of
+the provided geometries are manipulated in `Cartesian space
+<https://en.wikipedia.org/wiki/Cartesian_coordinate_system>`_. This greatly
+simplifies the collision checking process, and therefore the task allocation
+and scheduling, for multi-robot systems.
+
+The simplest collision geometries are the :class:`.LineCollisionModel`, defined
+by a single line between the robot's base and end effector, and the
+:class:`.LollipopCollisionModel` that, in addition to the line, adds a sphere
+around the end effector.
+
+The `python-fcl <https://github.com/BerkeleyAutomation/python-fcl>`_ library is
+used for more complicated collision geometries. Arguably, the most useful model
+is defined by the :class:`.FCLRobotBBCollisionModel`. This model defines a
+bounding box that is rigidly attached to the end effector of the robot and
+rotates around an axis through the robot's base. This model is shown in the
+image below.
+
+.. figure:: ../../_static/pyrobopath_collision_diagram.png
+  :width: 500
+  :align: center
+
+The dimensions of the bounding box are defined by the :file:`dims` parameter
+:math:`\textrm{dims}=\left(w, l, h\right)`. The anchor vector
+:math:`\vec{v}_{anchor}` defines the base frame location of the robot with
+respect to the world, and the offset :math:`\vec{v}_{offset}` defines the rigid
+translation between the end effector and the center face of the bounding box.
+The *offset* argument can be used to adjust the bounding box geometry to better
+approximate the links of the robot. This can also be useful if the robot tool
+geometry extends past the tool center point.

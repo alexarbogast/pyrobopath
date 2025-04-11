@@ -8,7 +8,9 @@ from matplotlib.widgets import Slider
 from matplotlib.gridspec import GridSpec
 
 from pyrobopath.toolpath import Toolpath
-from pyrobopath.collision_detection import FCLRobotBBCollisionModel
+from pyrobopath.collision_detection import (
+    FCLRobotBBCollisionModel,
+)
 
 from pyrobopath.toolpath_scheduling.system_model import AgentModel
 from pyrobopath.toolpath_scheduling.schedule import (
@@ -299,19 +301,22 @@ class RobotBBAnimationModel(AnimationModel):
         pos = self.sched.get_state(t, default=self.model.home_position)
         self.model.collision_model.translation = pos
 
+        # end-effector in world frame
         T_w_e = np.identity(3)
         T_w_e[:2, :2] = self.model.collision_model.rotation[:2, :2]
         T_w_e[:2, 2] = self.model.collision_model.translation[:2]
 
+        # bottom-left corner in end-effector frame
         T_e_bl = np.identity(3)
-        T_e_bl[:2, 2] = np.array([-self.dim[0], -self.dim[1] / 2])
+        T_e_bl[:2, 2] = self.model.collision_model.offset[:2] + np.array(
+            [-self.dim[0], -self.dim[1] / 2]
+        )
 
         T_w_bl = T_w_e @ T_e_bl
         tf = transforms.Affine2D(T_w_bl)
         self.rect.set_transform(tf + self.ax.transData)
 
-        v_w_line = T_w_e @ np.array([-self.dim[0], 0, 1])
         self.line.set_data(
-            [self.model.base_frame_position[0], v_w_line[0]],
-            [self.model.base_frame_position[1], v_w_line[1]],
+            [self.model.base_frame_position[0], pos[0]],
+            [self.model.base_frame_position[1], pos[1]],
         )

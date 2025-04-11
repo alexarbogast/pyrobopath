@@ -25,6 +25,11 @@ def unit_vector3(vec: NDArray) -> NDArray:
     return vec / norm3(vec)
 
 
+def unit_vector2(vec: NDArray) -> NDArray:
+    """A simple unit vector for vectors of length 3"""
+    return vec / norm2(vec)
+
+
 def norm3(v: ArrayLike3) -> float:
     """A simple vector norm for vectors of length 3
 

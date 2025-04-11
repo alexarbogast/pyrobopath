@@ -1,9 +1,10 @@
 from __future__ import annotations
 import numpy as np
+import quaternion
 import fcl
 
 from pyrobopath.tools.types import ArrayLike3, R3
-from pyrobopath.tools.linalg import unit_vector
+from pyrobopath.tools.linalg import unit_vector2
 from pyrobopath.toolpath.path.transform import Transform
 from pyrobopath.collision_detection.collision_model import CollisionModel
 
@@ -20,20 +21,23 @@ class FCLCollisionModel(CollisionModel):
     def __init__(self):
         super(FCLCollisionModel, self).__init__()
         self.obj: fcl.CollisionObject = None
+        self._collision_req = fcl.CollisionRequest(enable_contact=True)
 
     def in_collision(self, other: CollisionModel) -> bool:
         if not isinstance(other, FCLCollisionModel):
             raise NotImplementedError
 
-        this_tf = fcl.Transform(self._transform.R, self._transform.t)
-        other_tf = fcl.Transform(other._transform.R, other._transform.t)
+        q1 = quaternion.as_float_array(self._transform.quat)
+        q2 = quaternion.as_float_array(other._transform.quat)
+
+        this_tf = fcl.Transform(q1, self._transform.t)
+        other_tf = fcl.Transform(q2, other._transform.t)
 
         self.obj.setTransform(this_tf)
         other.obj.setTransform(other_tf)
 
-        req = fcl.CollisionRequest(enable_contact=True)
         res = fcl.CollisionResult()
-        fcl.collide(self.obj, other.obj, req, res)
+        fcl.collide(self.obj, other.obj, self._collision_req, res)
         return res.is_collision
 
 
@@ -55,29 +59,39 @@ class FCLBoxCollisionModel(FCLCollisionModel):
 
 
 class FCLRobotBBCollisionModel(FCLBoxCollisionModel):
-    """This model rotates about an axis orthogonal to the xy-plane located
-    at anchor.
+    """An FCL collision model for a robot's bounding box with rotation
+    about a planar anchor point and customizable center offset.
 
-    The anchor point is the base of the robot, and the `translation`
-    property is used to set the radial distance of the farthest face.
+    This model approximates a robot using a box aligned along the XY plane
+    that rotates around a vertical axis passing through `anchor`. The box
+    is positioned relative to an end-effector translation, and offset by a
+    specified vector to better fit the robot’s actual bounding shape.
 
-    :param x: The length of the box. The radial extension of the box towards
-              the end-effector from any given position.
-    :type x: float
-    :param y: The width of the box. The approximate bounding width of the robot
-              as viewed from above.
-    :type y: float
-    :param z: The height of the box. The total height of the box extruded in
-              both directions in z from `anchor`.
-    :type z: float
-    :param anchor: the anchor point about which the box rotates
-    :type anchor: np.ndarray
+    See the pyrobopath documentation for further details.
+
+    :param dims: The dimensions of the box [width (X), length (Y), height (Z)].
+    :type dims: ArrayLike3
+    :param anchor: The 3D anchor point about which the box rotates. Typically
+                   the robot base in world coordinates.
+    :type anchor: ArrayLike3
+    :param offset: An offset from the end-effector (tip) position to the center
+                   of the box in the robot's frame. Allows fine-tuning of the
+                   bounding volume shape.
+    :type offset: ArrayLike3
     """
 
-    def __init__(self, x: float, y: float, z: float, anchor: ArrayLike3):
-        super().__init__(x, y, z)
+    def __init__(
+        self,
+        dims: ArrayLike3,
+        anchor: ArrayLike3 = np.zeros(3),
+        offset: ArrayLike3 = np.zeros(3),
+    ):
+        super().__init__(*dims)
         self._anchor = np.array(anchor)
         self._eef_transform = Transform()
+
+        self._offset = np.array(offset)
+        self._box_center_in_eef = offset + np.array([-dims[0] * 0.5, 0.0, 0.0])
 
     @property
     def translation(self) -> R3:
@@ -85,18 +99,14 @@ class FCLRobotBBCollisionModel(FCLBoxCollisionModel):
 
     @translation.setter
     def translation(self, value: R3):
-        # find box center location (z_height matches anchor)
-        p_tip_anchor = (value - self.anchor)[:2]
-        dir = unit_vector(p_tip_anchor)
-        box_origin = value[:2] - self.box.side[0] * 0.5 * dir
+        p_eef_anchor = value[:2] - self.anchor[:2]
+        dir = unit_vector2(p_eef_anchor)
 
-        # set transformations
         self._eef_transform = Transform.Rz(np.arctan2(dir[1], dir[0]))
         self._eef_transform.t = value
-        self._transform.quat = self._eef_transform.quat
 
-        self._transform.t[:2] = box_origin
-        self._transform.t[2] = self.anchor[2]
+        self._transform.quat = self._eef_transform.quat
+        self._transform.t = self._eef_transform * self._box_center_in_eef
 
     @property
     def anchor(self):
@@ -105,6 +115,10 @@ class FCLRobotBBCollisionModel(FCLBoxCollisionModel):
     @anchor.setter
     def anchor(self, value: ArrayLike3):
         self._anchor = value
+
+    @property
+    def offset(self):
+        return self._offset
 
 
 def _continuous_collision_check(

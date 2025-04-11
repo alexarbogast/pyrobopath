@@ -1,3 +1,4 @@
+from re import S
 import unittest
 import numpy as np
 
@@ -214,7 +215,7 @@ class TestCollisionDetection(unittest.TestCase):
 
 
 class TestFCLCollisionDetection(unittest.TestCase):
-    def test_fcl_collision_models(self):
+    def test_fcl_box_collision_models(self):
         box_model_1 = FCLBoxCollisionModel(1, 1, 1)
         box_model_2 = FCLBoxCollisionModel(1, 1, 1)
 
@@ -232,18 +233,52 @@ class TestFCLCollisionDetection(unittest.TestCase):
             "Collision-free state returned with collision",
         )
 
-        # collision
+    def test_fcl_robot_bb_collision_model(self):
+        # models with no offset
+        # robot_bb_1 = FCLRobotBBCollisionModel(
+        #     dims=(3.0, 1.0, 0.5), anchor=(-5.0, 0.0, 0.0)
+        # )
+        # robot_bb_1.translation = np.array([0.1, 2.0, 0.0])
+        #
+        # robot_bb_2 = FCLRobotBBCollisionModel(
+        #     dims=(3.0, 1.0, 0.5), anchor=(5.0, 0.0, 0.0)
+        # )
+        # robot_bb_2.translation = np.array([-0.1, 2.0, 0.0])
+        #
+        # # collision
+        # self.assertTrue(
+        #     robot_bb_1.in_collision(robot_bb_2),
+        #     "Collision state returned with collision-free",
+        # )
+        #
+        # # collision-free
+        # robot_bb_1.translation = np.array([-1.0, 0.0, 0.0])
+        # robot_bb_2.translation = np.array([1.0, 0.0, 0.0])
+        # self.assertFalse(
+        #     robot_bb_1.in_collision(robot_bb_2),
+        #     "Collision-free state returned with collision",
+        # )
+
+        ## models with no offset
         robot_bb_1 = FCLRobotBBCollisionModel(
-            x=3.0, y=1.0, z=0.5, anchor=[-5.0, 0.0, 0.0]
+            dims=(3.0, 2.0, 2.0), anchor=(-7.0, 0.0, 0.0)
         )
-        robot_bb_1.translation = np.array([0.1, 2.0, 0.0])
+        robot_bb_1.translation = np.array([0.0, 0.0, 0.0])
 
         robot_bb_2 = FCLRobotBBCollisionModel(
-            x=3.0, y=1.0, z=0.5, anchor=[5.0, 0.0, 0.0]
+            dims=(3.0, 2.0, 2.0), anchor=(7.0, 0.0, 0.0)
         )
-        robot_bb_2.translation = np.array([-0.1, 2.0, 0.0])
+        robot_bb_2.translation = np.array([0.0, 0.0, 0.0])
+
+        # edge collision
+        self.assertTrue(
+            robot_bb_1.in_collision(robot_bb_2),
+            "Collision state returned with collision-free",
+        )
 
         # collision
+        robot_bb_1.translation = np.array([1.0, 0.0, 0.0])
+        robot_bb_2.translation = np.array([-1.0, 0.0, 0.0])
         self.assertTrue(
             robot_bb_1.in_collision(robot_bb_2),
             "Collision state returned with collision-free",
@@ -257,12 +292,45 @@ class TestFCLCollisionDetection(unittest.TestCase):
             "Collision-free state returned with collision",
         )
 
+        ## models with offset
+        robot_bb_1 = FCLRobotBBCollisionModel(
+            dims=(3.0, 2.0, 2.0), anchor=(-7.0, 0.0, 0.0), offset=(1.0, 0.0, 0.0)
+        )
+
+        robot_bb_2 = FCLRobotBBCollisionModel(
+            dims=(3.0, 2.0, 2.0), anchor=(7.0, 0.0, 0.0), offset=(1.0, 0.0, 0.0)
+        )
+
+        # edge-collision
+        robot_bb_1.translation = np.array([-1.0, 0.0, 0.0])
+        robot_bb_2.translation = np.array([1.0, 0.0, 0.0])
+        self.assertTrue(
+            robot_bb_1.in_collision(robot_bb_2),
+            "Collision state returned with collision-free",
+        )
+
+        robot_bb_1 = FCLRobotBBCollisionModel(
+            dims=(3.0, 2.0, 2.0), anchor=(-5.0, 1.0, 0.0), offset=(1.0, 1.0, 0.0)
+        )
+
+        robot_bb_2 = FCLRobotBBCollisionModel(
+            dims=(3.0, 2.0, 2.0), anchor=(5.0, -1.0, 0.0), offset=(1.0, 1.0, 0.0)
+        )
+
+        # collision-free
+        robot_bb_1.translation = np.array([0.0, 1.0, 0.0])
+        robot_bb_2.translation = np.array([0.0, -1.0, 0.0])
+        self.assertFalse(
+            robot_bb_1.in_collision(robot_bb_2),
+            "Collision-free state returned with collision",
+        )
+
     def test_trajectory_collision_query(self):
         robot_bb_1 = FCLRobotBBCollisionModel(
-            x=3.0, y=0.2, z=1.0, anchor=[-5.0, 0.0, 0.0]
+            dims=(3.0, 0.2, 1.0), anchor=(-5.0, 0.0, 0.0)
         )
         robot_bb_2 = FCLRobotBBCollisionModel(
-            x=3.0, y=0.2, z=1.0, anchor=[5.0, 0.0, 0.0]
+            dims=(3.0, 0.2, 1.0), anchor=(5.0, 0.0, 0.0)
         )
         threshold = 0.1
 
@@ -422,8 +490,8 @@ class TestTrajectoryCollision(unittest.TestCase):
         ret = trajectory_collision_query(model1, traj1, model2, traj2, threshold)
         self.assertFalse(ret)
 
-        model1 = FCLRobotBBCollisionModel(3.0, 0.2, 1.0, np.array([-6.0, 0.0, 0.0]))
-        model2 = FCLRobotBBCollisionModel(3.0, 0.2, 1.0, np.array([6.0, 0.0, 0.0]))
+        model1 = FCLRobotBBCollisionModel((3.0, 0.2, 1.0), (-6.0, 0.0, 0.0))
+        model2 = FCLRobotBBCollisionModel((3.0, 0.2, 1.0), (6.0, 0.0, 0.0))
 
         path1 = [[0.0, 3.0, 0.0], [0.0, -3.0, 0.0]]
         path2 = [[0.0, -3.0, 0.0], [0.0, 3.0, 0.0]]

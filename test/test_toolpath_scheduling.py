@@ -69,7 +69,7 @@ class TestToolpathCollision(unittest.TestCase):
 
         agent1 = AgentModel(
             capabilities=[0],
-            collision_model=FCLRobotBBCollisionModel(3.0, 0.2, 1.0, bf1),
+            collision_model=FCLRobotBBCollisionModel((3.0, 0.2, 1.0), bf1),
             base_frame_position=bf1,
             home_position=np.array([-3.0, 0.0, 0.0]),
             velocity=10.0,
@@ -77,7 +77,7 @@ class TestToolpathCollision(unittest.TestCase):
         )
         agent2 = AgentModel(
             capabilities=[0],
-            collision_model=FCLRobotBBCollisionModel(3.0, 0.2, 1.0, bf2),
+            collision_model=FCLRobotBBCollisionModel((3.0, 0.2, 1.0), bf2),
             base_frame_position=bf2,
             home_position=np.array([3.0, 0.0, 0.0]),
             velocity=10.0,
@@ -138,7 +138,7 @@ class TestToolpathCollision(unittest.TestCase):
             velocity=10.0,
             travel_velocity=10.0,
             collision_model=FCLRobotBBCollisionModel(
-                3.0, 0.2, 1.0, np.array([-5.0, 0.0, 0.0])
+                dims=(3.0, 0.2, 1.0), anchor=(-5.0, 0.0, 0.0)
             ),
         )
         agent2 = AgentModel(
@@ -148,7 +148,7 @@ class TestToolpathCollision(unittest.TestCase):
             velocity=10.0,
             travel_velocity=10.0,
             collision_model=FCLRobotBBCollisionModel(
-                3.0, 0.2, 1.0, np.array([5.0, 0.0, 0.0])
+                dims=(3.0, 0.2, 1.0), anchor=(5.0, 0.0, 0.0)
             ),
         )
         agent3 = AgentModel(
@@ -158,7 +158,7 @@ class TestToolpathCollision(unittest.TestCase):
             velocity=10.0,
             travel_velocity=10.0,
             collision_model=FCLRobotBBCollisionModel(
-                3.0, 0.2, 1.0, np.array([0.0, 5.0, 0.0])
+                dims=(3.0, 0.2, 1.0), anchor=(0.0, 5.0, 0.0)
             ),
         )
         agent_models = {"agent1": agent1, "agent2": agent2, "agent3": agent3}
@@ -263,7 +263,7 @@ class TestToolpathCollision(unittest.TestCase):
             velocity=10.0,
             travel_velocity=10.0,
             collision_model=FCLRobotBBCollisionModel(
-                3.0, 0.2, 1.0, np.array([-5.0, 0.0, 0.0])
+                dims=(3.0, 0.2, 1.0), anchor=(-5.0, 0.0, 0.0)
             ),
         )
         agent2 = AgentModel(
@@ -273,7 +273,7 @@ class TestToolpathCollision(unittest.TestCase):
             velocity=10.0,
             travel_velocity=10.0,
             collision_model=FCLRobotBBCollisionModel(
-                3.0, 0.2, 1.0, np.array([5.0, 0.0, 0.0])
+                dims=(3.0, 0.2, 1.0), anchor=(5.0, 0.0, 0.0)
             ),
         )
         agent_models = {"agent1": agent1, "agent2": agent2}

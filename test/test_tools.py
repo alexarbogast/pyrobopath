@@ -37,6 +37,19 @@ class TestTools(unittest.TestCase):
         u3 = unit_vector3(v3)
         nt.assert_equal(u3, np.repeat(1 / np.sqrt(3), 3))
 
+    def test_unit_vector2(self):
+        v1 = np.array([1.0, 0.0])
+        u1 = unit_vector2(v1)
+        nt.assert_equal(u1, v1)
+
+        v2 = np.array([0.0, -5.0])
+        u2 = unit_vector2(v2)
+        nt.assert_equal([0.0, -1.0], u2)
+
+        v3 = np.array([1.0, 1.0])
+        u3 = unit_vector2(v3)
+        nt.assert_equal(u3, np.repeat(1 / np.sqrt(2), 2))
+
     def test_norm3(self):
         v1 = np.array([1.0, 0.0, 0.0])
         self.assertEqual(norm3(v1), 1)
