@@ -170,10 +170,11 @@ class MultiAgentToolpathPlanner(object):
                     # slice travel event if overlap
                     if schedule[agent].end_time() > events[0].start:
                         prev_home_event = schedule[agent]._events.pop()
-                        sliced_home = self._slice_home_event(
-                            prev_home_event, events[0].start
-                        )
-                        schedule.add_event(sliced_home, agent)
+                        if prev_home_event.start != events[0].start:
+                            sliced_home = self._slice_home_event(
+                                prev_home_event, events[0].start
+                            )
+                            schedule.add_event(sliced_home, agent)
 
                     schedule.add_events(events, agent)
                     tm.add_inprogress(node, events[1].end)
