@@ -14,8 +14,8 @@ then cd to the :file:`examples` directory, and run the following command:
 
   python3 examples.py
 
-Creating a toolpath
--------------------
+Toolpaths
+---------
 
 A toolpath is created from a collection of :class:`.Contour` s.
 Contours represent a contiguous path that is traversed by a specified tool.
@@ -36,6 +36,7 @@ tool with an enum.
 
 Manual Toolpath Creation
 ^^^^^^^^^^^^^^^^^^^^^^^^
+
 To create a toolpath manually, we must first define a set of contours.
 
 .. code-block:: python
@@ -55,6 +56,7 @@ To create a toolpath manually, we must first define a set of contours.
 
 Gcode Toolpath Creation
 ^^^^^^^^^^^^^^^^^^^^^^^
+
 A toolpath can be created from standard Gcode flavors.
 
 .. Caution::
@@ -66,15 +68,17 @@ read a Gcode file to a python representation.
 
 .. code-block:: python
 
-  from gcodeparser import GCodeParser
+  from gcodeparser import GcodeParser
 
   filepath = "<path to gcode>"
   with open(filepath, "r") as f:
       gcode = f.read()
-  parsed_gcode = GCodeParser(gcode)
+  parsed_gcode = GcodeParser(gcode)
 
-
-Then, the parsed Gcode is transformed to a pyrobopath :class:`.Toolpath`
+Then, the parsed Gcode is transformed to a pyrobopath :class:`.Toolpath`.  A
+contour is defined by a consecutive group of linear G1 moves that have an
+extrusion value greater than 0. Contours are separated by G0 travel (rapid)
+moves or G1 moves with no extrusion.
 
 .. code-block:: python
 
@@ -82,6 +86,26 @@ Then, the parsed Gcode is transformed to a pyrobopath :class:`.Toolpath`
 
   toolpath = Toolpath.from_gcode(parsed_gcode.lines)
 
+Toolpath Visualization
+^^^^^^^^^^^^^^^^^^^^^^
+
+After creating a toolpath with one of the methods listed above, the path can be
+visualized using the :py:mod:`.pyrobopath.toolpath.visualization` module. There
+are functions for 2D and 3D visualization. The 2D projected visualization
+separates contours by distinct Z-heights and is useful for inspecting additive
+manufacturing (3D printing) paths.
+
+.. code-block:: python
+
+  from pyrobopath.toolpath.visualization import (
+    visualize_toolpath,
+    visualize_toolpath_projection
+  )
+
+  # toolpath = ...
+
+  visualize_toolpath(toolpath) # 3D
+  visualize_toolpath_projection(toolpath) # 2D projection
 
 Creating a Multi-robot System
 -----------------------------

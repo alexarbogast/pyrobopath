@@ -4,10 +4,24 @@ import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
 from matplotlib.widgets import Slider
 
-from pyrobopath.toolpath.toolpath import Toolpath
+from pyrobopath.toolpath.toolpath_core import Toolpath
 
 
 def visualize_toolpath(toolpath: Toolpath, show=True):
+    """
+    Visualize a 3D toolpath using matplotlib.
+
+    Each contour in the toolpath is plotted in 3D space with a distinct color.
+    This is useful for inspecting the overall geometry and sequencing of paths
+    in a toolpath object.
+
+    Args:
+        toolpath (Toolpath): The toolpath object containing contours to visualize.
+        show (bool, optional): Whether to display the figure immediately. Defaults to True.
+
+    Returns:
+        tuple: A tuple containing the matplotlib figure and 3D axes objects.
+    """
     fig = plt.figure()
     ax = fig.add_subplot(projection="3d")
     category_colors = plt.get_cmap("plasma")(
@@ -29,6 +43,20 @@ def visualize_toolpath(toolpath: Toolpath, show=True):
 
 
 def visualize_toolpath_projection(toolpath: Toolpath, show=True):
+    """
+    Visualize a 2D projection of the toolpath with an interactive layer slider.
+
+    Projects each contour in the toolpath onto the XY plane and allows the user
+    to browse different Z-height layers using a vertical slider. Each tool is
+    assigned a distinct color for visual differentiation.
+
+    Args:
+        toolpath (Toolpath): The toolpath object containing layered contours.
+        show (bool, optional): Whether to display the figure immediately. Defaults to True.
+
+    Returns:
+        tuple: A tuple containing the matplotlib figure and 2D axes objects.
+    """
     fig, ax = plt.subplots(figsize=(10, 8))
 
     layer_slider = _plot_toolpath_projection(toolpath, fig, ax)
