@@ -71,10 +71,8 @@ class TaskManager(object):
         return bool(self.frontier)
 
     def get_available_tasks(self, *args):
-        available = filter(lambda n: self.dg.can_start(n), self.frontier)
-        for arg in args:
-            available = filter(arg, available)
-        return list(available)
+        available = [n for n in self.frontier if self.dg.can_start(n)]
+        return available
 
 
 class EventBuilder(object):
@@ -139,18 +137,19 @@ class MultiAgentToolpathPlanner(object):
 
             for agent in min_time_agents:
                 tools = self._agent_models[agent].capabilities
-                available = tm.get_available_tasks(
-                    lambda n: tm.contours[n].tool in tools
-                )
+                available = tm.get_available_tasks()
+                available = [c for c in available if tm.contours[c].tool in tools]
 
                 if not available:
                     if len(sorted_times) > 1:
                         context.set_agent_start_time(agent, sorted_times[1])
                     continue
 
-                # sort tasks by out-degree
+                # prioritize tasks with highest out-degree
+                key = lambda n: dg._graph.out_degree(n)
+                nodes = sorted(available, key=key, reverse=True)  # type: ignore
+
                 all_collide_flag = True
-                nodes = sorted(available, key=lambda a: dg._graph.out_degree(a))
                 for node in nodes:
                     contour = tm.contours[node]
                     p_start = schedule[agent].get_state(
