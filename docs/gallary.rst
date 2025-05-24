@@ -36,3 +36,18 @@ https://github.com/alexarbogast/hydra_tic_tac_toe.
     title="YouTube video player" frameborder="0" allow="accelerometer; autoplay;
     clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
     allowfullscreen></iframe>
+
+Pyrobopath ROS Schedule execution
+---------------------------------
+
+These demonstrations use a two-robot system with markers to demonstrate
+heterogeneous task-allocation and schedule execution in ROS. See the
+https://github.com/alexarbogast/pyrobopath_ros repository for further details.
+
+.. raw:: html
+
+    <iframe width="560" height="315"
+    src="https://www.youtube.com/embed/PtlfFJrBAPE?si=QUwMj8qFvpRa7K3o"
+    title="YouTube video player" frameborder="0" allow="accelerometer; autoplay;
+    clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
