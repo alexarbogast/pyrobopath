@@ -37,6 +37,7 @@ def visualize_toolpath(toolpath: Toolpath, show=True):
             color=color,
             path_effects=[pe.Stroke(linewidth=3, foreground="black"), pe.Normal()],
         )
+    ax.set_aspect("equal")
     if show:
         plt.show()
     return fig, ax
