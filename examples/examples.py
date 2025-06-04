@@ -54,7 +54,7 @@ def simple_toolpath_example_two():
     # create planner
     planner = MultiAgentToolpathPlanner(agent_models)
     options = PlanningOptions(
-        retract_height=0.1,
+        retract_height=5.0,
         collision_offset=1.0,
         collision_gap_threshold=1.0,
     )
@@ -112,7 +112,7 @@ def simple_toolpath_example_three():
     # create planner
     planner = MultiAgentToolpathPlanner(agent_models)
     options = PlanningOptions(
-        retract_height=0.1,
+        retract_height=5.0,
         collision_offset=1.0,
         collision_gap_threshold=1.0,
     )
@@ -159,7 +159,7 @@ def multi_material_squares():
     # create planner
     planner = MultiAgentToolpathPlanner(agent_models)
     options = PlanningOptions(
-        retract_height=0.1,
+        retract_height=5.0,
         collision_offset=3.0,
         collision_gap_threshold=5.0,
     )
@@ -205,7 +205,7 @@ def complex_two_material_two_robots():
     # create planner
     planner = MultiAgentToolpathPlanner(agent_models)
     options = PlanningOptions(
-        retract_height=0.1,
+        retract_height=5.0,
         collision_offset=3.0,
         collision_gap_threshold=5.0,
     )
@@ -280,7 +280,7 @@ def complex_two_material_four_robots():
     # create planner
     planner = MultiAgentToolpathPlanner(agent_models)
     options = PlanningOptions(
-        retract_height=0.1,
+        retract_height=5.0,
         collision_offset=3.0,
         collision_gap_threshold=5.0,
     )
