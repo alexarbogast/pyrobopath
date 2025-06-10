@@ -31,6 +31,9 @@ dependencies = [
   "numpy-quaternion",
   "scipy",
   "colorama",
+  "PyQt5",
+  "pyqtgraph",
+  "PyOpenGL",
 ]
 
 [project.optional-dependencies]
@@ -56,6 +59,7 @@ packages = [
   "pyrobopath.scheduling",
   "pyrobopath.toolpath",
   "pyrobopath.toolpath.path",
+  "pyrobopath.toolpath.visualization",
   "pyrobopath.toolpath_scheduling",
   "pyrobopath.tools",
 ]

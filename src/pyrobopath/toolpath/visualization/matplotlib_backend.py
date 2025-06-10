@@ -4,31 +4,51 @@ import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
 from matplotlib.widgets import Slider
 
-from pyrobopath.toolpath.toolpath_core import Toolpath
+from pyrobopath.toolpath import Toolpath
+from .colors import get_contour_colors
 
 
-def visualize_toolpath(toolpath: Toolpath, show=True):
+def visualize_toolpath(
+    toolpath: Toolpath, color_method="tool", color_seq="tab10", show=True
+):
     """
     Visualize a 3D toolpath using matplotlib.
 
-    Each contour in the toolpath is plotted in 3D space with a distinct color.
-    This is useful for inspecting the overall geometry and sequencing of paths
-    in a toolpath object.
+    This function displays a 3D plot of the provided toolpath. Each contour is
+    rendered in space with a color assigned based on a specified color method.
+    Useful for examining path layout, tool usage, or sequencing in a 3D context.
 
-    Args:
-        toolpath (Toolpath): The toolpath object containing contours to visualize.
-        show (bool, optional): Whether to display the figure immediately. Defaults to True.
+    Parameters
+    ----------
+    toolpath : Toolpath
+        The toolpath object containing contours to be visualized.
+    color_method : str, optional
+        The strategy used to assign colors to contours. Valid options include
+        'tool', 'z', or 'cycle'. Defaults to 'tool'.
+    color_seq : str or list, optional
+        The name of the matplotlib colormap or a list of color values to cycle
+        through. Defaults to 'tab10'.
+    show : bool, optional
+        Whether to immediately display the plot with `plt.show()`.
+        Defaults to True.
 
-    Returns:
-        tuple: A tuple containing the matplotlib figure and 3D axes objects.
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The matplotlib figure object containing the plot.
+    ax : matplotlib.axes._subplots.Axes3DSubplot
+        The 3D axes on which the toolpath is drawn.
+
+    See Also
+    --------
+    pyrobopath.toolpath.visualization.colors.get_contour_colors
     """
     fig = plt.figure()
     ax = fig.add_subplot(projection="3d")
-    category_colors = plt.get_cmap("plasma")(
-        np.linspace(0.0, 1.0, len(toolpath.contours))
-    )
 
-    for contour, color in zip(toolpath.contours, category_colors):
+    colors = get_contour_colors(toolpath.contours, color_method, color_seq)
+
+    for contour, color in zip(toolpath.contours, colors):
         path = np.array(contour.path)
         ax.plot(
             path[:, 0],
@@ -38,6 +58,7 @@ def visualize_toolpath(toolpath: Toolpath, show=True):
             path_effects=[pe.Stroke(linewidth=3, foreground="black"), pe.Normal()],
         )
     ax.set_aspect("equal")
+    fig.tight_layout()
     if show:
         plt.show()
     return fig, ax
