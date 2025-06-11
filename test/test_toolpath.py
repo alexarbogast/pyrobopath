@@ -8,6 +8,7 @@ from pyrobopath.toolpath.path.spline import CubicBSpline2
 
 from pyrobopath.toolpath import Toolpath, Contour
 from pyrobopath.toolpath.path import *
+from pyrobopath.toolpath.preprocessing import *
 
 
 TEST_GCODE1 = os.path.join(
@@ -48,6 +49,47 @@ class TestToolpath(unittest.TestCase):
         self.assertEqual(contour.n_segments(), 2, "Number of segments is not 2")
 
 
+class TestPreprocessing(unittest.TestCase):
+    def setUp(self):
+        contour = Contour(path=[np.array([1.0, 2.0, 3.0]), np.array([4.0, 5.0, 6.0])])
+        self.toolpath = Toolpath()
+        self.toolpath.contours.append(contour)
+
+    def test_scaling_step(self):
+        step = ScalingStep(2.0)
+        result = step.apply(self.toolpath)
+        expected = np.array([[2, 4, 6], [8, 10, 12]])
+        nt.assert_allclose(result.contours[0].path, expected)
+
+    def test_translate_step(self):
+        step = TranslateStep([1, 0, -1])
+        result = step.apply(self.toolpath)
+        expected = np.array([[2, 2, 2], [5, 5, 5]])
+        np.testing.assert_allclose(result.contours[0].path, expected)
+
+    def test_rotate_step(self):
+        step = RotateStep(Rotation.Rz(np.pi / 2))
+        result = step.apply(self.toolpath)
+        expected = np.array([[-2, 1, 3], [-5, 4, 6]])
+        np.testing.assert_allclose(result.contours[0].path, expected)
+
+    def test_transform_step_identity(self):
+        tf = Transform.Rz(np.pi / 2)
+        tf.t = np.array([1, 0, -1])
+        step = TranformStep(tf)
+        result = step.apply(self.toolpath)
+        expected = np.array([[-1, 1, 2], [-4, 4, 5]])
+        np.testing.assert_allclose(result.contours[0].path, expected)
+
+    def test_preprocessor_combination(self):
+        processor = ToolpathPreprocessor()
+        processor.add_step(ScalingStep(2.0))
+        processor.add_step(TranslateStep([-1, -2, -3]))
+        result = processor.process(self.toolpath)
+        expected = np.array([[1, 2, 3], [7, 8, 9]])
+        np.testing.assert_allclose(result.contours[0].path, expected)
+
+
 class TestPath(unittest.TestCase):
     def test_splines(self):
         cp = [[0.0, 0.0], [0.0, 1.0], [0.0, 1.0], [1.0, 1.0]]
@@ -68,7 +110,6 @@ class TestPath(unittest.TestCase):
             nt.assert_equal(np.round(bspline(0.50), 4), [0.2604, 0.7396])
             nt.assert_equal(np.round(bspline(0.75), 4), [0.3763, 0.8398])
             nt.assert_equal(np.round(bspline(1.0), 4), [0.5, 0.9167])
-
 
     def test_segments(self):
         # linear segment
