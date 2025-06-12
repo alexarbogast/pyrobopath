@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List
+from typing import List, Dict
 from abc import ABC, abstractmethod
 import numpy as np
 
@@ -65,4 +65,15 @@ class TranformStep(PreprocessingStep):
     def apply(self, toolpath: Toolpath) -> Toolpath:
         for c in toolpath.contours:
             c.path = [self._trans * p for p in c.path]
+        return toolpath
+
+
+class SubstituteToolStep(PreprocessingStep):
+    def __init__(self, tool_map: Dict):
+        self._tool_map = tool_map
+
+    def apply(self, toolpath: Toolpath) -> Toolpath:
+        for c in toolpath.contours:
+            if c.tool in self._tool_map:
+                c.tool = self._tool_map[c.tool]
         return toolpath

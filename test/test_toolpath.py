@@ -51,9 +51,15 @@ class TestToolpath(unittest.TestCase):
 
 class TestPreprocessing(unittest.TestCase):
     def setUp(self):
-        contour = Contour(path=[np.array([1.0, 2.0, 3.0]), np.array([4.0, 5.0, 6.0])])
+        contour1 = Contour(
+            path=[np.array([1.0, 2.0, 3.0]), np.array([4.0, 5.0, 6.0])], tool=0
+        )
+        contour2 = Contour(
+            path=[np.array([1.0, 2.0, 3.0]), np.array([4.0, 5.0, 6.0])], tool=1
+        )
         self.toolpath = Toolpath()
-        self.toolpath.contours.append(contour)
+        self.toolpath.contours.append(contour1)
+        self.toolpath.contours.append(contour2)
 
     def test_scaling_step(self):
         step = ScalingStep(2.0)
@@ -80,6 +86,14 @@ class TestPreprocessing(unittest.TestCase):
         result = step.apply(self.toolpath)
         expected = np.array([[-1, 1, 2], [-4, 4, 5]])
         np.testing.assert_allclose(result.contours[0].path, expected)
+
+    def test_substitute_tool_step(self):
+        tool_map = {0: "A", 1: "B"}
+        step = SubstituteToolStep(tool_map)
+        result = step.apply(self.toolpath)
+
+        tools = [c.tool for c in result.contours]
+        self.assertEqual(tools, ["A", "B"])
 
     def test_preprocessor_combination(self):
         processor = ToolpathPreprocessor()
