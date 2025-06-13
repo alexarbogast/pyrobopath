@@ -4,7 +4,8 @@ from abc import ABC, abstractmethod
 import numpy as np
 
 from pyrobopath.tools.types import *
-from .toolpath_core import Toolpath
+from pyrobopath.tools.geometry import segment_path
+from .toolpath_core import Toolpath, Contour
 from .path import Rotation, Transform
 
 
@@ -76,4 +77,18 @@ class SubstituteToolStep(PreprocessingStep):
         for c in toolpath.contours:
             if c.tool in self._tool_map:
                 c.tool = self._tool_map[c.tool]
+        return toolpath
+
+
+class MaxContourLengthStep(PreprocessingStep):
+    def __init__(self, length: float):
+        self._length = length
+
+    def apply(self, toolpath: Toolpath) -> Toolpath:
+        contours = []
+        for c in toolpath.contours:
+            seg_paths = segment_path(c.path, self._length)
+            for p in seg_paths:
+                contours.append(Contour(p, tool=c.tool))
+        toolpath.contours = contours
         return toolpath

@@ -55,7 +55,7 @@ class TestPreprocessing(unittest.TestCase):
             path=[np.array([1.0, 2.0, 3.0]), np.array([4.0, 5.0, 6.0])], tool=0
         )
         contour2 = Contour(
-            path=[np.array([1.0, 2.0, 3.0]), np.array([4.0, 5.0, 6.0])], tool=1
+            path=[np.array([0.0, 0.0, 0.0]), np.array([6.0, 0.0, 0.0])], tool=1
         )
         self.toolpath = Toolpath()
         self.toolpath.contours.append(contour1)
@@ -71,13 +71,13 @@ class TestPreprocessing(unittest.TestCase):
         step = TranslateStep([1, 0, -1])
         result = step.apply(self.toolpath)
         expected = np.array([[2, 2, 2], [5, 5, 5]])
-        np.testing.assert_allclose(result.contours[0].path, expected)
+        nt.assert_allclose(result.contours[0].path, expected)
 
     def test_rotate_step(self):
         step = RotateStep(Rotation.Rz(np.pi / 2))
         result = step.apply(self.toolpath)
         expected = np.array([[-2, 1, 3], [-5, 4, 6]])
-        np.testing.assert_allclose(result.contours[0].path, expected)
+        nt.assert_allclose(result.contours[0].path, expected)
 
     def test_transform_step_identity(self):
         tf = Transform.Rz(np.pi / 2)
@@ -85,7 +85,7 @@ class TestPreprocessing(unittest.TestCase):
         step = TranformStep(tf)
         result = step.apply(self.toolpath)
         expected = np.array([[-1, 1, 2], [-4, 4, 5]])
-        np.testing.assert_allclose(result.contours[0].path, expected)
+        nt.assert_allclose(result.contours[0].path, expected)
 
     def test_substitute_tool_step(self):
         tool_map = {0: "A", 1: "B"}
@@ -94,6 +94,26 @@ class TestPreprocessing(unittest.TestCase):
 
         tools = [c.tool for c in result.contours]
         self.assertEqual(tools, ["A", "B"])
+
+    def test_max_contour_length_step(self):
+        step = MaxContourLengthStep(3)
+        result = step.apply(self.toolpath)
+
+        # check number of contours and tool preservation
+        self.assertEqual(len(result.contours), 4)
+        self.assertEqual(result.contours[0].tool, 0)
+        self.assertEqual(result.contours[1].tool, 0)
+        self.assertEqual(result.contours[2].tool, 1)
+        self.assertEqual(result.contours[3].tool, 1)
+
+        # check segmented paths
+        expected = [
+            [np.array([0.0, 0.0, 0.0]), np.array([3.0, 0.0, 0.0])],
+            [np.array([3.0, 0.0, 0.0]), np.array([6.0, 0.0, 0.0])],
+        ]
+        for c, e in zip(result.contours[2:], expected):
+            for a, b in zip(c.path, e):
+                nt.assert_array_equal(a, b)
 
     def test_preprocessor_combination(self):
         processor = ToolpathPreprocessor()
