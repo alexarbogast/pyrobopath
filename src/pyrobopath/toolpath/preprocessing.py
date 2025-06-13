@@ -10,6 +10,17 @@ from .path import Rotation, Transform
 
 
 class ToolpathPreprocessor:
+    """
+    A container for a sequence of toolpath preprocessing steps.
+
+    Methods
+    -------
+    process(toolpath):
+        Applies all registered preprocessing steps to the given toolpath.
+    add_step(step):
+        Adds a preprocessing step to the pipeline.
+    """
+
     def __init__(self):
         self.steps: List[PreprocessingStep] = []
 
@@ -23,12 +34,38 @@ class ToolpathPreprocessor:
 
 
 class PreprocessingStep(ABC):
+    """
+    Abstract base class for toolpath preprocessing steps.
+    """
+
     @abstractmethod
     def apply(self, toolpath: Toolpath) -> Toolpath:
+        """
+        Apply the preprocessing step to the given toolpath.
+
+        Parameters
+        ----------
+        toolpath : Toolpath
+            The toolpath to process.
+
+        Returns
+        -------
+        Toolpath
+            The processed toolpath.
+        """
         pass
 
 
 class ScalingStep(PreprocessingStep):
+    """
+    A preprocessing step that uniformly scales all path points.
+
+    Parameters
+    ----------
+    scale : float
+        The uniform scale factor to apply to each point.
+    """
+
     def __init__(self, scale: float):
         self._scale = scale
 
@@ -40,6 +77,15 @@ class ScalingStep(PreprocessingStep):
 
 
 class TranslateStep(PreprocessingStep):
+    """
+    A preprocessing step that translates all path points.
+
+    Parameters
+    ----------
+    trans : ArrayLike3
+        The translation vector to add to each point.
+    """
+
     def __init__(self, trans: ArrayLike3):
         self._trans = np.array(trans)
 
@@ -50,6 +96,15 @@ class TranslateStep(PreprocessingStep):
 
 
 class RotateStep(PreprocessingStep):
+    """
+    A preprocessing step that rotates all path points.
+
+    Parameters
+    ----------
+    rot : Rotation
+        The rotation to apply to each point.
+    """
+
     def __init__(self, rot: Rotation):
         self._rot = rot
 
@@ -60,6 +115,15 @@ class RotateStep(PreprocessingStep):
 
 
 class TranformStep(PreprocessingStep):
+    """
+    A preprocessing step that applies a general transform to all path points.
+
+    Parameters
+    ----------
+    trans : Transform
+        The transformation to apply to each point.
+    """
+
     def __init__(self, trans: Transform):
         self._trans = trans
 
@@ -70,6 +134,15 @@ class TranformStep(PreprocessingStep):
 
 
 class SubstituteToolStep(PreprocessingStep):
+    """
+    A preprocessing step that replaces tool types in contours using a mapping.
+
+    Parameters
+    ----------
+    tool_map : dict
+        A dictionary mapping existing tool names to new tool names.
+    """
+
     def __init__(self, tool_map: Dict):
         self._tool_map = tool_map
 
@@ -81,6 +154,16 @@ class SubstituteToolStep(PreprocessingStep):
 
 
 class MaxContourLengthStep(PreprocessingStep):
+    """
+    A preprocessing step that splits contours into smaller segments
+    if their total length exceeds a specified maximum.
+
+    Parameters
+    ----------
+    length : float
+        The maximum allowed length for any single contour.
+    """
+
     def __init__(self, length: float):
         self._length = length
 
