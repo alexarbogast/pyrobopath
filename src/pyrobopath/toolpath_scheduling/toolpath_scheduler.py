@@ -81,10 +81,11 @@ def build_event_chain(
     # travel + approach event
     p_approach = contour.path[0].copy()
     p_approach[2] += context.options.retract_height
+    path_travel = [p_start, p_approach, contour.path[0]]
+    if (p_start == p_approach).all():
+        path_travel.pop(0)
     e_travel = MoveEvent(
-        t_start,
-        [p_start, p_approach, contour.path[0]],
-        context.agent_models[agent].travel_velocity,
+        t_start, path_travel, context.agent_models[agent].travel_velocity
     )
 
     # contour event
