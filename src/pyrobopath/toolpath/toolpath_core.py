@@ -1,19 +1,22 @@
 from __future__ import annotations
-from typing import List, Union
+from typing import List, Union, Optional
 from enum import Enum
 from gcodeparser import GcodeParser, GcodeLine
 import numpy as np
 
 from pyrobopath.tools.utils import pairwise
+from pyrobopath.tools.types import NDArray
 
 
 class Contour(object):
     counter: int = 0
 
-    def __init__(self, path=None, tool: Union[int, Enum] = 0):
+    def __init__(
+        self, path: Optional[List[NDArray]] = None, tool: Union[int, Enum] = 0
+    ):
         if path is None:
             path = []
-        self.path: List[np.ndarray] = path
+        self.path: List[NDArray] = path
         self.tool: Union[int, Enum] = tool
 
         Contour.counter += 1
@@ -22,21 +25,23 @@ class Contour(object):
     def __repr__(self):
         return str(f"c{self.id}")
 
-    def path_length(self):
+    def path_length(self) -> float:
         length = 0.0
         for s, e in pairwise(self.path):
             length += np.linalg.norm(e - s)
-        return length
+        return float(length)
 
-    def n_segments(self):
+    def n_segments(self) -> int:
         return len(self.path) - 1
 
 
 class Toolpath(object):
-    def __init__(self):
-        self.contours: List[Contour] = []
+    def __init__(self, contours: Optional[List[Contour]] = None):
+        if contours is None:
+            contours = []
+        self.contours: List[Contour] = contours
 
-    def tools(self):
+    def tools(self) -> List[Union[int, Enum]]:
         """Find a unique list of tools in the toolpath
 
         :return: A unique list of tools in the toolpath
@@ -45,7 +50,7 @@ class Toolpath(object):
         tools = set(c.tool for c in self.contours)
         return list(tools)
 
-    def scale(self, value):
+    def scale(self, value: float):
         """Uniformly scale the points in each contour by value
 
         :param value: the value to scale each point
