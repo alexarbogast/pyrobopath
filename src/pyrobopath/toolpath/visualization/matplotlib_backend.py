@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patheffects as pe
 from matplotlib.widgets import Slider
 
-from pyrobopath.toolpath import Toolpath
+from pyrobopath.toolpath import Toolpath, split_by_layers
 from .colors import get_contour_colors
 
 
@@ -72,12 +72,19 @@ def visualize_toolpath_projection(toolpath: Toolpath, show=True):
     to browse different Z-height layers using a vertical slider. Each tool is
     assigned a distinct color for visual differentiation.
 
-    Args:
-        toolpath (Toolpath): The toolpath object containing layered contours.
-        show (bool, optional): Whether to display the figure immediately. Defaults to True.
+    Parameters
+    ----------
+    toolpath : Toolpath
+        The toolpath object containing layered contours.
+    show : bool, optional
+        Controls whether the figure is displayed immediately. Defaults to True.
 
-    Returns:
-        tuple: A tuple containing the matplotlib figure and 2D axes objects.
+    Returns
+    -------
+    fig : matplotlib.figure.Figure
+        The matplotlib figure object containing the plot.
+    ax : matplotlib.axes._subplots.Axes3DSubplot
+        The 3D axes on which the toolpath is drawn.
     """
     fig, ax = plt.subplots(figsize=(10, 8))
 
@@ -94,27 +101,18 @@ def _plot_toolpath_projection(toolpath, fig, ax):
     color_map = plt.get_cmap("Paired")(np.linspace(0.1, 0.9, len(unique_tools)))
     tool_colors = {tool: color_map[i] for i, tool in enumerate(unique_tools)}
 
-    # find a unique set of z values
-    contour_z = []
-    tools = []
-    for contour in toolpath.contours:
-        z_values = np.sort(np.array(contour.path)[:, 2])
-        contour_z.append(z_values[0])
-        tools.append(contour.tool)
+    layers = split_by_layers(toolpath)
 
-    unique_z = sorted(set(contour_z))
-
+    # slider value changed callback
     def update_layer(val):
         ax.cla()
-        z_height = unique_z[val - 1]
-        indices = [i for i, x in enumerate(contour_z) if x == z_height]
-        for idx in indices:
-            path = np.array(toolpath.contours[idx].path)
+        for c in layers[val - 1].contours:
+            path = np.array(c.path)
             ax.plot(
                 path[:, 0],
                 path[:, 1],
                 path_effects=[pe.Stroke(linewidth=3, foreground="black"), pe.Normal()],
-                color=tool_colors[tools[idx]],
+                color=tool_colors[c.tool],
             )
 
     # add slider control
@@ -123,7 +121,7 @@ def _plot_toolpath_projection(toolpath, fig, ax):
         ax=axlayers,
         label="Layer",
         valmin=1,
-        valmax=len(unique_z),
+        valmax=len(layers),
         valstep=1,
         orientation="vertical",
     )
