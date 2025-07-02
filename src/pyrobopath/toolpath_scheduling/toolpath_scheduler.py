@@ -59,7 +59,7 @@ class TaskManager(object):
         complete = [k for (k, v) in self.in_progress.items() if time >= v]
         self.completed_tasks.update(complete)
         for c in complete:
-            self.dg.set_complete(c)
+            self.dg.mark_complete(c)
             self.in_progress.pop(c)
 
     def has_frontier(self):
@@ -117,8 +117,8 @@ class MultiAgentToolpathPlanner(object):
         context = SchedulingContext(self._agent_models, options)
         tm = TaskManager(toolpath, dg)
 
-        tm.add_inprogress("start", 0.0)
-        tm.frontier.update(dg._graph.successors("start"))
+        tm.frontier.update(dg.roots())
+        print(dg.roots())
 
         while tm.has_frontier():
             sorted_times = context.get_unique_start_times()

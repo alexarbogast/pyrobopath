@@ -30,14 +30,11 @@ def create_dependency_graph_by_layers(toolpath: Toolpath) -> DependencyGraph:
         contour_z.append(z_values.pop())
 
     dg = DependencyGraph()
-    dg.add_node("start")
-    dg.set_complete("start")
-
     unique_z = sorted(set(contour_z))
     # connect start node
     ind = [i for i, x in enumerate(contour_z) if x == unique_z[0]]
     for first_layer_node in ind:
-        dg.add_node(first_layer_node, ["start"])
+        dg.add_node(first_layer_node)
 
     for a, b in zip(unique_z[:-1], unique_z[1:]):
         ind_a = [i for i, x in enumerate(contour_z) if x == a]

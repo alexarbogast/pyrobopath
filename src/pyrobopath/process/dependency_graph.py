@@ -7,35 +7,42 @@ class DependencyGraph(object):
 
     def __init__(self):
         self._graph = nx.DiGraph()
+        self._completed_tasks = set()
 
     def add_node(self, node, dependencies=None):
-        self._graph.add_node(node, complete=False)
+        self._graph.add_node(node)
         if dependencies is None:
             return
 
         for d in dependencies:
             if not d in self._graph.nodes:
-                self._graph.add_node(d, complete=False)
+                self._graph.add_node(d)
         edges = product(dependencies, [node])
         self._graph.add_edges_from(edges)
 
-    def set_complete(self, node):
-        nx.set_node_attributes(self._graph, {node: {"complete": True}})
+    def mark_complete(self, node):
+        self._completed_tasks.add(node)
 
     def can_start(self, node):
         parents = self._graph.predecessors(node)
-        complete = all([self._graph.nodes[p]["complete"] for p in parents])
-        return complete
+        return all(p in self._completed_tasks for p in parents)
+
+    def pending_tasks(self):
+        return [n for n in self._graph.nodes if n not in self._completed_tasks]
+
+    def roots(self):
+        return [n for n in self._graph.nodes if self._graph.in_degree(n) == 0]
 
     def reset(self):
-        nx.set_node_attributes(self._graph, False, "complete")
+        self._completed_tasks.clear()
 
     def draw(self, show=True):
         import matplotlib.pyplot as plt
         from networkx.drawing.nx_pydot import graphviz_layout
 
+        _, ax = plt.subplots()
         pos = graphviz_layout(self._graph, prog="dot")
-        nx.draw(self._graph, pos, with_labels=True)
+        nx.draw(self._graph, pos, ax, with_labels=True)
 
         if show:
             plt.show()
