@@ -16,7 +16,7 @@ class PlanningOptions:
     collision_gap_threshold: float = 1.0
 
 
-class SchedulingContext(object):
+class SchedulingContext:
     def __init__(self, agent_models: Dict[str, AgentModel], options: PlanningOptions):
         self.agent_models = agent_models
         self.options = options
@@ -42,7 +42,7 @@ class SchedulingContext(object):
         return self.positions[agent]
 
 
-class TaskManager(object):
+class TaskManager:
     def __init__(self, toolpath: Toolpath, dg: DependencyGraph):
         self.contours = toolpath.contours
         self.dg = dg
@@ -105,20 +105,19 @@ def build_event_chain(
     return [e_travel, e_contour, e_depart, e_home]
 
 
-class MultiAgentToolpathPlanner(object):
+class MultiAgentToolpathPlanner:
     def __init__(self, agent_models: Dict[str, AgentModel]):
         self._agent_models = agent_models
-        self._agents = agent_models.keys()
 
-    def plan(self, toolpath: Toolpath, dg: DependencyGraph, options: PlanningOptions):
+    def plan(
+        self, toolpath: Toolpath, dg: DependencyGraph, options: PlanningOptions
+    ) -> MultiAgentToolpathSchedule:
         schedule = MultiAgentToolpathSchedule()
         schedule.add_agents(self._agent_models.keys())
 
         context = SchedulingContext(self._agent_models, options)
         tm = TaskManager(toolpath, dg)
-
         tm.frontier.update(dg.roots())
-        print(dg.roots())
 
         while tm.has_frontier():
             sorted_times = context.get_unique_start_times()

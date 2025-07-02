@@ -1,4 +1,7 @@
+from re import sub
 import numpy as np
+import copy
+from typing import List
 
 from pyrobopath.toolpath import Toolpath
 from .dependency_graph import DependencyGraph
@@ -6,7 +9,8 @@ from .dependency_graph import DependencyGraph
 
 def create_dependency_graph_by_layers(toolpath: Toolpath) -> DependencyGraph:
     """
-    Create a layered dependency graph from a toolpath based on contour Z-heights.
+    Create a layered dependency graph from a toolpath based on contour
+    Z-heights.
 
     Constructs a `DependencyGraph` where each contour is a node, and
     dependencies are defined by the relative Z-height of the contours.
@@ -43,3 +47,52 @@ def create_dependency_graph_by_layers(toolpath: Toolpath) -> DependencyGraph:
             dg.add_node(upper, ind_a)
 
     return dg
+
+
+def split_digraph(dg: DependencyGraph, max_nodes: int) -> List[DependencyGraph]:
+    """
+    Split a directed graph into multiple subgraphs with at most `max_nodes`
+    nodes each.
+
+    Parameters
+    ----------
+    dg : DependencyGraph
+        The input graph to be split into subgraphs.
+    max_nodes : int
+        The maximum number of nodes allowed in each subgraph.
+
+    Returns
+    -------
+    subgraphs : List[DependencyGraph]
+        A list of `DependencyGraph` instances, each containing at most
+        `max_nodes` nodes. The subgraphs preserve the internal structure of the
+        original graph for the included node subsets.
+
+    Notes
+    -----
+    - This function does not attempt to preserve connectivity between
+      subgraphs.
+    - Nodes are partitioned in the order returned by `dg._graph.nodes`.
+    - The `_graph` attribute is deep-copied into each subgraph to ensure
+      isolation.
+
+    Examples
+    --------
+    >>> dg = DependencyGraph()
+    >>> # Assume dg._graph has 10 nodes
+    >>> subgraphs = split_digraph(dg, max_nodes=4)
+    >>> len(subgraphs)
+    3
+    >>> [len(sg._graph.nodes) for sg in subgraphs]
+    [4, 4, 2]
+    """
+    subgraphs = []
+    nodes = list(dg._graph.nodes)
+
+    # Simple greedy partition
+    for i in range(0, len(nodes), max_nodes):
+        node_subset = nodes[i : i + max_nodes]
+        subgraph = DependencyGraph()
+        subgraph._graph = copy.deepcopy(dg._graph.subgraph(node_subset))  # type:ignore
+        subgraphs.append(subgraph)
+    return subgraphs

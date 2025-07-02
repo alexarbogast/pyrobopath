@@ -3,7 +3,7 @@ from typing import List, Iterable, Hashable
 import collections
 
 
-class Interval(object):
+class Interval:
     """
     An implementation of Allen's interval algebra
 
@@ -13,6 +13,10 @@ class Interval(object):
     def __init__(self, start, end):
         self.start = start
         self.end = end
+
+    def offset(self, t):
+        self.start += t
+        self.end += t
 
     def precedes(self, other):
         """XXX YYY"""
@@ -114,22 +118,21 @@ class Event(Interval):
         return self.end - self.start
 
 
-class Schedule(object):
+class Schedule:
     def __init__(self):
         self._events: List[Event] = []
         self._start_time = float("inf")
         self._end_time = float("-inf")
 
     def add_event(self, event: Event):
-        if event.start < self._start_time:
-            self._start_time = event.start
-        if event.end > self._end_time:
-            self._end_time = event.end
+        self._start_time = min(self._start_time, event.start)
+        self._end_time = max(self._end_time, event.end)
         self._events.append(event)
 
-    def add_events(self, event: List[Event]):
-        for e in event:
-            self.add_event(e)
+    def add_events(self, events: List[Event]):
+        self._events.extend(events)
+        self._start_time = min(self._start_time, min(e.start for e in events))
+        self._end_time = max(self._end_time, max(e.end for e in events))
 
     def start_time(self):
         return self._start_time
@@ -139,6 +142,12 @@ class Schedule(object):
 
     def duration(self):
         return self.end_time() - self.start_time()
+
+    def offset(self, time):
+        for e in self._events:
+            e.offset(time)
+        self._start_time += time
+        self._end_time += time
 
     def n_events(self):
         return len(self._events)
@@ -180,8 +189,22 @@ class Schedule(object):
         ind = [i for i, e in enumerate(self._events) if filter(e)]
         return ind
 
+    @classmethod
+    def merge(cls, schedules):
+        merged = cls()
+        current_time = schedules[0].start_time
 
-class MultiAgentSchedule(object):
+        for s in schedules:
+            s.offset(current_time)
+            merged._events.extend(s._events)
+            current_time = s.end_time()
+
+        merged._start_time = min([e.start for e in merged._events])
+        merged._end_time = max([e.end for e in merged._events])
+        return merged
+
+
+class MultiAgentSchedule:
     def __init__(self):
         self.schedules = collections.defaultdict(Schedule)
         self._start_time = 0.0
@@ -230,6 +253,12 @@ class MultiAgentSchedule(object):
         """The duration of the combined schedule"""
         return self.end_time() - self.start_time()
 
+    def offset(self, time):
+        for s in self.schedules.values():
+            s.offset(time)
+        self._start_time += time
+        self._end_time += time
+
     def n_agents(self):
         """The number of agents with schedules"""
         return len(self.schedules)
@@ -269,3 +298,22 @@ class MultiAgentSchedule(object):
         new_mas._start_time = min([s.start_time() for s in new_mas.schedules.values()])
         new_mas._end_time = max([s.end_time() for s in new_mas.schedules.values()])
         return new_mas
+
+    @classmethod
+    def merge(cls, schedules):
+        merged = cls()
+        current_time = schedules[0].start_time()
+
+        for mas in schedules:
+            mas.offset(current_time)
+            for agent in mas.agents():
+                if agent not in merged.schedules:
+                    merged.add_agent(agent)
+
+                if mas[agent]._events:
+                    merged[agent].add_events(mas[agent]._events)
+            current_time = mas.end_time()
+
+        merged._start_time = min(s._start_time for s in merged.schedules.values())
+        merged._end_time = max(s._end_time for s in merged.schedules.values())
+        return merged

@@ -123,7 +123,7 @@ class Toolpath(object):
             A new `Toolpath` containing all contours from the input toolpaths.
         """
         contours = [p for t in toolpaths for p in t.contours]
-        return Toolpath(contours)
+        return cls(contours)
 
     @classmethod
     def from_gcode(cls, gcode: List[GcodeLine]) -> Toolpath:
@@ -149,7 +149,7 @@ class Toolpath(object):
           of a contour.
         - Tool changes are captured using `T` commands.
         """
-        toolpath = Toolpath()
+        toolpath = cls()
         contour = Contour()
         xyze = np.array([0.0, 0.0, 0.0, 0.0])
         tool = 0

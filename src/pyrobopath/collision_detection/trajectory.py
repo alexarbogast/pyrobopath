@@ -95,6 +95,10 @@ class Trajectory:
             return 0.0
         return self.points[-1].time - self.points[0].time
 
+    def offset(self, time):
+        for p in self.points:
+            p.time += time
+
     def add_traj_point(self, point):
         self.points.append(point)
 

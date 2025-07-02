@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import List, Dict, Hashable
+from typing import List, Dict, Hashable, Optional
 import collections
 
 from pyrobopath.scheduling import Event, Schedule, MultiAgentSchedule
@@ -12,6 +12,10 @@ class MoveEvent(Event):
         self.traj = Trajectory.from_const_vel_path(path, velocity, start)
         self.velocity = velocity
         super(MoveEvent, self).__init__(start, self.traj.end_time(), path)
+
+    def offset(self, t):
+        super().offset(t)
+        self.traj.offset(t)
 
 
 class ContourEvent(MoveEvent):
@@ -26,7 +30,7 @@ class ToolpathSchedule(Schedule):
         self._events: List[MoveEvent] = []
 
     # schedule sampling
-    def get_state(self, time, default: NDArray | None = None) -> NDArray | None:
+    def get_state(self, time, default: Optional[NDArray] = None) -> Optional[NDArray]:
         """Samples the state (position) in the toolpath schedule at time"""
         state = default
         if time < self.start_time():
