@@ -2,6 +2,7 @@ from __future__ import annotations
 import numpy as np
 import quaternion
 import fcl
+import copy
 
 from pyrobopath.tools.types import ArrayLike3, R3
 from pyrobopath.tools.linalg import unit_vector2
@@ -41,6 +42,14 @@ class FCLCollisionModel(CollisionModel):
         fcl.collide(self.obj, other.obj, self._collision_req, res)
         return res.is_collision
 
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        copied = cls.__new__(cls)
+        memo[id(self)] = copied
+        copied._transform = copy.deepcopy(self._transform, memo)
+        copied._collision_req = fcl.CollisionRequest(enable_contact=True)
+        return copied
+
 
 class FCLBoxCollisionModel(FCLCollisionModel):
     """An fcl box collision model.
@@ -57,6 +66,12 @@ class FCLBoxCollisionModel(FCLCollisionModel):
         super(FCLBoxCollisionModel, self).__init__()
         self.box = fcl.Box(x, y, z)
         self.obj = fcl.CollisionObject(self.box, fcl.Transform())
+
+    def __deepcopy__(self, memo):
+        copied = super().__deepcopy__(memo)
+        copied.box = fcl.Box(*self.box.side)
+        copied.obj = fcl.CollisionObject(copied.box, fcl.Transform())
+        return copied
 
 
 class FCLRobotBBCollisionModel(FCLBoxCollisionModel):
@@ -120,6 +135,14 @@ class FCLRobotBBCollisionModel(FCLBoxCollisionModel):
     @property
     def offset(self):
         return self._offset
+
+    def __deepcopy__(self, memo):
+        copied = super().__deepcopy__(memo)
+        copied._anchor = copy.deepcopy(self.anchor)
+        copied._eef_transform = copy.deepcopy(self._eef_transform)
+        copied._offset = copy.deepcopy(self._offset)
+        copied._box_center_in_eef = copy.deepcopy(self._box_center_in_eef)
+        return copied
 
 
 def _continuous_collision_check(
