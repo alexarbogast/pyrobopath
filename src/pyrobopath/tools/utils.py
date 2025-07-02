@@ -1,5 +1,5 @@
 from itertools import tee
-from pyrobopath.tools.types import ArrayLike3
+from .types import ArrayLike3
 
 
 def pairwise(iterable):

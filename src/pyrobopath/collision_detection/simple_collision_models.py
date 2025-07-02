@@ -3,7 +3,8 @@ import numpy as np
 
 from pyrobopath.tools.types import NDArray
 from pyrobopath.tools.geometry import orientation, on_segment
-from pyrobopath.collision_detection.collision_model import CollisionModel
+
+from .collision_model import CollisionModel
 
 
 class LineCollisionModel(CollisionModel):

@@ -2,7 +2,7 @@ from __future__ import annotations
 import numpy as np
 import math
 
-from pyrobopath.tools.types import *
+from .types import *
 
 
 def unit_vector(vec: NDArray) -> NDArray:

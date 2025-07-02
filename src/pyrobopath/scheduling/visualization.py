@@ -1,6 +1,6 @@
 import numpy as np
 
-from pyrobopath.scheduling.schedule import Event, Schedule, MultiAgentSchedule
+from .schedule import Event, Schedule, MultiAgentSchedule
 
 
 def draw_schedule(s: Schedule, show=True):

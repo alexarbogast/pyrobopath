@@ -7,17 +7,14 @@ import matplotlib.patheffects as pe
 from matplotlib.widgets import Slider
 from matplotlib.gridspec import GridSpec
 
+from pyrobopath.process import AgentModel
 from pyrobopath.toolpath import Toolpath
 from pyrobopath.collision_detection import (
     FCLRobotBBCollisionModel,
 )
 
-from pyrobopath.toolpath_scheduling.system_model import AgentModel
-from pyrobopath.toolpath_scheduling.schedule import (
-    ContourEvent,
-    MultiAgentToolpathSchedule,
-    ToolpathSchedule,
-)
+from .schedule import ContourEvent, MultiAgentToolpathSchedule, ToolpathSchedule
+
 
 # temporary fix to override user-specific rcParams that distort scheduling
 # animations

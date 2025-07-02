@@ -3,15 +3,10 @@ from typing import Dict
 from dataclasses import dataclass
 
 from pyrobopath.toolpath import Toolpath, Contour
-from pyrobopath.scheduling import DependencyGraph
+from pyrobopath.process import AgentModel, DependencyGraph
 
-from pyrobopath.toolpath_scheduling.system_model import AgentModel
-from pyrobopath.toolpath_scheduling.schedule import (
-    ContourEvent,
-    MoveEvent,
-    MultiAgentToolpathSchedule,
-)
-from pyrobopath.toolpath_scheduling.toolpath_collision import events_cause_collision
+from .schedule import ContourEvent, MoveEvent, MultiAgentToolpathSchedule
+from .toolpath_collision import events_cause_collision
 
 
 @dataclass

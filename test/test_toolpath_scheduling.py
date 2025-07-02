@@ -1,13 +1,12 @@
 import unittest
 import numpy as np
-from pyrobopath.collision_detection.fcl_collision_models import FCLCollisionModel
 
+from pyrobopath.process import AgentModel
 from pyrobopath.toolpath import Contour
 from pyrobopath.collision_detection import (
     FCLRobotBBCollisionModel,
     TrajectoryPoint,
     Trajectory,
-    collision_model,
 )
 from pyrobopath.toolpath_scheduling import *
 

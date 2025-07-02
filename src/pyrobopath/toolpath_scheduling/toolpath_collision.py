@@ -1,6 +1,7 @@
 from typing import List, Dict, Hashable
 import numpy as np
 
+from pyrobopath.process import AgentModel
 from pyrobopath.collision_detection import (
     Trajectory,
     TrajectoryPoint,
@@ -8,12 +9,7 @@ from pyrobopath.collision_detection import (
 )
 from pyrobopath.scheduling import Interval
 
-from pyrobopath.toolpath_scheduling.schedule import (
-    ContourEvent,
-    ToolpathSchedule,
-    MultiAgentToolpathSchedule,
-)
-from pyrobopath.toolpath_scheduling.system_model import AgentModel
+from .schedule import ContourEvent, ToolpathSchedule, MultiAgentToolpathSchedule
 
 
 def schedule_to_trajectory(

@@ -6,7 +6,8 @@ import fcl
 from pyrobopath.tools.types import ArrayLike3, R3
 from pyrobopath.tools.linalg import unit_vector2
 from pyrobopath.toolpath.path.transform import Transform
-from pyrobopath.collision_detection.collision_model import CollisionModel
+
+from .collision_model import CollisionModel
 
 
 class FCLCollisionModel(CollisionModel):

@@ -4,8 +4,8 @@ import numpy as np
 import quaternion as quat
 import numpy.testing as nt
 from gcodeparser import GcodeParser
-from pyrobopath.toolpath.path.spline import CubicBSpline2
 
+from pyrobopath.toolpath.path.spline import CubicBSpline2
 from pyrobopath.toolpath import Toolpath, Contour
 from pyrobopath.toolpath.path import *
 from pyrobopath.toolpath.preprocessing import *

@@ -1,13 +1,27 @@
 import numpy as np
 
 from pyrobopath.toolpath import Toolpath
-from pyrobopath.scheduling import DependencyGraph
+from .dependency_graph import DependencyGraph
 
 
 def create_dependency_graph_by_layers(toolpath: Toolpath) -> DependencyGraph:
-    """Create a dependency graph between contours based on the z height of the
-    contour's first point. Contours have dependencies with neighboring
-    contours at smaller z-heights.
+    """
+    Create a layered dependency graph from a toolpath based on contour Z-heights.
+
+    Constructs a `DependencyGraph` where each contour is a node, and
+    dependencies are defined by the relative Z-height of the contours.
+    Specifically, a contour is dependent on all contours in the layer directly
+    below it.
+
+    Parameters
+    ----------
+    toolpath : Toolpath
+        A toolpath composed of multiple contours to be layered and ordered.
+
+    Returns
+    -------
+    DependencyGraph
+        A dependency graph with inter-layer dependencies based on Z-height.
     """
     contour_z = []
     for contour in toolpath.contours:

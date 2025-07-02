@@ -3,11 +3,11 @@ from typing import List
 import numpy as np
 
 from pyrobopath.tools.types import NDArray
-from pyrobopath.collision_detection.collision_model import (
+from .collision_model import (
     CollisionGroup,
     CollisionModel,
 )
-from pyrobopath.collision_detection.trajectory import Trajectory
+from .trajectory import Trajectory
 
 
 def continuous_collide(

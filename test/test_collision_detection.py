@@ -1,4 +1,3 @@
-from re import S
 import unittest
 import numpy as np
 
