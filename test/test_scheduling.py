@@ -241,19 +241,24 @@ class TestDependencyGraph(unittest.TestCase):
         can_start = dg.can_start(0)
         self.assertFalse(can_start, "node zero cannot start before start is completed")
 
-        dg.set_complete("start")
-        complete = dg._graph.nodes["start"]["complete"]
-        self.assertTrue(complete, "'start' was not marked complete")
+        dg.mark_complete("start")
+        can_start = dg.can_start(0)
+        self.assertTrue(can_start, "node 0 cannot start after 'start' marked complete")
 
         dg.reset()
         can_start = dg.can_start(0)
-        self.assertFalse(can_start, "node zero cannot start before start is completed")
+        self.assertFalse(can_start, "dependency graph was not reset")
 
-        dg.set_complete("start")
-        dg.set_complete(0)
+        roots = dg.roots()
+        self.assertEqual(roots, ["start"])
+
+        dg.mark_complete("start")
+        dg.mark_complete(0)
         dg.add_node(1, [0])
+        dg.add_node(2, ["start", 1])
         can_start = dg.can_start(1)
         self.assertTrue(can_start)
+        self.assertEqual(dg.pending_tasks(), [1, 2])
 
 
 if __name__ == "__main__":
