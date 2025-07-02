@@ -5,7 +5,7 @@ import numpy as np
 
 from pyrobopath.tools.types import *
 from pyrobopath.tools.geometry import segment_path
-from .toolpath_core import Toolpath, Contour
+from .toolpath_core import Toolpath, Contour, split_by_layers
 from .path import Rotation, Transform
 
 
@@ -26,7 +26,7 @@ class ToolpathPreprocessor:
 
     def process(self, toolpath: Toolpath) -> Toolpath:
         for step in self.steps:
-            step.apply(toolpath)
+            toolpath = step.apply(toolpath)
         return toolpath
 
     def add_step(self, step: PreprocessingStep):
@@ -174,4 +174,53 @@ class MaxContourLengthStep(PreprocessingStep):
             for p in seg_paths:
                 contours.append(Contour(p, tool=c.tool))
         toolpath.contours = contours
+        return toolpath
+
+
+class ShuffleStep(PreprocessingStep):
+    """
+    Reorders contours in a toolpath to interleave by tool as much as possible.
+    """
+
+    def apply(self, toolpath: Toolpath) -> Toolpath:
+        contours = []
+        unique_tools = toolpath.tools()
+        while unique_tools:
+            for tool in unique_tools:
+                found = False
+                for i, c in enumerate(toolpath.contours):
+                    if c.tool == tool:
+                        contours.append(toolpath.contours.pop(i))
+                        found = True
+                        break
+                if not found:
+                    unique_tools.remove(tool)
+        toolpath.contours = contours
+        return toolpath
+
+
+class LayerRangeStep(PreprocessingStep):
+    """
+    Selects a range of layers from a toolpath based on Z-height slicing.
+
+    Parameters
+    ----------
+    start : int
+        The starting layer index (inclusive) to include in the result.
+    stop : int
+        The stopping layer index (exclusive).
+    step : int, optional
+        The step size for slicing. Defaults to 1.
+    """
+
+    def __init__(self, start: int, stop: int, step: int = 1):
+        self.start = start
+        self.stop = stop
+        self.step = step
+
+    def apply(self, toolpath: Toolpath) -> Toolpath:
+        layers = split_by_layers(toolpath)
+        toolpath.contours = Toolpath.combine(
+            layers[self.start : self.stop : self.step]
+        ).contours
         return toolpath

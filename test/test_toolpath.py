@@ -57,9 +57,7 @@ class TestPreprocessing(unittest.TestCase):
         contour2 = Contour(
             path=[np.array([0.0, 0.0, 0.0]), np.array([6.0, 0.0, 0.0])], tool=1
         )
-        self.toolpath = Toolpath()
-        self.toolpath.contours.append(contour1)
-        self.toolpath.contours.append(contour2)
+        self.toolpath = Toolpath([contour1, contour2])
 
     def test_scaling_step(self):
         step = ScalingStep(2.0)
@@ -114,6 +112,53 @@ class TestPreprocessing(unittest.TestCase):
         for c, e in zip(result.contours[2:], expected):
             for a, b in zip(c.path, e):
                 nt.assert_array_equal(a, b)
+
+    def test_shuffle_step(self):
+        c0 = [Contour(tool=0)] * 4
+        c1 = [Contour(tool=1)] * 4
+        toolpath = Toolpath(c0 + c1)
+
+        step = ShuffleStep()
+        result = step.apply(toolpath)
+        self.assertEqual(8, len(result.contours))
+        self.assertEqual([0, 1] * 4, [c.tool for c in result.contours])
+
+        c0 = [Contour(tool=1)] * 4
+        c1 = [Contour(tool=2)] * 4
+        c2 = [Contour(tool=3)] * 3
+        toolpath = Toolpath(c0 + c1 + c2)
+
+        result = step.apply(toolpath)
+        self.assertEqual(11, len(result.contours))
+        self.assertEqual([1, 2, 3] * 3 + [1, 2], [c.tool for c in result.contours])
+
+    def make_toolpath_with_layers(self, n_layers: int, contours_per_layer: int = 1):
+        contours = []
+        for z in range(n_layers):
+            for i in range(contours_per_layer):
+                path = [np.array([0.0, 0.0, float(z)]), np.array([1.0, 1.0, float(z)])]
+                contours.append(Contour(path))
+        return Toolpath(contours)
+
+    def test_layer_range_step_basic(self):
+        toolpath = self.make_toolpath_with_layers(5)
+        expected_ids = [c.id for c in toolpath.contours[1:4]]
+
+        step = LayerRangeStep(start=1, stop=4)
+        result = step.apply(toolpath)
+
+        ids = [c.id for c in result.contours]
+        self.assertEqual(ids, expected_ids)
+
+    def test_layer_range_step_with_step(self):
+        toolpath = self.make_toolpath_with_layers(5)
+        expected_ids = [c.id for c in toolpath.contours[0:5:2]]
+
+        step = LayerRangeStep(start=0, stop=5, step=2)
+        result = step.apply(toolpath)
+
+        ids = [c.id for c in result.contours]
+        self.assertEqual(ids, expected_ids)
 
     def test_preprocessor_combination(self):
         processor = ToolpathPreprocessor()
