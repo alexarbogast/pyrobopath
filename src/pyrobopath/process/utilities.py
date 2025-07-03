@@ -1,13 +1,12 @@
-from re import sub
 import numpy as np
-import copy
+import networkx as nx
 from typing import List
 
 from pyrobopath.toolpath import Toolpath
 from .dependency_graph import DependencyGraph
 
 
-def create_dependency_graph_by_layers(toolpath: Toolpath) -> DependencyGraph:
+def create_dependency_graph_by_z(toolpath: Toolpath) -> DependencyGraph:
     """
     Create a layered dependency graph from a toolpath based on contour
     Z-heights.
@@ -49,7 +48,7 @@ def create_dependency_graph_by_layers(toolpath: Toolpath) -> DependencyGraph:
     return dg
 
 
-def split_digraph(dg: DependencyGraph, max_nodes: int) -> List[DependencyGraph]:
+def batch_digraph(dg: DependencyGraph, max_nodes: int) -> List[DependencyGraph]:
     """
     Split a directed graph into multiple subgraphs with at most `max_nodes`
     nodes each.
@@ -93,6 +92,16 @@ def split_digraph(dg: DependencyGraph, max_nodes: int) -> List[DependencyGraph]:
     for i in range(0, len(nodes), max_nodes):
         node_subset = nodes[i : i + max_nodes]
         subgraph = DependencyGraph()
-        subgraph._graph = copy.deepcopy(dg._graph.subgraph(node_subset))  # type:ignore
+        subgraph._graph = dg._graph.subgraph(node_subset).copy()  # type:ignore
+        subgraphs.append(subgraph)
+    return subgraphs
+
+
+def stratify_digraph(dg: DependencyGraph) -> List[DependencyGraph]:
+    subgraphs = []
+    generations = nx.topological_generations(dg._graph)
+    for gen in generations:
+        subgraph = DependencyGraph()
+        subgraph._graph.add_nodes_from(gen)
         subgraphs.append(subgraph)
     return subgraphs

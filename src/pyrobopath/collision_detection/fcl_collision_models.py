@@ -42,13 +42,16 @@ class FCLCollisionModel(CollisionModel):
         fcl.collide(self.obj, other.obj, self._collision_req, res)
         return res.is_collision
 
-    def __deepcopy__(self, memo):
-        cls = self.__class__
-        copied = cls.__new__(cls)
-        memo[id(self)] = copied
-        copied._transform = copy.deepcopy(self._transform, memo)
-        copied._collision_req = fcl.CollisionRequest(enable_contact=True)
-        return copied
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # remove unpickleable objects
+        state["obj"] = None
+        state["_collision_req"] = None
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__ = state
+        self._collision_req = fcl.CollisionRequest(enable_contact=True)
 
 
 class FCLBoxCollisionModel(FCLCollisionModel):
@@ -64,14 +67,12 @@ class FCLBoxCollisionModel(FCLCollisionModel):
 
     def __init__(self, x: float, y: float, z: float):
         super(FCLBoxCollisionModel, self).__init__()
-        self.box = fcl.Box(x, y, z)
-        self.obj = fcl.CollisionObject(self.box, fcl.Transform())
+        self.dims = (x, y, z)
+        self.obj = fcl.CollisionObject(fcl.Box(*self.dims), fcl.Transform())
 
-    def __deepcopy__(self, memo):
-        copied = super().__deepcopy__(memo)
-        copied.box = fcl.Box(*self.box.side)
-        copied.obj = fcl.CollisionObject(copied.box, fcl.Transform())
-        return copied
+    def __setstate__(self, state):
+        super().__setstate__(state)
+        self.obj = fcl.CollisionObject(fcl.Box(*self.dims), fcl.Transform())
 
 
 class FCLRobotBBCollisionModel(FCLBoxCollisionModel):
@@ -135,14 +136,6 @@ class FCLRobotBBCollisionModel(FCLBoxCollisionModel):
     @property
     def offset(self):
         return self._offset
-
-    def __deepcopy__(self, memo):
-        copied = super().__deepcopy__(memo)
-        copied._anchor = copy.deepcopy(self.anchor)
-        copied._eef_transform = copy.deepcopy(self._eef_transform)
-        copied._offset = copy.deepcopy(self._offset)
-        copied._box_center_in_eef = copy.deepcopy(self._box_center_in_eef)
-        return copied
 
 
 def _continuous_collision_check(

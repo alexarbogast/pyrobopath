@@ -264,7 +264,7 @@ class RobotBBAnimationModel(AnimationModel):
         super(RobotBBAnimationModel, self).__init__(agent_model, schedule, ax)
 
         # create bounding box
-        self.dim = agent_model.collision_model.box.side
+        self.dim = agent_model.collision_model.dims
         self.rect = patches.Rectangle(
             (0, 0), self.dim[0], self.dim[1], fill=None, linewidth=2
         )

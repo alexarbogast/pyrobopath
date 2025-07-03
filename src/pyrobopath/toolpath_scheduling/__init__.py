@@ -12,7 +12,8 @@ from .toolpath_collision import (
     concurrent_trajectory_pairs,
 )
 from .toolpath_scheduler import MultiAgentToolpathPlanner, PlanningOptions
-from .parallel_scheduler import DepthLimitedParallelPlanner
+from .batched_planners import BatchedSequentialPlanner, BatchedParallelPlanner
+from .depth_based_planners import DepthBasedSequentialPlanner, DepthBasedParallelPlanner
 from .visualization import (
     draw_multi_agent_schedule,
     animate_multi_agent_toolpath_schedule,
