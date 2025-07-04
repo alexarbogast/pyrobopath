@@ -44,8 +44,8 @@ def visualize_toolpath(toolpath: Toolpath, backend="pyqtgraph", **kwargs):
     >>> visualize_toolpath(toolpath, backend="pyqtgraph", color_method="tool")
     """
     if backend == "pyqtgraph":
-        pqg_backend.visualize_toolpath(toolpath, **kwargs)
+        return pqg_backend.visualize_toolpath(toolpath, **kwargs)
     elif backend == "matplotlib":
-        mpl_backend.visualize_toolpath(toolpath, **kwargs)
+        return mpl_backend.visualize_toolpath(toolpath, **kwargs)
     else:
         raise ValueError(f"Unknown backend: {backend}")
