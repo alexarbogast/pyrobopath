@@ -112,6 +112,8 @@ class MultiAgentToolpathPlanner:
     def plan(
         self, toolpath: Toolpath, dg: DependencyGraph, options: PlanningOptions
     ) -> MultiAgentToolpathSchedule:
+        self._validate_toolpath(toolpath)
+
         schedule = MultiAgentToolpathSchedule()
         schedule.add_agents(self._agent_models.keys())
 
@@ -180,6 +182,14 @@ class MultiAgentToolpathPlanner:
                     context.set_agent_start_time(agent, time + options.collision_offset)
 
         return schedule
+
+    def _validate_toolpath(self, toolpath):
+        required_tools = set(toolpath.tools())
+        provided_tools = set(
+            [cap for a in self._agent_models.values() for cap in a.capabilities]
+        )
+        if not required_tools.issubset(provided_tools):
+            raise ValueError("Agents cannot provide all required capabilities")
 
     def _slice_home_event(self, home_event: MoveEvent, end_time: float):
         new_traj = home_event.traj.slice(home_event.start, end_time)
