@@ -57,7 +57,10 @@ def visualize_toolpath(toolpath: Toolpath, color_method="tool", color_seq="tab10
     """
     colors = get_contour_colors(toolpath.contours, color_method, color_seq)
 
-    app = QApplication(sys.argv)
+    app = QApplication.instance()
+    if not app:
+        app = QApplication(sys.argv)
+
     viewer = ToolpathViewer()
     viewer.add_toolpath(toolpath, colors)
     viewer.show()
