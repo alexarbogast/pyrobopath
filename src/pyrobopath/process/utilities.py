@@ -98,8 +98,27 @@ def batch_digraph(dg: DependencyGraph, max_nodes: int) -> List[DependencyGraph]:
 
 
 def stratify_digraph(dg: DependencyGraph) -> List[DependencyGraph]:
+    """
+    Stratify a directed graph into separate subgraphs by generation.
+
+    Each subgraph contains nodes from the same topological generation, where
+    all nodes in a generation have no dependencies among themselves and only
+    depend on nodes from earlier generations.
+
+    Parameters
+    ----------
+    dg : DependencyGraph
+        The dependency graph to be stratified.
+
+    Returns
+    -------
+    subgraphs : List[DependencyGraph]
+        A list of subgraphs, each containing nodes from one generation level of
+        the graph.
+
+    """
     subgraphs = []
-    generations = nx.topological_generations(dg._graph)
+    generations = nx.topological_generations(dg._graph.copy())
     for gen in generations:
         subgraph = DependencyGraph()
         subgraph._graph.add_nodes_from(gen)
