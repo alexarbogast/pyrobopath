@@ -120,22 +120,21 @@ class MultiAgentToolpathPlanner:
         context = SchedulingContext(self._agent_models, options)
         tm = TaskManager(toolpath, dg)
         tm.frontier.update(dg.roots())
+        time = 0
 
         while tm.has_frontier():
-            sorted_times = context.get_unique_start_times()
-            time = sorted_times[0]
-            min_time_agents = context.get_agents_with_start_time(time)
-
             tm.mark_inprogress_complete(time)
+
+            min_time_agents = context.get_agents_with_start_time(time)
+            idle_agents = set()  # agents with no feasible task
 
             for agent in min_time_agents:
                 tools = self._agent_models[agent].capabilities
-                available = tm.get_available_tasks()
-                available = [c for c in available if tm.contours[c].tool in tools]
+                feasible = tm.get_available_tasks()
+                feasible = [c for c in feasible if tm.contours[c].tool in tools]
 
-                if not available:
-                    if len(sorted_times) > 1:
-                        context.set_agent_start_time(agent, sorted_times[1])
+                if not feasible:
+                    idle_agents.add(agent)
                     continue
 
                 # prioritize tasks with highest out-degree
@@ -180,6 +179,10 @@ class MultiAgentToolpathPlanner:
 
                 if all_collide_flag:
                     context.set_agent_start_time(agent, time + options.collision_offset)
+
+            time = min(t for t in context.get_unique_start_times() if t != time)
+            for agent in idle_agents:
+                context.set_agent_start_time(agent, time)
 
         return schedule
 
