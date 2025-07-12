@@ -1,18 +1,28 @@
 .. _python_examples:
 
-===============
 Python Examples
 ===============
 
-A few Python examples are provided in :file:`examples/example.py`. The basic
-components of these examples, such as creating toolpaths and defining robot
-systems, are explained below. First, :ref:`install <installation>` pyrobopath,
-then cd to the :file:`examples` directory, and run the following command:
+Several example scripts are provided in the :file:`examples` directory of the
+repository. These examples demonstrate the core features of **pyrobopath**,
+including:
+
+- Creating and preprocessing toolpaths
+- Defining robot systems
+- Selecting and running planners
+
+Before running the examples, make sure you have :ref:`installed <installation>`
+:mod:`pyrobopath`. Then, navigate to the :file:`examples` directory:
 
 .. code-block:: sh
-  :caption: Run the provided examples
+  :caption: Run example scripts from the examples directory
 
-  python3 examples.py
+  cd examples
+  python3 simple_scheduling_example.py
+  python3 toolpath_examples.py
+  python3 planners_examples.py
+  python3 robot_number_examples.py
+
 
 Toolpaths
 ---------
@@ -119,8 +129,8 @@ We will create a simple two robot system.
 
 .. code-block:: python
 
+  from pyrobopath.process import AgentModels
   from pyrobopath.collision_detection import FCLRobotBBCollisionModel
-  from pyrobopath.toolpath_scheduling import *
 
   bf1 = np.array([-350.0, 0.0, 0.0])
   bf2 = np.array([350.0, 0.0, 0.0])

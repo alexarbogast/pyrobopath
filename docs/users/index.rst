@@ -2,15 +2,23 @@
 Users Guide
 ===========
 
-.. toctree::
-  :caption: Getting Started
+.. grid:: 1 1 2 2
 
-  installation
-  development
+  .. grid-item-card::
+      :padding: 2
 
-.. toctree::
-  :caption: Examples
+      .. toctree::
+          :maxdepth: 2
+          :includehidden:
 
-  examples/python_examples.rst
-  examples/ros_examples.rst
+          installation
+          development
 
+  .. grid-item-card::
+      :padding: 2
+
+      .. toctree::
+          :maxdepth: 2
+          :includehidden:
+
+          examples/index

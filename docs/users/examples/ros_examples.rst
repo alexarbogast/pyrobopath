@@ -1,6 +1,5 @@
 .. _ros_examples:
 
-============
 ROS Examples
 ============
 
