@@ -49,7 +49,6 @@ class TaskManager:
 
         # task sets
         self.frontier = set()
-        self.completed_tasks = set()
         self.in_progress: Dict[str, float] = dict()
 
     def add_inprogress(self, id, t_end):
@@ -57,7 +56,6 @@ class TaskManager:
 
     def mark_inprogress_complete(self, time):
         complete = [k for (k, v) in self.in_progress.items() if time >= v]
-        self.completed_tasks.update(complete)
         for c in complete:
             self.dg.mark_complete(c)
             self.in_progress.pop(c)
@@ -124,14 +122,15 @@ class MultiAgentToolpathPlanner:
 
         while tm.has_frontier():
             tm.mark_inprogress_complete(time)
+            idle_agents = set()
 
-            min_time_agents = context.get_agents_with_start_time(time)
-            idle_agents = set()  # agents with no feasible task
-
-            for agent in min_time_agents:
-                tools = self._agent_models[agent].capabilities
-                feasible = tm.get_available_tasks()
-                feasible = [c for c in feasible if tm.contours[c].tool in tools]
+            for agent in context.get_agents_with_start_time(time):
+                agent_model = self._agent_models[agent]
+                feasible = [
+                    n
+                    for n in tm.get_available_tasks()
+                    if tm.contours[n].tool in agent_model.capabilities
+                ]
 
                 if not feasible:
                     idle_agents.add(agent)
@@ -139,16 +138,13 @@ class MultiAgentToolpathPlanner:
 
                 # prioritize tasks with highest out-degree
                 key = lambda n: dg._graph.out_degree(n)
-                nodes = sorted(available, key=key, reverse=True)  # type: ignore
+                nodes = sorted(feasible, key=key, reverse=True)  # type: ignore
+                p_start = schedule[agent].get_state(time, agent_model.home_position)
 
-                all_collide_flag = True
                 for node in nodes:
                     contour = tm.contours[node]
-                    p_start = schedule[agent].get_state(
-                        time, self._agent_models[agent].home_position
-                    )
-
                     events = build_event_chain(time, p_start, contour, agent, context)
+
                     if events_cause_collision(
                         events,
                         agent,
@@ -173,16 +169,17 @@ class MultiAgentToolpathPlanner:
                     tm.frontier.update(dg._graph.successors(node))
                     context.positions[agent] = events[2].data[-1]
                     context.set_agent_start_time(agent, events[2].end)
-
-                    all_collide_flag = False
                     break
-
-                if all_collide_flag:
+                else:
+                    # if all cause collisions
                     context.set_agent_start_time(agent, time + options.collision_offset)
 
-            time = min(t for t in context.get_unique_start_times() if t != time)
+            # advance global time
+            time = min(t for t in context.start_times.values() if t != time)
+
+            t_feasible = min(tm.in_progress.values(), default=time)
             for agent in idle_agents:
-                context.set_agent_start_time(agent, time)
+                context.set_agent_start_time(agent, t_feasible)
 
         return schedule
 
