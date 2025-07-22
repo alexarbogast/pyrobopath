@@ -83,11 +83,11 @@ def segment_path(path: List[np.ndarray], max_length: float) -> List[List[np.ndar
 
     for td in target_distances:
         # Advance to the segment containing td, add points along the way
-        while path_idx < len(path) - 1 and cum_lengths[path_idx + 1] < td:
+        while path_idx < len(path) - 2 and cum_lengths[path_idx + 1] < td:
             current_segment.append(path[path_idx + 1])
             path_idx += 1
 
-        if cum_lengths[path_idx + 1] == td:  # point on path
+        if np.isclose(cum_lengths[path_idx + 1], td):  # point on path
             current_segment.append(path[path_idx + 1])
             path_idx += 1
         else:  # interpolated point
