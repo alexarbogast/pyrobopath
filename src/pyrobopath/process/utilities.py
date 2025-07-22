@@ -1,6 +1,7 @@
 import numpy as np
 import networkx as nx
 from typing import List
+from itertools import chain
 
 from pyrobopath.toolpath import Toolpath
 from .dependency_graph import DependencyGraph
@@ -97,18 +98,20 @@ def batch_digraph(dg: DependencyGraph, max_nodes: int) -> List[DependencyGraph]:
     return subgraphs
 
 
-def stratify_digraph(dg: DependencyGraph) -> List[DependencyGraph]:
+def stratify_digraph(dg: DependencyGraph, delta=1) -> List[DependencyGraph]:
     """
-    Stratify a directed graph into separate subgraphs by generation.
+    Stratify a directed graph into subgraphs grouped by topological generation.
 
-    Each subgraph contains nodes from the same topological generation, where
-    all nodes in a generation have no dependencies among themselves and only
-    depend on nodes from earlier generations.
+    Each subgraph contains up to `delta` consecutive topological generation.
+    Nodes within each generation are from the same depth in `dg`. They do not
+    depend on each other and only depend on nodes from earlier generations.
 
     Parameters
     ----------
     dg : DependencyGraph
         The dependency graph to be stratified.
+    delta : int
+        The max number of consecutive topological generations in each subgraph.
 
     Returns
     -------
@@ -118,9 +121,11 @@ def stratify_digraph(dg: DependencyGraph) -> List[DependencyGraph]:
 
     """
     subgraphs = []
-    generations = nx.topological_generations(dg._graph.copy())
-    for gen in generations:
+    generations = list(nx.topological_generations(dg._graph.copy()))
+    gen_groups = [generations[i : i + delta] for i in range(0, len(generations), delta)]
+    for group in gen_groups:
+        flat_nodes = list(chain.from_iterable(group))
         subgraph = DependencyGraph()
-        subgraph._graph.add_nodes_from(gen)
+        subgraph._graph = dg._graph.subgraph(flat_nodes).copy()  # type:ignore
         subgraphs.append(subgraph)
     return subgraphs

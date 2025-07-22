@@ -25,8 +25,9 @@ class DepthBasedSequentialPlanner:
 
 
 class DepthBasedParallelPlanner:
-    def __init__(self, agent_models: Dict[str, AgentModel]):
+    def __init__(self, agent_models: Dict[str, AgentModel], delta=1):
         self._base_planner = MultiAgentToolpathPlanner(agent_models)
+        self._delta = delta
 
     def _plan_layer(self, args):
         return self._base_planner.plan(*args)
@@ -34,7 +35,7 @@ class DepthBasedParallelPlanner:
     def plan(
         self, toolpath: Toolpath, dg: DependencyGraph, options: PlanningOptions
     ) -> MultiAgentToolpathSchedule:
-        dgs = stratify_digraph(dg)
+        dgs = stratify_digraph(dg, self._delta)
         args = [(toolpath, subgraph, options) for subgraph in dgs]
 
         results = []
