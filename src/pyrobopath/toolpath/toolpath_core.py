@@ -1,7 +1,7 @@
 from __future__ import annotations
 from typing import List, Union, Optional
 from enum import Enum
-from gcodeparser import GcodeParser, GcodeLine
+from gcodeparser import GcodeLine
 import numpy as np
 
 from pyrobopath.tools.utils import pairwise
@@ -231,12 +231,3 @@ def split_by_layers(toolpath: Toolpath) -> List[Toolpath]:
         layers.append(Toolpath([toolpath.contours[i] for i in contour_ind]))
 
     return layers
-
-
-if __name__ == "__main__":
-    with open("my_gcode.gcode", "r") as f:
-        gcode = f.read()
-    parsed_gcode = GcodeParser(gcode)
-
-    toolpath = Toolpath.from_gcode(parsed_gcode.lines)
-    print(f"Number of Contours: {len(toolpath.contours)}")

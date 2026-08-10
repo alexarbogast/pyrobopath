@@ -1,6 +1,6 @@
 import numpy as np
 from enum import Enum
-from gcodeparser import GcodeParser
+from gcodeparser import parse_gcode_lines
 
 from pyrobopath.toolpath import Toolpath, Contour
 from pyrobopath.toolpath_scheduling import MultiAgentToolpathSchedule
@@ -11,9 +11,9 @@ def toolpath_from_gcode(filepath):
     """Parse gcode file to internal toolpath representation."""
     with open(filepath, "r") as f:
         gcode = f.read()
-    parsed_gcode = GcodeParser(gcode)
+    parsed_gcode = list(parse_gcode_lines(gcode))
 
-    toolpath = Toolpath.from_gcode(parsed_gcode.lines)
+    toolpath = Toolpath.from_gcode(parsed_gcode)
     return toolpath
 
 

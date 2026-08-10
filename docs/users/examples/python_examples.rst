@@ -78,12 +78,12 @@ read a Gcode file to a python representation.
 
 .. code-block:: python
 
-  from gcodeparser import GcodeParser
+  from gcodeparser import parsed_gcode_lines
 
   filepath = "<path to gcode>"
   with open(filepath, "r") as f:
       gcode = f.read()
-  parsed_gcode = GcodeParser(gcode)
+  parsed_gcode = list(parsed_gcode_lines(gcode))
 
 Then, the parsed Gcode is transformed to a pyrobopath :class:`.Toolpath`.  A
 contour is defined by a consecutive group of linear G1 moves that have an
