@@ -54,3 +54,4 @@ documentation = "https://pyrobopath.readthedocs.io/en/latest/"
 issues = "https://github.com/alexarbogast/pyrobopath/issues"
 
 [tool.setuptools_scm]
+local_scheme = "no-local-version"
