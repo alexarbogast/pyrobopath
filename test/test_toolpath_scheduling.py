@@ -1,5 +1,5 @@
-import unittest
 import numpy as np
+import numpy.testing as nt
 
 from pyrobopath.process import AgentModel
 from pyrobopath.toolpath import Contour
@@ -11,7 +11,7 @@ from pyrobopath.collision_detection import (
 from pyrobopath.toolpath_scheduling import *
 
 
-class TestToolpathSchedule(unittest.TestCase):
+class TestToolpathSchedule:
     def test_toolpath_schedule(self):
         contour1 = Contour(
             [
@@ -33,35 +33,35 @@ class TestToolpathSchedule(unittest.TestCase):
         schedule.add_event(ContourEvent(0.0, contour1, 1.0))
         schedule.add_event(ContourEvent(5.0, contour2, 1.0))
 
-        self.assertEqual(schedule.duration(), 7)
+        assert schedule.duration() == 7.0
 
         default = "default"
         state = schedule.get_state(-1.0, default)
-        self.assertEqual(state, default)
+        assert state == default
 
         state = schedule.get_state(0.0, default)
-        self.assertTrue(np.all(state == np.array([0.0, 1.0, 0.0])))
+        nt.assert_array_equal(state, np.array([0.0, 1.0, 0.0]))
 
         state = schedule.get_state(0.5, default)
-        self.assertTrue(np.all(state == np.array([0.0, 0.5, 0.0])))
+        nt.assert_array_equal(state, np.array([0.0, 0.5, 0.0]))
 
         state = schedule.get_state(2.0, default)
-        self.assertTrue(np.all(state == np.array([0.0, -1.0, 0.0])))
+        nt.assert_array_equal(state, np.array([0.0, -1.0, 0.0]))
 
         state = schedule.get_state(3.0, default)
-        self.assertTrue(np.all(state == np.array([0.0, -1.0, 0.0])))
+        nt.assert_array_equal(state, np.array([0.0, -1.0, 0.0]))
 
         state = schedule.get_state(5.0, default)
-        self.assertTrue(np.all(state == np.array([0.0, -1.0, 0.0])))
+        nt.assert_array_equal(state, np.array([0.0, -1.0, 0.0]))
 
         state = schedule.get_state(7.0, default)
-        self.assertTrue(np.all(state == np.array([1.0, 0.0, 0.0])))
+        nt.assert_array_equal(state, np.array([1.0, 0.0, 0.0]))
 
         state = schedule.get_state(8.0, default)
-        self.assertTrue(np.all(state == np.array([1.0, 0.0, 0.0])))
+        nt.assert_array_equal(state, np.array([1.0, 0.0, 0.0]))
 
 
-class TestToolpathCollision(unittest.TestCase):
+class TestToolpathCollision:
     def test_event_causes_collision_two(self):
         bf1 = np.array([-5.0, 0.0, 0.0])
         bf2 = np.array([5.0, 0.0, 0.0])
@@ -95,7 +95,7 @@ class TestToolpathCollision(unittest.TestCase):
         collide = event_causes_collision(
             event1, "agent1", schedule, agent_models, threshold
         )
-        self.assertFalse(collide)
+        assert not collide
         schedule.add_event(event1, "agent1")
 
         # collision
@@ -103,14 +103,14 @@ class TestToolpathCollision(unittest.TestCase):
         collide = event_causes_collision(
             event2, "agent2", schedule, agent_models, threshold
         )
-        self.assertTrue(collide)
+        assert collide
 
         # no collision
         event3 = ContourEvent(2.0, c2, 1.0)
         collide = event_causes_collision(
             event3, "agent2", schedule, agent_models, threshold
         )
-        self.assertFalse(collide)
+        assert not collide
         schedule.add_event(event3, "agent2")
 
         # no collision
@@ -119,7 +119,7 @@ class TestToolpathCollision(unittest.TestCase):
         collide = event_causes_collision(
             event4, "agent2", schedule, agent_models, threshold
         )
-        self.assertFalse(collide)
+        assert not collide
 
         # collision
         c4 = Contour([np.array([-2.0, 0.0, 0.0]), np.array([0.0, -2.0, 0.0])])
@@ -127,7 +127,7 @@ class TestToolpathCollision(unittest.TestCase):
         collide = event_causes_collision(
             event5, "agent2", schedule, agent_models, threshold
         )
-        self.assertTrue(collide)
+        assert collide
 
     def test_event_causes_collision_three(self):
         agent1 = AgentModel(
@@ -174,21 +174,21 @@ class TestToolpathCollision(unittest.TestCase):
         collide = event_causes_collision(
             event1, "agent1", schedule, agent_models, threshold
         )
-        self.assertFalse(collide)
+        assert not collide
         schedule.add_event(event1, "agent1")
 
         event2 = ContourEvent(0.0, c2, 1.0)
         collide = event_causes_collision(
             event2, "agent2", schedule, agent_models, threshold
         )
-        self.assertFalse(collide)
+        assert not collide
         schedule.add_event(event2, "agent2")
 
         event3 = ContourEvent(0.0, c3, 1.0)
         collide = event_causes_collision(
             event3, "agent3", schedule, agent_models, threshold
         )
-        self.assertFalse(collide)
+        assert not collide
         schedule.add_event(event3, "agent3")
 
         # collision (agent1 - agent2)
@@ -197,13 +197,13 @@ class TestToolpathCollision(unittest.TestCase):
         collide = event_causes_collision(
             event4, "agent1", schedule, agent_models, threshold
         )
-        self.assertTrue(collide, "Colliding event returned False")
+        assert collide
 
         event5 = ContourEvent(2.1, c4, 1.0)
         collide = event_causes_collision(
             event5, "agent1", schedule, agent_models, threshold
         )
-        self.assertTrue(collide, "Colliding event returned False")
+        assert collide
 
         # no collision (agent1 - agent3)
         c5 = Contour([np.array([-2.0, 0.0, 0.0]), np.array([0.0, 0.0, 0.0])])
@@ -211,7 +211,7 @@ class TestToolpathCollision(unittest.TestCase):
         collide = event_causes_collision(
             event6, "agent1", schedule, agent_models, threshold
         )
-        self.assertFalse(collide, "Non-colliding event returned True")
+        assert not collide
         schedule.add_event(event6, "agent1")
 
         # collision (agent1 - agent3)
@@ -220,7 +220,7 @@ class TestToolpathCollision(unittest.TestCase):
         collide = event_causes_collision(
             event7, "agent3", schedule, agent_models, threshold
         )
-        self.assertTrue(collide, "Colliding event returned False")
+        assert collide
 
         c7 = Contour(
             [
@@ -234,7 +234,7 @@ class TestToolpathCollision(unittest.TestCase):
         collide = event_causes_collision(
             event8, "agent1", schedule, agent_models, threshold
         )
-        self.assertFalse(collide, "Non-colliding event returned True")
+        assert not collide
         schedule.add_event(event8, "agent1")
 
         c8 = Contour([np.array([0.0, 1.0, 0.0]), np.array([0.0, -0.4, 0.0])])
@@ -242,7 +242,7 @@ class TestToolpathCollision(unittest.TestCase):
         collide = event_causes_collision(
             event9, "agent2", schedule, agent_models, threshold
         )
-        self.assertFalse(collide, "Non-colliding event returned True")
+        assert not collide
         schedule.add_event(event9, "agent2")
 
         c9 = Contour([np.array([0.0, 2.0, 0.0]), np.array([-1.0, 1.0, 0.0])])
@@ -252,7 +252,7 @@ class TestToolpathCollision(unittest.TestCase):
         )
         schedule.add_event(event10, "agent3")
 
-        self.assertTrue(collide, "Colliding event returned False")
+        assert collide
 
     def test_events_cause_collision_two(self):
         agent1 = AgentModel(
@@ -304,7 +304,7 @@ class TestToolpathCollision(unittest.TestCase):
         schedule.add_event(ec1_0, "agent1")
         schedule.add_event(ec1_1, "agent1")
         schedule.add_event(ec1_2, "agent1")
-        self.assertFalse(ret)
+        assert not ret
 
         c2s = [
             Contour([np.array([3.0, 0.0, 0.0]), np.array([0.0, 1.0, 0.0])], tool=-1),
@@ -325,7 +325,7 @@ class TestToolpathCollision(unittest.TestCase):
         ret = events_cause_collision(
             [ec2_0, ec2_1, ec2_2], "agent2", schedule, agent_models, threshold
         )
-        self.assertTrue(ret)
+        assert ret
 
         # shift start time
         ec2_0 = ContourEvent(2.0, c2s[0], 1.0)
@@ -334,7 +334,7 @@ class TestToolpathCollision(unittest.TestCase):
         ret = events_cause_collision(
             [ec2_0, ec2_1, ec2_2], "agent2", schedule, agent_models, threshold
         )
-        self.assertFalse(ret)
+        assert not ret
         schedule.add_event(ec2_0, "agent2")
         schedule.add_event(ec2_1, "agent2")
         schedule.add_event(ec2_2, "agent2")
@@ -354,68 +354,68 @@ class TestToolpathCollision(unittest.TestCase):
         traj = schedule_to_trajectory(
             schedule, t_start=-0.2, t_end=-0.1, default_state=default
         )
-        self.assertEqual(traj.n_points(), 2)
-        self.assertEqual(traj.start_time(), -0.2)
-        self.assertEqual(traj.end_time(), -0.1)
-        self.assertEqual(traj.points[0].data, default)
-        self.assertEqual(traj.points[-1].data, default)
+        assert traj.n_points() == 2
+        assert traj.start_time() == -0.2
+        assert traj.end_time() == -0.1
+        assert traj.points[0].data == default
+        assert traj.points[-1].data == default
 
         traj = schedule_to_trajectory(
             schedule, t_start=-0.2, t_end=0.0, default_state=default
         )
-        self.assertEqual(traj.n_points(), 2)
-        self.assertEqual(traj.start_time(), -0.2)
-        self.assertEqual(traj.end_time(), 0.0)
-        self.assertEqual(traj.points[0].data, default)
-        self.assertTrue(np.all(traj.points[-1].data == c1.path[0]))
+        assert traj.n_points() == 2
+        assert traj.start_time() == -0.2
+        assert traj.end_time() == 0.0
+        assert traj.points[0].data == default
+        nt.assert_array_equal(traj.points[-1].data, c1.path[0])
 
         traj = schedule_to_trajectory(
             schedule, t_start=0.0, t_end=2.0, default_state=default
         )
-        self.assertEqual(traj.n_points(), 2)
-        self.assertEqual(traj.start_time(), 0.0)
-        self.assertEqual(traj.end_time(), 2.0)
-        self.assertTrue(np.all(traj.points[0].data == c1.path[0]))
-        self.assertTrue(np.all(traj.points[-1].data == np.array([0.0, 0.0, 0.0])))
+        assert traj.n_points() == 2
+        assert traj.start_time() == 0.0
+        assert traj.end_time() == 2.0
+        nt.assert_array_equal(traj.points[0].data, c1.path[0])
+        nt.assert_array_equal(traj.points[-1].data, np.array([0.0, 0.0, 0.0]))
 
         traj = schedule_to_trajectory(
             schedule, t_start=2.0, t_end=5.0, default_state=default
         )
-        self.assertEqual(traj.n_points(), 3)
-        self.assertEqual(traj.start_time(), 2.0)
-        self.assertEqual(traj.end_time(), 5.0)
-        self.assertTrue(np.all(traj.points[0].data == np.array([0.0, 0.0, 0.0])))
-        self.assertTrue(np.all(traj.points[1].data == c1.path[1]))
-        self.assertTrue(np.all(traj.points[2].data == c1.path[1]))
+        assert traj.n_points() == 3
+        assert traj.start_time() == 2.0
+        assert traj.end_time() == 5.0
+        nt.assert_array_equal(traj.points[0].data, np.array([0.0, 0.0, 0.0]))
+        nt.assert_array_equal(traj.points[1].data, c1.path[1])
+        nt.assert_array_equal(traj.points[2].data, c1.path[1])
 
         traj = schedule_to_trajectory(
             schedule, t_start=5.0, t_end=11.0, default_state=default
         )
-        self.assertEqual(traj.n_points(), 4)
-        self.assertEqual(traj.start_time(), 5.0)
-        self.assertEqual(traj.end_time(), 11.0)
-        self.assertTrue(np.all(traj.points[0].data == c1.path[1]))
-        self.assertTrue(np.all(traj.points[1].data == c2.path[0]))
-        self.assertTrue(np.all(traj.points[2].data == c2.path[1]))
-        self.assertTrue(np.all(traj.points[3].data == c2.path[1]))
+        assert traj.n_points() == 4
+        assert traj.start_time() == 5.0
+        assert traj.end_time() == 11.0
+        nt.assert_array_equal(traj.points[0].data, c1.path[1])
+        nt.assert_array_equal(traj.points[1].data, c2.path[0])
+        nt.assert_array_equal(traj.points[2].data, c2.path[1])
+        nt.assert_array_equal(traj.points[3].data, c2.path[1])
 
         traj = schedule_to_trajectory(
             schedule, t_start=10.0, t_end=11.0, default_state=default
         )
-        self.assertEqual(traj.n_points(), 2)
-        self.assertEqual(traj.start_time(), 10.0)
-        self.assertEqual(traj.end_time(), 11.0)
-        self.assertTrue(np.all(traj.points[0].data == c2.path[1]))
-        self.assertTrue(np.all(traj.points[1].data == c2.path[1]))
+        assert traj.n_points() == 2
+        assert traj.start_time() == 10.0
+        assert traj.end_time() == 11.0
+        nt.assert_array_equal(traj.points[0].data, c2.path[1])
+        nt.assert_array_equal(traj.points[1].data, c2.path[1])
 
         traj = schedule_to_trajectory(
             schedule, t_start=6.0, t_end=10.0, default_state=default
         )
-        self.assertEqual(traj.n_points(), 2)
-        self.assertEqual(traj.start_time(), 6.0)
-        self.assertEqual(traj.end_time(), 10.0)
-        self.assertTrue(np.all(traj.points[0].data == c2.path[0]))
-        self.assertTrue(np.all(traj.points[1].data == c2.path[1]))
+        assert traj.n_points() == 2
+        assert traj.start_time() == 6.0
+        assert traj.end_time() == 10.0
+        nt.assert_array_equal(traj.points[0].data, c2.path[0])
+        nt.assert_array_equal(traj.points[1].data, c2.path[1])
 
     def test_schedule_to_trajectories(self):
         p1 = [np.array([0.0, 0.0, 0.0]), np.array([1.0, 0.0, 0.0])]
@@ -430,16 +430,16 @@ class TestToolpathCollision(unittest.TestCase):
 
         # full schedule interval
         trajs = schedule_to_trajectories(s, s.start_time(), s.end_time())
-        self.assertEqual(len(trajs), 2)
-        self.assertEqual(trajs[0].start_time(), e1.start)
-        self.assertEqual(trajs[0].end_time(), e1.end)
-        self.assertEqual(trajs[1].start_time(), e2.start)
-        self.assertEqual(trajs[1].end_time(), e2.end)
+        assert len(trajs) == 2
+        assert trajs[0].start_time() == e1.start
+        assert trajs[0].end_time() == e1.end
+        assert trajs[1].start_time() == e2.start
+        assert trajs[1].end_time() == e2.end
 
         trajs = schedule_to_trajectories(s, e1.start, e1.end)
-        self.assertEqual(len(trajs), 1)
-        self.assertEqual(trajs[0].start_time(), e1.start)
-        self.assertEqual(trajs[0].end_time(), e1.end)
+        assert len(trajs) == 1
+        assert trajs[0].start_time() == e1.start
+        assert trajs[0].end_time() == e1.end
 
         # partial schedule interval
         trajs = schedule_to_trajectories(s, 0.5, 3.5)
@@ -449,7 +449,7 @@ class TestToolpathCollision(unittest.TestCase):
         t2 = Trajectory()
         t2.add_traj_point(TrajectoryPoint(np.array([2.0, 0.0, 0.0]), 3.0))
         t2.add_traj_point(TrajectoryPoint(np.array([2.5, 0.0, 0.0]), 3.5))
-        self.assertListEqual(trajs, [t1, t2])
+        assert trajs == [t1, t2]
 
         # add new event
         p3 = [np.array([1.0, 0.0, 0.0]), np.array([2.0, 0.0, 0.0])]
@@ -460,11 +460,11 @@ class TestToolpathCollision(unittest.TestCase):
         t3 = Trajectory()
         t3.add_traj_point(TrajectoryPoint(np.array([1.0, 0.0, 0.0]), 1.0))
         t3.add_traj_point(TrajectoryPoint(np.array([2.0, 0.0, 0.0]), 2.0))
-        self.assertListEqual(trajs, [t1, t2, t3])
+        assert trajs == [t1, t2, t3]
 
         # test empty interval
         trajs = schedule_to_trajectories(s, 6.0, 7.0)
-        self.assertLessEqual(trajs, [])
+        assert trajs == []
 
     def test_chop_concurrent_trajectories(self):
         # list 1
@@ -492,25 +492,25 @@ class TestToolpathCollision(unittest.TestCase):
         list2 = [t21, t22]
 
         concurrent_pairs = concurrent_trajectory_pairs(list1, list2)
-        self.assertEqual(len(concurrent_pairs), 4)
+        assert len(concurrent_pairs) == 4
 
         pair0 = concurrent_pairs[0]
-        self.assertEqual(pair0[0], t11)
-        self.assertEqual(pair0[1], t11)
+        assert pair0[0] == t11
+        assert pair0[1] == t11
 
         pair1 = concurrent_pairs[1]
         sliced_traj = t12.slice(5, 6)
-        self.assertEqual(pair1[0], sliced_traj)
-        self.assertEqual(pair1[1], sliced_traj)
+        assert pair1[0] == sliced_traj
+        assert pair1[1] == sliced_traj
 
         pair2 = concurrent_pairs[2]
         sliced_traj = t12.slice(7, 8)
-        self.assertEqual(pair2[0], sliced_traj)
-        self.assertEqual(pair2[1], sliced_traj)
+        assert pair2[0] == sliced_traj
+        assert pair2[1] == sliced_traj
 
         pair3 = concurrent_pairs[3]
-        self.assertEqual(pair3[0], t13)
-        self.assertEqual(pair3[1], t13)
+        assert pair3[0] == t13
+        assert pair3[1] == t13
 
         # single point duplicate trajectory (edge case)
         t11 = Trajectory()
@@ -527,16 +527,12 @@ class TestToolpathCollision(unittest.TestCase):
         list2 = [t21]
 
         concurrent_pairs = concurrent_trajectory_pairs(list1, list2)
-        self.assertEqual(len(concurrent_pairs), 2)
+        assert len(concurrent_pairs) == 2
 
         pair0 = concurrent_pairs[0]
-        self.assertEqual(pair0[0], t11)
-        self.assertEqual(pair0[1], t11)
+        assert pair0[0] == t11
+        assert pair0[1] == t11
 
         pair1 = concurrent_pairs[1]
-        self.assertEqual(pair1[0], t12)
-        self.assertEqual(pair1[1], t12)
-
-
-if __name__ == "__main__":
-    unittest.main()
+        assert pair1[0] == t12
+        assert pair1[1] == t12

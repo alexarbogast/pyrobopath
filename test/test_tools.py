@@ -1,4 +1,4 @@
-import unittest
+import pytest
 import numpy as np
 import numpy.testing as nt
 
@@ -6,7 +6,7 @@ from pyrobopath.tools.linalg import *
 from pyrobopath.tools.geometry import *
 
 
-class TestLinalgTools(unittest.TestCase):
+class TestLinalgTools:
     def test_unit_vector(self):
         v1 = np.array([1.0, 0.0, 0.0])
         u1 = unit_vector(v1)
@@ -53,63 +53,63 @@ class TestLinalgTools(unittest.TestCase):
 
     def test_norm3(self):
         v1 = np.array([1.0, 0.0, 0.0])
-        self.assertEqual(norm3(v1), 1)
+        assert norm3(v1) == 1.0
 
         v2 = np.array([1.0, 2.0, -3.0])
-        self.assertEqual(norm3(v2), np.linalg.norm(v2))
+        assert norm3(v2) == np.linalg.norm(v2)
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             norm3(np.zeros(3))
 
     def test_norm2(self):
         v1 = np.array([1.0, 0.0])
-        self.assertEqual(norm2(v1), 1)
+        assert norm2(v1) == 1.0
 
         v2 = np.array([2.0, -3.0])
-        self.assertEqual(norm2(v2), np.linalg.norm(v2))
+        assert norm2(v2) == np.linalg.norm(v2)
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             norm2(np.zeros(2))
 
     def test_angle_between(self):
         v1 = np.array([1.0, 0.0, 0.0])
         v2 = np.array([0.0, 1.0, 0.0])
         v3 = np.array([-1.0, 0.0, 0.0])
-        self.assertEqual(np.pi / 2, angle_between(v1, v2))
-        self.assertEqual(np.pi, angle_between(v1, v3))
+        assert angle_between(v1, v2) == np.pi / 2
+        assert angle_between(v1, v3) == np.pi
 
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             angle_between(v1, np.zeros(3))
 
 
-class TestSegmentPath(unittest.TestCase):
+class TestSegmentPath:
     def test_empty(self):
-        self.assertEqual(segment_path([], 1.0), [])
+        assert segment_path([], 1.0) == []
 
     def test_single_point(self):
         pt = np.array([1.0, 2.0, 3.0])
         result = segment_path([pt], 1.0)
-        self.assertEqual(len(result), 1)
+        assert len(result) == 1
         nt.assert_array_equal(result[0][0], pt)
 
     def test_under_threshold(self):
         path = [np.array([0, 0, 0]), np.array([1, 0, 0])]
         result = segment_path(path, 2.0)
-        self.assertEqual(len(result), 1)
+        assert len(result) == 1
         nt.assert_array_equal(result[0], path)
 
     def test_exact_threshold(self):
         path = [np.array([0, 0, 0]), np.array([1, 0, 0])]
         result = segment_path(path, 1.0)
-        self.assertEqual(len(result), 1)
+        assert len(result) == 1
         np.testing.assert_array_equal(result[0], path)
 
     def test_even_split(self):
         path = [np.array([0, 0, 0]), np.array([2, 0, 0])]
         result = segment_path(path, 1.0)
-        self.assertEqual(len(result), 2)
-        self.assertAlmostEqual(np.linalg.norm(result[0][-1] - result[0][0]), 1.0)
-        self.assertAlmostEqual(np.linalg.norm(result[1][-1] - result[1][0]), 1.0)
+        assert len(result) == 2
+        assert np.linalg.norm(result[0][-1] - result[0][0]) == 1.0
+        assert np.linalg.norm(result[1][-1] - result[1][0]) == 1.0
 
     def test_interpolation(self):
         path = [np.array([0, 0, 0]), np.array([1.0, 0, 0]), np.array([10.0, 0, 0])]
@@ -118,10 +118,6 @@ class TestSegmentPath(unittest.TestCase):
             [np.array([0, 0, 0]), np.array([1.0, 0, 0]), np.array([5.0, 0, 0])],
             [np.array([5.0, 0, 0]), np.array([10.0, 0, 0])],
         ]
-        self.assertEqual(len(result), 2)
+        assert len(result) == 2
         for a, b in zip(result, expected):
             nt.assert_array_equal(a, b)
-
-
-if __name__ == "__main__":
-    unittest.main()
