@@ -1,26 +1,35 @@
 import sys
 
-from PySide6.QtWidgets import QApplication, QMainWindow
-import pyqtgraph.opengl as gl
-
 from pyrobopath.toolpath import Toolpath, Contour
 from .colors import get_contour_colors
 
 
-class ToolpathViewer(QMainWindow):
+class ToolpathViewer:
     def __init__(self):
-        super().__init__()
-        self.setWindowTitle("3D Toolpath Viewer")
-        self.resize(800, 600)
+        from PySide6.QtWidgets import QMainWindow
+        import pyqtgraph.opengl as gl
+
+        self._gl = gl
+
+        self.window = QMainWindow()
+        self.window.setWindowTitle("3D Toolpath Viewer")
+        self.window.resize(800, 600)
 
         self.widget = gl.GLViewWidget()
-        self.setCentralWidget(self.widget)
+        self.window.setCentralWidget(self.widget)
         self.widget.setCameraPosition(distance=100)
+
+    def show(self):
+        self.window.show()
 
     def add_contour(self, contour: Contour, color=(1, 0, 0, 1)):
         color = tuple(color)
-        line = gl.GLLinePlotItem(
-            pos=contour.path, color=color, width=3, antialias=True, mode="line_strip"
+        line = self._gl.GLLinePlotItem(
+            pos=contour.path,
+            color=color,
+            width=3,
+            antialias=True,
+            mode="line_strip",
         )
         self.widget.addItem(line)
 
@@ -55,6 +64,8 @@ def visualize_toolpath(toolpath: Toolpath, color_method="tool", color_seq="tab10
     --------
     pyrobopath.toolpath.visualization.colors.get_contour_colors
     """
+    from PySide6.QtWidgets import QApplication
+
     colors = get_contour_colors(toolpath.contours, color_method, color_seq)
 
     app = QApplication.instance()
