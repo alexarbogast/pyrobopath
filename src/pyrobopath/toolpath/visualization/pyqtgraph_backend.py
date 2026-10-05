@@ -1,6 +1,6 @@
 import sys
 
-from PyQt5.QtWidgets import QApplication, QMainWindow
+from PySide6.QtWidgets import QApplication, QMainWindow
 import pyqtgraph.opengl as gl
 
 from pyrobopath.toolpath import Toolpath, Contour
@@ -64,4 +64,4 @@ def visualize_toolpath(toolpath: Toolpath, color_method="tool", color_seq="tab10
     viewer = ToolpathViewer()
     viewer.add_toolpath(toolpath, colors)
     viewer.show()
-    app.exec_()
+    app.exec()
